@@ -9,6 +9,7 @@
     --green-dark: #059669;
     --red: #ef4444;
     --blue: #3b82f6;
+    --purple: #8b5cf6;
     --border: #253342;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
@@ -29,6 +30,69 @@ body {
 }
 
 /* ================================
+   BARRA SUPERIOR COMPARTIDA
+================================ */
+.app-topbar {
+    position: relative;
+    z-index: 600;
+    background: rgba(11, 16, 22, 0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 9px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.brand-group {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.brand-logo {
+    font-size: 0.96rem;
+    font-weight: 900;
+    color: var(--accent-bright);
+    letter-spacing: 0.3px;
+}
+
+.city-tag {
+    font-size: 0.6rem;
+    font-weight: 800;
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: var(--accent-bright);
+    padding: 3px 7px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mode-switch-link {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 6px 9px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+/* ================================
    LAYOUT PASAJERO (MAPA + PANEL)
 ================================ */
 body.passenger-body {
@@ -38,61 +102,11 @@ body.passenger-body {
     flex-direction: column;
 }
 
-.app-topbar {
-    position: relative;
-    z-index: 600;
-    background: rgba(11, 16, 22, 0.94);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--border);
-    padding: 10px 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-}
-
-.brand-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.brand-logo {
-    font-size: 1rem;
-    font-weight: 900;
-    color: var(--accent-bright);
-    letter-spacing: 0.3px;
-}
-
-.city-tag {
-    font-size: 0.62rem;
-    font-weight: 800;
-    background: rgba(245, 158, 11, 0.14);
-    border: 1px solid rgba(245, 158, 11, 0.4);
-    color: var(--accent-bright);
-    padding: 3px 7px;
-    border-radius: 20px;
-}
-
-.mode-switch-link {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: var(--text-main);
-    text-decoration: none;
-    font-size: 0.72rem;
-    font-weight: 800;
-    padding: 6px 10px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-}
-
 .map-wrapper {
     position: relative;
     flex: 1;
     width: 100%;
-    min-height: 220px;
+    min-height: 190px;
 }
 
 #map {
@@ -103,9 +117,9 @@ body.passenger-body {
 
 .map-floating-controls {
     position: absolute;
-    top: 12px;
-    left: 12px;
-    right: 12px;
+    top: 10px;
+    left: 10px;
+    right: 10px;
     z-index: 500;
     display: flex;
     justify-content: space-between;
@@ -115,10 +129,10 @@ body.passenger-body {
 }
 
 .map-hint-pill {
-    background: rgba(11, 16, 22, 0.9);
+    background: rgba(11, 16, 22, 0.92);
     border: 1px solid var(--border);
     color: #e2e8f0;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 700;
     padding: 7px 11px;
     border-radius: 20px;
@@ -130,9 +144,9 @@ body.passenger-body {
     background: var(--bg-panel);
     border: 1.5px solid var(--accent);
     color: var(--accent-bright);
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 800;
-    padding: 8px 11px;
+    padding: 7px 10px;
     border-radius: 20px;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
@@ -149,28 +163,58 @@ body.passenger-body {
     background: var(--bg-panel);
     border-top: 2px solid var(--accent);
     border-radius: 18px 18px 0 0;
-    padding: 14px 16px 18px;
+    padding: 12px 14px 16px;
     box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.75);
-    max-height: 58dvh;
+    max-height: 62dvh;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 9px;
+}
+
+/* SELECTOR DE MODALIDAD Y HORARIO */
+.segmented-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+}
+
+.seg-btn {
+    background: var(--bg-input);
+    border: 1.5px solid var(--border);
+    color: var(--text-muted);
+    padding: 8px 6px;
+    border-radius: 9px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-align: center;
+}
+
+.seg-btn.active {
+    border-color: var(--accent-bright);
+    background: rgba(245, 158, 11, 0.14);
+    color: #fff;
 }
 
 .point-selector-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 7px;
 }
 
 .point-box {
     background: var(--bg-input);
     border: 1.5px solid var(--border);
     border-radius: 10px;
-    padding: 8px 10px;
+    padding: 7px 9px;
     cursor: pointer;
     transition: border-color 0.2s;
+    position: relative;
+}
+
+.point-box.full-width {
+    grid-column: 1 / -1;
 }
 
 .point-box.active-target {
@@ -179,23 +223,47 @@ body.passenger-body {
 }
 
 .point-label {
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     font-weight: 800;
     text-transform: uppercase;
     color: var(--text-muted);
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 4px;
 }
 
 .point-value {
-    font-size: 0.76rem;
+    font-size: 0.75rem;
     font-weight: 700;
     color: #fff;
-    margin-top: 3px;
+    margin-top: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.stop-toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.mini-pill-btn {
+    background: var(--bg-card);
+    border: 1px dashed var(--accent);
+    color: var(--accent-bright);
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.mini-pill-btn.remove {
+    border-color: var(--red);
+    color: #fca5a5;
 }
 
 .quick-places-scroll {
@@ -209,9 +277,9 @@ body.passenger-body {
     background: var(--bg-card);
     border: 1px solid var(--border);
     color: #cbd5e1;
-    font-size: 0.68rem;
+    font-size: 0.67rem;
     font-weight: 700;
-    padding: 5px 10px;
+    padding: 5px 9px;
     border-radius: 16px;
     white-space: nowrap;
     cursor: pointer;
@@ -223,57 +291,69 @@ body.passenger-body {
     color: #000;
 }
 
+/* TARJETA DE TARIFA Y BADGES */
 .fare-summary-card {
     background: linear-gradient(135deg, #1a2430 0%, #121922 100%);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 10px 12px;
+    padding: 9px 11px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 .fare-info-left {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 9px;
+    min-width: 0;
 }
 
 .moto-badge-icon {
-    font-size: 1.7rem;
+    font-size: 1.55rem;
     background: rgba(245, 158, 11, 0.14);
     border: 1px solid rgba(245, 158, 11, 0.35);
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-shrink: 0;
 }
 
-.fare-title {
-    font-size: 0.85rem;
+.fare-title { font-size: 0.82rem; font-weight: 800; }
+.fare-sub { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+.fare-price-big { font-size: 1.25rem; font-weight: 900; color: var(--green); text-align: right; white-space: nowrap; }
+
+.badges-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.tag-badge {
+    font-size: 0.62rem;
     font-weight: 800;
+    padding: 3px 7px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
 }
 
-.fare-sub {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    margin-top: 2px;
-}
-
-.fare-price-big {
-    font-size: 1.3rem;
-    font-weight: 900;
-    color: var(--green);
-    text-align: right;
-}
+.tag-badge.rain { background: rgba(59, 130, 246, 0.2); border: 1px solid var(--blue); color: #93c5fd; }
+.tag-badge.night { background: rgba(139, 92, 246, 0.2); border: 1px solid var(--purple); color: #c4b5fd; }
+.tag-badge.stop { background: rgba(245, 158, 11, 0.18); border: 1px solid var(--accent); color: #fde68a; }
+.tag-badge.pkg { background: rgba(16, 185, 129, 0.18); border: 1px solid var(--green); color: #a7f3d0; }
+.tag-badge.sched { background: rgba(236, 72, 153, 0.18); border: 1px solid #ec4899; color: #f9a8d4; }
+.tag-badge.danger { background: rgba(239, 68, 68, 0.2); border: 1px solid var(--red); color: #fca5a5; }
 
 .passenger-inputs-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 7px;
 }
 
 .field-input {
@@ -281,30 +361,28 @@ body.passenger-body {
     background: var(--bg-input);
     border: 1px solid var(--border);
     border-radius: 8px;
-    padding: 9px 10px;
+    padding: 8px 10px;
     color: #fff;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 600;
     outline: none;
 }
 
-.field-input:focus {
-    border-color: var(--accent-bright);
-}
+.field-input:focus { border-color: var(--accent-bright); }
 
 .payment-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 7px;
 }
 
 .pay-option {
     background: var(--bg-input);
     border: 1px solid var(--border);
     color: var(--text-muted);
-    padding: 8px;
+    padding: 7px;
     border-radius: 8px;
-    font-size: 0.74rem;
+    font-size: 0.72rem;
     font-weight: 800;
     text-align: center;
     cursor: pointer;
@@ -319,10 +397,10 @@ body.passenger-body {
 /* BOTONES GENERALES */
 .btn {
     width: 100%;
-    padding: 12px 14px;
+    padding: 11px 12px;
     border-radius: 10px;
     border: none;
-    font-size: 0.88rem;
+    font-size: 0.84rem;
     font-weight: 900;
     cursor: pointer;
     display: inline-flex;
@@ -347,10 +425,8 @@ body.passenger-body {
     color: #031a11;
 }
 
-.btn-blue {
-    background: #1d4ed8;
-    color: #fff;
-}
+.btn-blue { background: #1d4ed8; color: #fff; }
+.btn-sos { background: linear-gradient(180deg, #ef4444 0%, #991b1b 100%); color: #fff; }
 
 .btn-danger {
     background: rgba(239, 68, 68, 0.16);
@@ -364,21 +440,28 @@ body.passenger-body {
     color: #e2e8f0;
 }
 
+.btn-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
 /* ESTADO DE VIAJE ACTIVO (PASAJERO) */
 .active-ride-box {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 9px;
 }
 
 .status-banner {
     background: rgba(245, 158, 11, 0.12);
     border: 1px solid var(--accent);
     border-radius: 10px;
-    padding: 10px 12px;
+    padding: 9px 11px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
 }
 
 .status-banner.arrived {
@@ -389,18 +472,19 @@ body.passenger-body {
 .pin-pill {
     background: var(--accent-bright);
     color: #000;
-    font-size: 0.85rem;
+    font-size: 0.84rem;
     font-weight: 900;
-    padding: 4px 10px;
+    padding: 4px 9px;
     border-radius: 8px;
     letter-spacing: 1px;
+    white-space: nowrap;
 }
 
 .driver-card-live {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 12px;
+    padding: 10px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -411,7 +495,7 @@ body.passenger-body {
     display: inline-block;
     background: #fff;
     color: #000;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 900;
     padding: 2px 7px;
     border-radius: 4px;
@@ -419,18 +503,32 @@ body.passenger-body {
     letter-spacing: 0.5px;
 }
 
+.rating-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(245, 158, 11, 0.16);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    color: var(--accent-bright);
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 12px;
+    margin-left: 5px;
+}
+
 .helmet-note {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     color: #a7f3d0;
     background: rgba(16, 185, 129, 0.1);
     border: 1px solid rgba(16, 185, 129, 0.3);
-    padding: 6px 10px;
+    padding: 6px 9px;
     border-radius: 8px;
     text-align: center;
 }
 
 /* ================================
-   VISTA CONDUCTOR (CHOFER)
+   VISTA CONDUCTOR Y ADMIN
 ================================ */
 body.driver-body {
     display: flex;
@@ -440,26 +538,36 @@ body.driver-body {
 
 .driver-container {
     width: 100%;
-    max-width: 540px;
+    max-width: 580px;
     padding: 14px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 13px;
+    padding-bottom: 28px;
 }
 
 .panel-card {
     background: var(--bg-panel);
     border: 1.5px solid var(--border);
     border-radius: 14px;
-    padding: 16px;
+    padding: 15px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 11px;
 }
 
 .panel-card.highlight {
     border-color: var(--accent);
     box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+}
+
+.panel-title {
+    font-size: 0.88rem;
+    font-weight: 900;
+    color: var(--accent-bright);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .online-switch-card {
@@ -469,7 +577,8 @@ body.driver-body {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: 12px 14px;
+    padding: 11px 13px;
+    gap: 8px;
 }
 
 .status-dot {
@@ -489,56 +598,121 @@ body.driver-body {
 .stats-grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 9px;
+}
+
+.stats-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
 }
 
 .stat-box {
     background: var(--bg-input);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 10px;
+    padding: 10px 6px;
     text-align: center;
 }
 
-.stat-num {
-    font-size: 1.2rem;
-    font-weight: 900;
-    color: var(--green);
-}
-
-.stat-lbl {
-    font-size: 0.66rem;
-    color: var(--text-muted);
-    font-weight: 700;
-    margin-top: 2px;
-}
+.stat-num { font-size: 1.15rem; font-weight: 900; color: var(--green); }
+.stat-lbl { font-size: 0.62rem; color: var(--text-muted); font-weight: 700; margin-top: 2px; }
 
 .ride-request-card {
     background: var(--bg-card);
     border: 1.5px solid var(--accent);
     border-radius: 12px;
-    padding: 14px;
+    padding: 13px;
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
 .ride-route-line {
-    font-size: 0.78rem;
-    line-height: 1.4;
+    font-size: 0.76rem;
+    line-height: 1.45;
     color: #e2e8f0;
 }
 
-.btn-grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
+.history-card {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.74rem;
 }
 
-/* TOASTS */
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+}
+
+.input-label {
+    font-size: 0.66rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+}
+
+/* MODALES Y ESTRELLAS */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.84);
+    z-index: 1500;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+}
+
+.modal-overlay.hidden { display: none; }
+
+.modal-box {
+    background: var(--bg-panel);
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    padding: 18px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 82dvh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stars-picker {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 6px 0;
+}
+
+.star-btn {
+    background: none;
+    border: none;
+    font-size: 2.2rem;
+    cursor: pointer;
+    filter: grayscale(1) opacity(0.45);
+    transition: transform 0.12s, filter 0.15s;
+}
+
+.star-btn.lit {
+    filter: none;
+    transform: scale(1.1);
+}
+
+/* TOASTS Y ALERTAS */
 .toast-container {
     position: fixed;
-    top: 58px;
+    top: 56px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 2000;
@@ -569,9 +743,9 @@ body.driver-body {
     background: rgba(239, 68, 68, 0.16);
     border: 1px solid var(--red);
     color: #fecaca;
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     font-weight: 700;
-    padding: 8px 10px;
+    padding: 9px 10px;
     border-radius: 8px;
     text-align: center;
     display: none;
