@@ -14,12 +14,11 @@
     <!-- BARRA SUPERIOR -->
     <header class="app-topbar">
         <div class="brand-group">
-            <span class="brand-logo">🪖 CHOFER MOTOYA</span>
+            <span class="brand-logo">🏍️ CHOFER MOTOYA</span>
             <span class="city-tag">SAN VICENTE</span>
         </div>
         <div class="topbar-actions">
             <a href="index.html" class="mode-switch-link">🧍 Pasajero</a>
-            <a href="admin.html" class="mode-switch-link" title="Panel Admin">⚙️</a>
         </div>
     </header>
 
@@ -198,7 +197,6 @@
             return Math.round((Number(driverServerState.ratingSum || 0) / cnt) * 10) / 10;
         }
 
-        // Mostrar aviso si modo lluvia está activo
         onValue(ref(db, "config/rainMode"), (snap) => {
             document.getElementById("rain-banner-drv").style.display = snap.val() ? "inline-flex" : "none";
         });
@@ -557,7 +555,6 @@
                 const msg = encodeURIComponent(`Hola ${ride.passengerName}, soy ${driverProfile.name} de MotoYa (${driverProfile.moto}, patente ${driverProfile.plate}).`);
                 document.getElementById("btn-wa-passenger").href = waNum ? `https://wa.me/${waNum}?text=${msg}` : "#";
 
-                // Ruta en Google Maps (incluye parada intermedia si ya inició el viaje)
                 let navUrl = "#";
                 if (ride.status === "in_progress" && ride.destination) {
                     const wp = ride.stop ? `&waypoints=${ride.stop.lat},${ride.stop.lng}` : "";
