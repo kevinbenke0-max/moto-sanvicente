@@ -35,11 +35,25 @@
             background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(16, 185, 129, 0.1) 100%);
             border: 1.5px solid var(--accent);
             border-radius: 12px;
-            padding: 11px 14px;
+            padding: 12px 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .comm-banner-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+        }
+        .comm-banner-sub {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 8px;
+            font-size: 0.72rem;
+            font-weight: 700;
         }
         .driver-card-clickable {
             cursor: pointer;
@@ -57,7 +71,7 @@
         }
         .driver-modal-box {
             max-width: 460px;
-            max-height: 88dvh;
+            max-height: 90dvh;
             padding: 16px;
         }
         .period-tabs {
@@ -115,7 +129,7 @@
             display: flex;
             flex-direction: column;
             gap: 7px;
-            max-height: 210px;
+            max-height: 185px;
             overflow-y: auto;
             padding-right: 2px;
         }
@@ -126,13 +140,13 @@
             padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 7px;
         }
         .liq-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.78rem;
+            font-size: 0.76rem;
             gap: 8px;
         }
         .liq-divider {
@@ -141,14 +155,23 @@
             margin: 2px 0;
         }
         .liq-driver-val {
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: 900;
             color: var(--green);
         }
         .liq-admin-val {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             font-weight: 900;
             color: var(--accent-bright);
+        }
+        .pay-register-box {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1.5px solid rgba(16, 185, 129, 0.5);
+            border-radius: 12px;
+            padding: 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
     </style>
 </head>
@@ -173,7 +196,7 @@
         <section id="admin-pin-screen" class="panel-card" style="margin-top: 24px;">
             <div class="panel-title">🔐 Panel de Control MotoYa</div>
             <p style="font-size: 0.74rem; color: var(--text-muted);">
-                Ingresá tu PIN de administrador para gestionar choferes, comisiones, tarifas, lugares e historial.
+                Ingresá tu PIN de administrador para gestionar choferes, comisiones, pagos, tarifas y lugares.
             </p>
             <form id="admin-pin-form" style="display: flex; flex-direction: column; gap: 10px;">
                 <input type="password" id="admin-pin-input" inputmode="numeric" class="field-input" placeholder="PIN de acceso" required>
@@ -200,33 +223,105 @@
                 </div>
             </div>
 
-            <!-- GANANCIA TOTAL DEL ADMINISTRADOR -->
+            <!-- GANANCIA TOTAL, COBRADA Y PENDIENTE DEL ADMINISTRADOR -->
             <div class="admin-commission-banner">
-                <div>
-                    <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">
-                        TU COMISIÓN TOTAL (<span id="adm-pct-banner">15</span>%)
+                <div class="comm-banner-top">
+                    <div>
+                        <div style="font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">
+                            COMISIÓN TOTAL ACUMULADA (<span id="adm-pct-banner">15</span>%)
+                        </div>
+                        <div style="font-size: 0.7rem; color: #cbd5e1; margin-top: 2px;">
+                            Sobre todos los viajes completados
+                        </div>
                     </div>
-                    <div style="font-size: 0.7rem; color: #cbd5e1; margin-top: 2px;">
-                        Sobre todos los viajes completados
+                    <div style="font-size: 1.3rem; font-weight: 900; color: var(--accent-bright);" id="adm-total-commission">
+                        $0
                     </div>
                 </div>
-                <div style="font-size: 1.3rem; font-weight: 900; color: var(--accent-bright);" id="adm-total-commission">
-                    $0
+                <div class="comm-banner-sub">
+                    <div>✅ Cobrado: <strong style="color: var(--green);" id="adm-paid-commission">$0</strong></div>
+                    <div style="text-align: right;">⏳ Por cobrar: <strong style="color: #fca5a5;" id="adm-pending-commission">$0</strong></div>
                 </div>
             </div>
 
-            <!-- GESTIÓN DE CONDUCTORES (TOCAR PARA VER LIQUIDACIÓN) -->
+            <!-- GESTIÓN DE CONDUCTORES -->
             <section class="panel-card highlight">
                 <div class="panel-title">
                     <span>🏍️ Conductores Registrados</span>
                     <span id="adm-drivers-count" style="font-size: 0.72rem; color: var(--text-muted);">0</span>
                 </div>
                 <p style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.35;">
-                    Tocá arriba de cualquier chofer para ver sus viajes, efectivo, transferencia y el reparto (85% chofer / <span id="adm-pct-hint">15</span>% tuyo).
+                    Tocá arriba de cualquier chofer para ver sus viajes, su saldo pendiente (<span id="adm-pct-hint">15</span>%) y registrar cuando te pague la comisión.
                 </p>
                 <div id="adm-drivers-list" style="display: flex; flex-direction: column; gap: 8px;">
                     <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Cargando...</div>
                 </div>
+            </section>
+
+            <!-- HISTORIAL GENERAL DE PAGOS DE COMISIONES -->
+            <section class="panel-card">
+                <div class="panel-title">
+                    <span>💵 Historial de Pagos de Comisiones</span>
+                    <span id="adm-payments-count" style="font-size: 0.72rem; color: var(--green);">0 pagos</span>
+                </div>
+                <div id="adm-payments-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Todavía no registraste pagos de comisiones.</div>
+                </div>
+            </section>
+
+            <!-- TARIFAS, CLIMA Y DATOS DE COBRO (ALIAS + WHATSAPP) -->
+            <section class="panel-card">
+                <div class="panel-title">
+                    <span>💰 Tarifas, Clima y Datos de Cobro</span>
+                    <button type="button" id="btn-toggle-rain" class="btn btn-secondary" style="width: auto; padding: 6px 10px; font-size: 0.72rem;">
+                        ☀️ Clima Normal
+                    </button>
+                </div>
+
+                <div class="form-grid-2">
+                    <div>
+                        <label class="input-label" for="cfg-base">Bajada bandera ($)</label>
+                        <input type="number" id="cfg-base" class="field-input">
+                    </div>
+                    <div>
+                        <label class="input-label" for="cfg-km">Precio por km ($)</label>
+                        <input type="number" id="cfg-km" class="field-input">
+                    </div>
+                    <div>
+                        <label class="input-label" for="cfg-min">Viaje mínimo ($)</label>
+                        <input type="number" id="cfg-min" class="field-input">
+                    </div>
+                    <div>
+                        <label class="input-label" for="cfg-stop">Adicional parada ($)</label>
+                        <input type="number" id="cfg-stop" class="field-input">
+                    </div>
+                    <div>
+                        <label class="input-label" for="cfg-night">Nocturna 00-06 (%)</label>
+                        <input type="number" id="cfg-night" class="field-input">
+                    </div>
+                    <div>
+                        <label class="input-label" for="cfg-rain-pct">Recargo lluvia (%)</label>
+                        <input type="number" id="cfg-rain-pct" class="field-input">
+                    </div>
+                    <div>
+                        <label class="input-label" for="cfg-admin-pct">Comisión Admin (%)</label>
+                        <input type="number" id="cfg-admin-pct" class="field-input" min="0" max="100">
+                    </div>
+                    <div>
+                        <label class="input-label" for="cfg-admin-phone">WhatsApp Admin</label>
+                        <input type="tel" id="cfg-admin-phone" class="field-input" placeholder="Ej: 3755449964">
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label class="input-label" for="cfg-admin-alias">Alias para recibir comisiones (MP / Naranja X)</label>
+                        <input type="text" id="cfg-admin-alias" class="field-input" placeholder="Ej: kevin.motoya.mp">
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label class="input-label" for="cfg-admin-holder">Titular de la cuenta (opcional)</label>
+                        <input type="text" id="cfg-admin-holder" class="field-input" placeholder="Ej: Kevin Benke">
+                    </div>
+                </div>
+
+                <button type="button" id="btn-save-config" class="btn btn-accent">💾 GUARDAR TARIFAS Y DATOS EN VIVO</button>
             </section>
 
             <!-- LUGARES RÁPIDOS EN EL MAPA -->
@@ -261,49 +356,6 @@
                 </div>
             </section>
 
-            <!-- TARIFAS INTELIGENTES Y MODO LLUVIA -->
-            <section class="panel-card">
-                <div class="panel-title">
-                    <span>💰 Tarifas Inteligentes y Clima</span>
-                    <button type="button" id="btn-toggle-rain" class="btn btn-secondary" style="width: auto; padding: 6px 10px; font-size: 0.72rem;">
-                        ☀️ Clima Normal
-                    </button>
-                </div>
-
-                <div class="form-grid-2">
-                    <div>
-                        <label class="input-label" for="cfg-base">Bajada bandera ($)</label>
-                        <input type="number" id="cfg-base" class="field-input">
-                    </div>
-                    <div>
-                        <label class="input-label" for="cfg-km">Precio por km ($)</label>
-                        <input type="number" id="cfg-km" class="field-input">
-                    </div>
-                    <div>
-                        <label class="input-label" for="cfg-min">Viaje mínimo ($)</label>
-                        <input type="number" id="cfg-min" class="field-input">
-                    </div>
-                    <div>
-                        <label class="input-label" for="cfg-stop">Adicional parada ($)</label>
-                        <input type="number" id="cfg-stop" class="field-input">
-                    </div>
-                    <div>
-                        <label class="input-label" for="cfg-night">Nocturna 00-06 (%)</label>
-                        <input type="number" id="cfg-night" class="field-input">
-                    </div>
-                    <div>
-                        <label class="input-label" for="cfg-rain-pct">Recargo lluvia (%)</label>
-                        <input type="number" id="cfg-rain-pct" class="field-input">
-                    </div>
-                    <div style="grid-column: 1 / -1;">
-                        <label class="input-label" for="cfg-admin-pct">Comisión Administrador (%)</label>
-                        <input type="number" id="cfg-admin-pct" class="field-input" min="0" max="100">
-                    </div>
-                </div>
-
-                <button type="button" id="btn-save-config" class="btn btn-accent">💾 GUARDAR TARIFAS EN VIVO</button>
-            </section>
-
             <!-- HISTORIAL GENERAL DE VIAJES Y ENVÍOS -->
             <section class="panel-card">
                 <div class="panel-title">🧾 Últimos Viajes y Envíos</div>
@@ -316,7 +368,7 @@
         </section>
     </main>
 
-    <!-- MODAL DETALLE Y LIQUIDACIÓN DEL CHOFER -->
+    <!-- MODAL DETALLE, LIQUIDACIÓN Y REGISTRO DE PAGO DEL CHOFER -->
     <div id="driver-detail-modal" class="modal-overlay hidden">
         <div class="modal-box driver-modal-box">
             <div class="panel-title">
@@ -334,12 +386,12 @@
                 <button type="button" class="period-tab" data-period="month">Este mes</button>
             </div>
 
-            <!-- MÉTRICAS DEL CHOFER -->
+            <!-- MÉTRICAS DEL PERÍODO -->
             <div class="detail-metrics-grid">
                 <div class="metric-tile">
                     <span class="metric-tile-lbl">🏍️ Viajes hechos</span>
                     <span class="metric-tile-val" id="det-trips-count">0</span>
-                    <span class="metric-tile-sub" id="det-trips-sub">Completados</span>
+                    <span class="metric-tile-sub">Completados</span>
                 </div>
                 <div class="metric-tile">
                     <span class="metric-tile-lbl">💰 Total recaudado</span>
@@ -364,28 +416,69 @@
             </div>
             <div id="det-driver-rides-list" class="driver-rides-scroll"></div>
 
-            <!-- LIQUIDACIÓN FINAL BIEN ABAJO -->
+            <!-- LIQUIDACIÓN FINAL Y ESTADO DE CUENTA -->
             <div class="liquidation-box">
                 <div style="font-size: 0.72rem; font-weight: 900; color: var(--accent-bright); text-transform: uppercase;">
-                    📊 Liquidación Final
+                    📊 Liquidación del Período
                 </div>
-                <div class="liq-row">
-                    <span style="color: var(--text-muted);">Total recaudado:</span>
-                    <strong id="det-liq-gross">$0</strong>
-                </div>
-                <div class="liq-divider"></div>
                 <div class="liq-row">
                     <span>🏍️ Se queda el chofer (<span id="det-driver-pct">85</span>%):</span>
                     <span class="liq-driver-val" id="det-liq-driver">$0</span>
                 </div>
                 <div class="liq-row">
-                    <span>💰 Te tiene que pagar (<span id="det-admin-pct">15</span>%):</span>
+                    <span>💰 Comisión del período (<span id="det-admin-pct">15</span>%):</span>
                     <span class="liq-admin-val" id="det-liq-admin">$0</span>
+                </div>
+                <div class="liq-divider"></div>
+                <div style="font-size: 0.68rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">
+                    Cuenta Corriente Real (Histórico)
+                </div>
+                <div class="liq-row">
+                    <span style="color: #cbd5e1;">Comisión acumulada total:</span>
+                    <strong id="det-hist-admin-total">$0</strong>
+                </div>
+                <div class="liq-row">
+                    <span style="color: #a7f3d0;">✅ Ya te pagó:</span>
+                    <strong style="color: var(--green);" id="det-hist-paid-total">$0</strong>
+                </div>
+                <div class="liq-row">
+                    <span style="font-weight: 800;">⏳ Saldo pendiente a pagar:</span>
+                    <span class="liq-admin-val" id="det-hist-pending">$0</span>
                 </div>
             </div>
 
-            <a id="btn-wa-liquidation" href="#" target="_blank" class="btn btn-green" style="font-size: 0.76rem;">
-                💬 Enviar liquidación por WhatsApp
+            <!-- REGISTRAR PAGO DE COMISIÓN -->
+            <div class="pay-register-box">
+                <div style="font-size: 0.74rem; font-weight: 900; color: #a7f3d0;">
+                    ✅ Registrar Pago de Comisión
+                </div>
+                <div class="form-grid-2">
+                    <div>
+                        <label class="input-label" for="pay-amount-input">Monto pagado ($)</label>
+                        <input type="number" id="pay-amount-input" class="field-input" min="1" placeholder="Ej: 780">
+                    </div>
+                    <div>
+                        <label class="input-label" for="pay-method-select">Medio de pago</label>
+                        <select id="pay-method-select" class="field-input">
+                            <option value="Transferencia / MP">📱 Transferencia / MP</option>
+                            <option value="Efectivo">💵 Efectivo</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="text" id="pay-note-input" class="field-input" placeholder="Nota opcional (ej: Comprobante WhatsApp)">
+                <button type="button" id="btn-register-commission-payment" class="btn btn-green">
+                    ✅ MARCAR COMISIÓN COMO PAGADA
+                </button>
+            </div>
+
+            <!-- PAGOS REGISTRADOS DE ESTE CHOFER -->
+            <div style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">
+                💵 Pagos registrados de este chofer
+            </div>
+            <div id="det-driver-payments-list" class="driver-rides-scroll" style="max-height: 150px;"></div>
+
+            <a id="btn-wa-liquidation" href="#" target="_blank" class="btn btn-blue" style="font-size: 0.76rem;">
+                💬 Enviar resumen por WhatsApp al chofer
             </a>
         </div>
     </div>
@@ -402,9 +495,16 @@
         const ADMIN_PIN = "1234";
         const DEFAULT_ADMIN_PCT = 15;
 
-        let currentCfg = { ...DEFAULT_CONFIG, adminPct: DEFAULT_ADMIN_PCT };
+        let currentCfg = {
+            ...DEFAULT_CONFIG,
+            adminPct: DEFAULT_ADMIN_PCT,
+            adminAlias: "",
+            adminHolder: "",
+            adminPhone: ""
+        };
         let allDrivers = [];
         let allRides = [];
+        let allPayments = [];
         let selectedDriverId = null;
         let selectedPeriod = "all";
         let listenersStarted = false;
@@ -438,6 +538,13 @@
             return false;
         }
 
+        function paymentBelongsToDriver(p, d) {
+            if (!p || !d) return false;
+            if (p.driverId && d.id && p.driverId === d.id) return true;
+            if (p.driverDni && d.dni && String(p.driverDni) === String(d.dni)) return true;
+            return false;
+        }
+
         function isTransferPayment(method) {
             const pm = String(method || "Efectivo").toLowerCase();
             return pm.includes("transfer") || pm.includes("mp") || pm.includes("mercado");
@@ -462,6 +569,17 @@
                        date.getMonth() === now.getMonth();
             }
             return true;
+        }
+
+        function getDriverAccountSummary(drv) {
+            const adminPct = getAdminPct();
+            const completed = allRides.filter((r) => r.status === "completed" && rideBelongsToDriver(r, drv));
+            const totalEarned = completed.reduce((acc, r) => acc + Number(r.fare || 0), 0);
+            const totalCommission = Math.round(totalEarned * (adminPct / 100));
+            const drvPayments = allPayments.filter((p) => paymentBelongsToDriver(p, drv));
+            const totalPaid = drvPayments.reduce((acc, p) => acc + Number(p.amount || 0), 0);
+            const pending = Math.max(0, totalCommission - totalPaid);
+            return { completedCount: completed.length, totalEarned, totalCommission, totalPaid, pending, drvPayments };
         }
 
         function initAdminMap() {
@@ -601,9 +719,10 @@
                 const displayPlate = d.plate ? escHtml(d.plate) : "—";
                 const displayPhone = d.phone ? escHtml(d.phone) : "—";
 
-                const completed = allRides.filter((r) => r.status === "completed" && rideBelongsToDriver(r, d));
-                const totalEarned = completed.reduce((acc, r) => acc + Number(r.fare || 0), 0);
-                const adminCut = Math.round(totalEarned * (adminPct / 100));
+                const acc = getDriverAccountSummary(d);
+                const pendingBadge = acc.pending > 0
+                    ? `<span style="color:#fca5a5;">Debe: <strong>$${acc.pending.toLocaleString("es-AR")}</strong></span>`
+                    : `<span style="color:var(--green);">✅ <strong>Al día</strong></span>`;
 
                 return `
                 <div class="history-card driver-card-clickable" data-open-driver="${escHtml(d.id)}">
@@ -616,13 +735,13 @@
                     <div style="color:#93c5fd; font-weight:700;">🪪 DNI: ${displayDni}</div>
                     <div style="color:#cbd5e1;">🏍️ ${displayMoto} · Patente: <strong>${displayPlate}</strong></div>
                     <div style="font-size:0.68rem; color:var(--text-muted);">
-                        📱 ${displayPhone} · Viajes completados: <strong style="color:#fff;">${completed.length}</strong>
+                        📱 ${displayPhone} · Viajes: <strong style="color:#fff;">${acc.completedCount}</strong> · Recaudado: <strong style="color:var(--green);">$${acc.totalEarned.toLocaleString("es-AR")}</strong>
                     </div>
                     <div style="display:flex; justify-content:space-between; font-size:0.72rem; background:rgba(255,255,255,0.03); padding:6px 8px; border-radius:7px; margin-top:2px;">
-                        <span>Recaudado: <strong style="color:var(--green);">$${totalEarned.toLocaleString("es-AR")}</strong></span>
-                        <span>Comisión (${adminPct}%): <strong style="color:var(--accent-bright);">$${adminCut.toLocaleString("es-AR")}</strong></span>
+                        <span>Pagado: <strong style="color:var(--green);">$${acc.totalPaid.toLocaleString("es-AR")}</strong></span>
+                        ${pendingBadge}
                     </div>
-                    <div class="driver-tap-hint">👆 Tocá acá para ver detalle y liquidación completa</div>
+                    <div class="driver-tap-hint">👆 Tocá acá para ver detalle y registrar pagos (${adminPct}%)</div>
                     <div class="btn-grid-2" style="margin-top:4px;">
                         <button type="button" class="btn ${suspended ? "btn-green" : "btn-danger"}"
                                 style="padding:7px; font-size:0.7rem;"
@@ -635,6 +754,33 @@
                             🗑️ Eliminar
                         </button>
                     </div>
+                </div>`;
+            }).join("");
+        }
+
+        function renderPaymentsList() {
+            const container = document.getElementById("adm-payments-list");
+            document.getElementById("adm-payments-count").textContent =
+                `${allPayments.length} pago${allPayments.length === 1 ? "" : "s"}`;
+
+            if (!allPayments.length) {
+                container.innerHTML = `<div style="font-size:0.74rem; color:var(--text-muted); text-align:center;">Todavía no registraste pagos de comisiones.</div>`;
+                return;
+            }
+
+            container.innerHTML = allPayments.slice(0, 40).map((p) => {
+                const isTr = isTransferPayment(p.method);
+                return `
+                <div class="history-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                        <strong>✅ ${escHtml(p.driverName || "Chofer")} · <span style="color:var(--green);">$${Number(p.amount || 0).toLocaleString("es-AR")}</span></strong>
+                        <button type="button" class="mini-pill-btn remove" data-del-payment="${escHtml(p.id)}" title="Eliminar pago">🗑️</button>
+                    </div>
+                    <div style="font-size:0.69rem; color:#cbd5e1;">
+                        ${p.driverDni ? `🪪 DNI ${escHtml(p.driverDni)} · ` : ""}${isTr ? "📱" : "💵"} ${escHtml(p.method || "Transferencia / MP")}
+                    </div>
+                    ${p.note ? `<div style="font-size:0.68rem; color:#93c5fd;">📝 ${escHtml(p.note)}</div>` : ""}
+                    <div style="font-size:0.65rem; color:var(--text-muted);">${formatHoraFecha(p.createdAt)}</div>
                 </div>`;
             }).join("");
         }
@@ -656,6 +802,8 @@
             });
 
             const totalCommission = Math.round(revenue * (adminPct / 100));
+            const totalPaidGlobal = allPayments.reduce((acc, p) => acc + Number(p.amount || 0), 0);
+            const totalPendingGlobal = Math.max(0, totalCommission - totalPaidGlobal);
 
             document.getElementById("adm-active-rides").textContent = activeCount;
             document.getElementById("adm-completed-rides").textContent = completedCount;
@@ -663,6 +811,8 @@
             document.getElementById("adm-pct-banner").textContent = adminPct;
             document.getElementById("adm-pct-hint").textContent = adminPct;
             document.getElementById("adm-total-commission").textContent = `$${totalCommission.toLocaleString("es-AR")}`;
+            document.getElementById("adm-paid-commission").textContent = `$${totalPaidGlobal.toLocaleString("es-AR")}`;
+            document.getElementById("adm-pending-commission").textContent = `$${totalPendingGlobal.toLocaleString("es-AR")}`;
 
             if (!allRides.length) {
                 container.innerHTML = `<div style="font-size:0.74rem; color:var(--text-muted); text-align:center;">Sin viajes registrados todavía.</div>`;
@@ -697,7 +847,7 @@
             }).join("");
         }
 
-        function renderDriverDetailModal() {
+        function renderDriverDetailModal(prefillAmount = false) {
             const modal = document.getElementById("driver-detail-modal");
             const drv = allDrivers.find((d) => d.id === selectedDriverId);
             if (!drv) {
@@ -741,8 +891,11 @@
                 }
             });
 
-            const adminCut = Math.round(totalEarned * (adminPct / 100));
-            const driverKeeps = totalEarned - adminCut;
+            const periodAdminCut = Math.round(totalEarned * (adminPct / 100));
+            const periodDriverKeeps = totalEarned - periodAdminCut;
+
+            // Cuenta corriente real histórica
+            const acc = getDriverAccountSummary(drv);
 
             document.getElementById("det-trips-count").textContent = drvRides.length;
             document.getElementById("det-total-earned").textContent = `$${totalEarned.toLocaleString("es-AR")}`;
@@ -751,15 +904,25 @@
             document.getElementById("det-transfer-total").textContent = `$${transferTotal.toLocaleString("es-AR")}`;
             document.getElementById("det-transfer-count").textContent = `${transferCount} viaje${transferCount === 1 ? "" : "s"}`;
 
-            document.getElementById("det-liq-gross").textContent = `$${totalEarned.toLocaleString("es-AR")}`;
             document.getElementById("det-driver-pct").textContent = driverPct;
             document.getElementById("det-admin-pct").textContent = adminPct;
-            document.getElementById("det-liq-driver").textContent = `$${driverKeeps.toLocaleString("es-AR")}`;
-            document.getElementById("det-liq-admin").textContent = `$${adminCut.toLocaleString("es-AR")}`;
+            document.getElementById("det-liq-driver").textContent = `$${periodDriverKeeps.toLocaleString("es-AR")}`;
+            document.getElementById("det-liq-admin").textContent = `$${periodAdminCut.toLocaleString("es-AR")}`;
+
+            document.getElementById("det-hist-admin-total").textContent = `$${acc.totalCommission.toLocaleString("es-AR")}`;
+            document.getElementById("det-hist-paid-total").textContent = `$${acc.totalPaid.toLocaleString("es-AR")}`;
+            const pendingEl = document.getElementById("det-hist-pending");
+            pendingEl.textContent = acc.pending > 0 ? `$${acc.pending.toLocaleString("es-AR")}` : "$0 (Al día)";
+            pendingEl.style.color = acc.pending > 0 ? "#fca5a5" : "var(--green)";
+
+            if (prefillAmount) {
+                document.getElementById("pay-amount-input").value = acc.pending > 0 ? acc.pending : "";
+                document.getElementById("pay-note-input").value = "";
+            }
 
             const ridesListEl = document.getElementById("det-driver-rides-list");
             if (!drvRides.length) {
-                ridesListEl.innerHTML = `<div style="font-size:0.74rem; color:var(--text-muted); text-align:center; padding:12px;">No hay viajes completados en este período.</div>`;
+                ridesListEl.innerHTML = `<div style="font-size:0.74rem; color:var(--text-muted); text-align:center; padding:10px;">No hay viajes completados en este período.</div>`;
             } else {
                 ridesListEl.innerHTML = drvRides.map((r) => {
                     const isTr = isTransferPayment(r.paymentMethod);
@@ -782,7 +945,30 @@
                 }).join("");
             }
 
-            // Enlace de WhatsApp con liquidación lista
+            // Pagos registrados de este chofer
+            const payListEl = document.getElementById("det-driver-payments-list");
+            if (!acc.drvPayments.length) {
+                payListEl.innerHTML = `<div style="font-size:0.73rem; color:var(--text-muted); text-align:center; padding:8px;">Sin pagos registrados para este chofer.</div>`;
+            } else {
+                payListEl.innerHTML = acc.drvPayments.map((p) => {
+                    const isTr = isTransferPayment(p.method);
+                    return `
+                    <div class="history-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong style="color:var(--green);">✅ $${Number(p.amount || 0).toLocaleString("es-AR")}</strong>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span style="font-size:0.64rem; color:var(--text-muted);">${formatHoraFecha(p.createdAt)}</span>
+                                <button type="button" class="mini-pill-btn remove" data-del-payment="${escHtml(p.id)}">🗑️</button>
+                            </div>
+                        </div>
+                        <div style="font-size:0.68rem; color:#cbd5e1;">
+                            ${isTr ? "📱" : "💵"} ${escHtml(p.method || "Transferencia / MP")}${p.note ? ` · 📝 ${escHtml(p.note)}` : ""}
+                        </div>
+                    </div>`;
+                }).join("");
+            }
+
+            // Enlace WhatsApp con resumen + alias
             const periodNames = {
                 all: "Histórico total",
                 today: "Hoy",
@@ -793,14 +979,17 @@
             const waText = [
                 `🏍️ *Resumen MotoYa San Vicente (${periodNames[selectedPeriod]})*`,
                 `Chofer: ${drv.name} (DNI ${drv.dni || "N/D"})`,
-                `✅ Viajes completados: ${drvRides.length}`,
+                `✅ Viajes del período: ${drvRides.length}`,
                 `💵 Efectivo: $${cashTotal.toLocaleString("es-AR")} (${cashCount})`,
                 `📱 Transferencia/MP: $${transferTotal.toLocaleString("es-AR")} (${transferCount})`,
-                `💰 Total recaudado: $${totalEarned.toLocaleString("es-AR")}`,
+                `💰 Recaudado período: $${totalEarned.toLocaleString("es-AR")}`,
                 `-----------------------`,
-                `🏍️ Tu parte (${driverPct}%): *$${driverKeeps.toLocaleString("es-AR")}*`,
-                `🏦 Comisión MotoYa (${adminPct}%): *$${adminCut.toLocaleString("es-AR")}*`
-            ].join("\n");
+                `🏍️ Tu parte (${driverPct}%): *$${periodDriverKeeps.toLocaleString("es-AR")}*`,
+                `🏦 Comisión acumulada (${adminPct}%): $${acc.totalCommission.toLocaleString("es-AR")}`,
+                `✅ Ya pagado: $${acc.totalPaid.toLocaleString("es-AR")}`,
+                `⏳ *Saldo pendiente a rendir: $${acc.pending.toLocaleString("es-AR")}*`,
+                currentCfg.adminAlias ? `💳 Alias: *${currentCfg.adminAlias}*${currentCfg.adminHolder ? ` (${currentCfg.adminHolder})` : ""}` : null
+            ].filter(Boolean).join("\n");
 
             const waBtn = document.getElementById("btn-wa-liquidation");
             waBtn.href = waNum ? `https://wa.me/${waNum}?text=${encodeURIComponent(waText)}` : `https://wa.me/?text=${encodeURIComponent(waText)}`;
@@ -808,11 +997,66 @@
             modal.classList.remove("hidden");
         }
 
+        // Registrar pago de comisión en Firebase
+        document.getElementById("btn-register-commission-payment").addEventListener("click", async () => {
+            const drv = allDrivers.find((d) => d.id === selectedDriverId);
+            if (!drv) return;
+
+            const amount = Number(document.getElementById("pay-amount-input").value);
+            const method = document.getElementById("pay-method-select").value;
+            const note = document.getElementById("pay-note-input").value.trim();
+
+            if (!amount || amount <= 0) {
+                showToast("⚠️ Ingresá un monto válido mayor a $0.", "error");
+                return;
+            }
+
+            if (!confirm(`¿Registrar pago de $${amount.toLocaleString("es-AR")} de ${drv.name}?`)) return;
+
+            const btn = document.getElementById("btn-register-commission-payment");
+            btn.disabled = true;
+            btn.textContent = "REGISTRANDO...";
+
+            try {
+                await push(ref(db, "payments"), {
+                    driverId: drv.id,
+                    driverName: drv.name || "Chofer",
+                    driverDni: drv.dni || "",
+                    amount,
+                    method,
+                    note,
+                    createdAt: Date.now()
+                });
+                showToast(`✅ Pago de $${amount.toLocaleString("es-AR")} registrado.`);
+                document.getElementById("pay-note-input").value = "";
+                setTimeout(() => {
+                    if (selectedDriverId) renderDriverDetailModal(true);
+                }, 150);
+            } catch {
+                showToast("❌ Error al registrar el pago.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "✅ MARCAR COMISIÓN COMO PAGADA";
+            }
+        });
+
+        async function handleDeletePaymentClick(e) {
+            const btn = e.target.closest("button[data-del-payment]");
+            if (!btn) return;
+            e.stopPropagation();
+            if (!confirm("¿Eliminar este registro de pago?")) return;
+            await remove(ref(db, `payments/${btn.dataset.delPayment}`));
+            showToast("🗑️ Pago eliminado del historial.");
+        }
+
+        document.getElementById("adm-payments-list").addEventListener("click", handleDeletePaymentClick);
+        document.getElementById("det-driver-payments-list").addEventListener("click", handleDeletePaymentClick);
+
         function startAdminListeners() {
             if (listenersStarted) return;
             listenersStarted = true;
 
-            // 1. Lugares rápidos guardados (con llaves en forEach para leer TODOS)
+            // 1. Lugares rápidos
             onValue(ref(db, "places"), (snap) => {
                 const container = document.getElementById("adm-places-list");
                 const list = [];
@@ -857,9 +1101,16 @@
                 `).join("");
             });
 
-            // 2. Configuración de tarifas y comisión
+            // 2. Configuración de tarifas, comisión y cobro
             onValue(ref(db, "config"), (snap) => {
-                currentCfg = { ...DEFAULT_CONFIG, adminPct: DEFAULT_ADMIN_PCT, ...(snap.val() || {}) };
+                currentCfg = {
+                    ...DEFAULT_CONFIG,
+                    adminPct: DEFAULT_ADMIN_PCT,
+                    adminAlias: "",
+                    adminHolder: "",
+                    adminPhone: "",
+                    ...(snap.val() || {})
+                };
                 document.getElementById("cfg-base").value = currentCfg.base;
                 document.getElementById("cfg-km").value = currentCfg.perKm;
                 document.getElementById("cfg-min").value = currentCfg.minimum;
@@ -867,13 +1118,16 @@
                 document.getElementById("cfg-night").value = currentCfg.nightPct;
                 document.getElementById("cfg-rain-pct").value = currentCfg.rainPct;
                 document.getElementById("cfg-admin-pct").value = getAdminPct();
+                document.getElementById("cfg-admin-alias").value = currentCfg.adminAlias || "";
+                document.getElementById("cfg-admin-holder").value = currentCfg.adminHolder || "";
+                document.getElementById("cfg-admin-phone").value = currentCfg.adminPhone || "";
                 updateRainBtnUI();
                 renderGlobalMetricsAndRides();
                 renderDriversList();
-                if (selectedDriverId) renderDriverDetailModal();
+                if (selectedDriverId) renderDriverDetailModal(false);
             });
 
-            // 3. Conductores (con llaves en forEach para leer TODOS)
+            // 3. Conductores
             onValue(ref(db, "drivers"), (snap) => {
                 const list = [];
                 snap.forEach((c) => {
@@ -881,10 +1135,10 @@
                 });
                 allDrivers = list;
                 renderDriversList();
-                if (selectedDriverId) renderDriverDetailModal();
+                if (selectedDriverId) renderDriverDetailModal(false);
             });
 
-            // 4. TODOS los viajes y envíos (sin recorte para liquidaciones exactas)
+            // 4. Todos los viajes
             onValue(ref(db, "rides"), (snap) => {
                 const list = [];
                 snap.forEach((c) => {
@@ -894,11 +1148,24 @@
                 allRides = list;
                 renderGlobalMetricsAndRides();
                 renderDriversList();
-                if (selectedDriverId) renderDriverDetailModal();
+                if (selectedDriverId) renderDriverDetailModal(false);
+            });
+
+            // 5. Historial de pagos de comisiones
+            onValue(ref(db, "payments"), (snap) => {
+                const list = [];
+                snap.forEach((c) => {
+                    list.push({ id: c.key, ...c.val() });
+                });
+                list.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+                allPayments = list;
+                renderPaymentsList();
+                renderGlobalMetricsAndRides();
+                renderDriversList();
+                if (selectedDriverId) renderDriverDetailModal(false);
             });
         }
 
-        // Clicks en la lista de choferes (abrir detalle vs suspender/eliminar)
         document.getElementById("adm-drivers-list").addEventListener("click", async (e) => {
             const toggleBtn = e.target.closest("button[data-drv-toggle]");
             if (toggleBtn) {
@@ -924,11 +1191,10 @@
                 document.querySelectorAll("#det-period-tabs .period-tab").forEach((b) => {
                     b.classList.toggle("active", b.dataset.period === "all");
                 });
-                renderDriverDetailModal();
+                renderDriverDetailModal(true);
             }
         });
 
-        // Cambiar período dentro del modal del chofer
         document.getElementById("det-period-tabs").addEventListener("click", (e) => {
             const btn = e.target.closest(".period-tab[data-period]");
             if (!btn) return;
@@ -936,7 +1202,7 @@
             document.querySelectorAll("#det-period-tabs .period-tab").forEach((b) => {
                 b.classList.toggle("active", b === btn);
             });
-            renderDriverDetailModal();
+            renderDriverDetailModal(false);
         });
 
         document.getElementById("btn-close-driver-detail").addEventListener("click", () => {
@@ -982,10 +1248,13 @@
                 nightPct: Math.max(0, Number(document.getElementById("cfg-night").value) || 0),
                 rainPct: Math.max(0, Number(document.getElementById("cfg-rain-pct").value) || 0),
                 adminPct: Math.min(100, Math.max(0, Number(document.getElementById("cfg-admin-pct").value) || 0)),
+                adminAlias: document.getElementById("cfg-admin-alias").value.trim(),
+                adminHolder: document.getElementById("cfg-admin-holder").value.trim(),
+                adminPhone: document.getElementById("cfg-admin-phone").value.trim(),
                 rainMode: Boolean(currentCfg.rainMode)
             };
             await set(ref(db, "config"), newCfg);
-            showToast("✅ Tarifas y comisión actualizadas en vivo.");
+            showToast("✅ Tarifas, alias y WhatsApp actualizados en vivo.");
         });
 
         document.getElementById("adm-rides-list").addEventListener("click", async (e) => {
