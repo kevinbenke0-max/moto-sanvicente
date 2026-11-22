@@ -4,8 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Admin - MotoYa San Vicente</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .admin-map-wrap {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1.5px solid var(--border);
+        }
+        #admin-map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .coords-preview {
+            font-size: 0.7rem;
+            color: #93c5fd;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 10px;
+            text-align: center;
+            font-weight: 700;
+        }
+    </style>
 </head>
 <body class="driver-body">
 
@@ -28,7 +54,7 @@
         <section id="admin-pin-screen" class="panel-card" style="margin-top: 24px;">
             <div class="panel-title">🔐 Panel de Control MotoYa</div>
             <p style="font-size: 0.74rem; color: var(--text-muted);">
-                Ingresá tu PIN de administrador para gestionar tarifas, lluvia, conductores e historial.
+                Ingresá tu PIN de administrador para gestionar tarifas, lluvia, lugares en el mapa, conductores e historial.
             </p>
             <form id="admin-pin-form" style="display: flex; flex-direction: column; gap: 10px;">
                 <input type="password" id="admin-pin-input" inputmode="numeric" class="field-input" placeholder="PIN de acceso" required>
@@ -55,8 +81,40 @@
                 </div>
             </div>
 
-            <!-- TARIFAS INTELIGENTES Y MODO LLUVIA -->
+            <!-- LUGARES RÁPIDOS EN EL MAPA -->
             <section class="panel-card highlight">
+                <div class="panel-title">
+                    <span>📍 Lugares Rápidos en el Mapa</span>
+                    <button type="button" id="btn-admin-gps" class="btn btn-secondary" style="width: auto; padding: 6px 10px; font-size: 0.7rem;">
+                        📍 Mi GPS
+                    </button>
+                </div>
+                <p style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
+                    Hacé zoom hasta la puerta exacta del lugar, tocá el mapa para clavar el pin rojo, escribí el nombre y guardalo.
+                </p>
+
+                <div class="admin-map-wrap">
+                    <div id="admin-map"></div>
+                </div>
+
+                <div class="coords-preview" id="admin-coords-txt">
+                    Tocá un punto en el mapa para seleccionar coordenadas
+                </div>
+
+                <input type="text" id="place-name-input" class="field-input" placeholder="Nombre (Ej: Hospital SAMIC, Terminal, Plaza San Martín)">
+                <button type="button" id="btn-save-place" class="btn btn-green">➕ GUARDAR LUGAR</button>
+
+                <div style="font-size: 0.74rem; font-weight: 800; color: var(--text-muted); margin-top: 4px; display: flex; justify-content: space-between;">
+                    <span>LUGARES GUARDADOS EN FIREBASE</span>
+                    <span id="adm-places-count">0</span>
+                </div>
+                <div id="adm-places-list" style="display: flex; flex-direction: column; gap: 7px;">
+                    <div style="font-size: 0.73rem; color: var(--text-muted); text-align: center;">Cargando lugares...</div>
+                </div>
+            </section>
+
+            <!-- TARIFAS INTELIGENTES Y MODO LLUVIA -->
+            <section class="panel-card">
                 <div class="panel-title">
                     <span>💰 Tarifas Inteligentes y Clima</span>
                     <button type="button" id="btn-toggle-rain" class="btn btn-secondary" style="width: auto; padding: 6px 10px; font-size: 0.72rem;">
@@ -117,10 +175,11 @@
         </section>
     </main>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script type="module">
         import {
-            db, ref, set, update, remove, onValue, query, limitToLast,
-            DEFAULT_CONFIG, escHtml, formatHoraFecha
+            db, ref, push, set, update, remove, onValue, query, limitToLast,
+            DEFAULT_CONFIG, SAN_VICENTE_CENTER, escHtml, formatHoraFecha
         } from "./firebase-config.js";
 
         // Cambiá este PIN por el tuyo personal
@@ -128,14 +187,123 @@
         let currentCfg = { ...DEFAULT_CONFIG };
         let listenersStarted = false;
 
+        // Variables del mapa de lugares
+        let adminMap = null;
+        let selectedPinMarker = null;
+        let selectedPlaceCoords = null;
+        let savedPlacesLayer = null;
+
         function showToast(msg, type = "success") {
             const container = document.getElementById("toast-container");
             const toast = document.createElement("div");
             toast.className = `toast ${type}`;
             toast.textContent = msg;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 2600);
+            setTimeout(() => toast.remove(), 2700);
         }
+
+        function initAdminMap() {
+            if (adminMap) {
+                setTimeout(() => adminMap.invalidateSize(), 150);
+                return;
+            }
+
+            adminMap = L.map("admin-map").setView(SAN_VICENTE_CENTER, 15);
+            L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                attribution: "&copy; OpenStreetMap",
+                maxZoom: 19
+            }).addTo(adminMap);
+
+            savedPlacesLayer = L.layerGroup().addTo(adminMap);
+
+            const redPinIcon = L.divIcon({
+                html: `<div style="font-size:28px; filter:drop-shadow(0 2px 4px #000);">📍</div>`,
+                className: "",
+                iconSize: [28, 28],
+                iconAnchor: [14, 28]
+            });
+
+            adminMap.on("click", (e) => {
+                const lat = Number(e.latlng.lat.toFixed(6));
+                const lng = Number(e.latlng.lng.toFixed(6));
+                selectedPlaceCoords = { lat, lng };
+
+                if (!selectedPinMarker) {
+                    selectedPinMarker = L.marker([lat, lng], { icon: redPinIcon }).addTo(adminMap);
+                } else {
+                    selectedPinMarker.setLatLng([lat, lng]);
+                }
+
+                document.getElementById("admin-coords-txt").textContent =
+                    `📍 Punto elegido: ${lat}, ${lng}`;
+            });
+
+            setTimeout(() => adminMap.invalidateSize(), 150);
+        }
+
+        document.getElementById("btn-admin-gps").addEventListener("click", () => {
+            if (!navigator.geolocation || !adminMap) {
+                showToast("GPS no disponible.", "error");
+                return;
+            }
+            showToast("Buscando tu ubicación actual...");
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = Number(pos.coords.latitude.toFixed(6));
+                    const lng = Number(pos.coords.longitude.toFixed(6));
+                    adminMap.setView([lat, lng], 17);
+                    selectedPlaceCoords = { lat, lng };
+
+                    const redPinIcon = L.divIcon({
+                        html: `<div style="font-size:28px; filter:drop-shadow(0 2px 4px #000);">📍</div>`,
+                        className: "",
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 28]
+                    });
+                    if (!selectedPinMarker) {
+                        selectedPinMarker = L.marker([lat, lng], { icon: redPinIcon }).addTo(adminMap);
+                    } else {
+                        selectedPinMarker.setLatLng([lat, lng]);
+                    }
+                    document.getElementById("admin-coords-txt").textContent =
+                        `📍 Tu ubicación GPS: ${lat}, ${lng}`;
+                },
+                () => showToast("No se pudo obtener el GPS.", "error"),
+                { enableHighAccuracy: true, timeout: 8000 }
+            );
+        });
+
+        document.getElementById("btn-save-place").addEventListener("click", async () => {
+            const nombre = document.getElementById("place-name-input").value.trim();
+            if (!selectedPlaceCoords) {
+                showToast("⚠️ Primero tocá el punto exacto en el mapa.", "error");
+                return;
+            }
+            if (!nombre) {
+                showToast("⚠️ Escribí el nombre del lugar.", "error");
+                return;
+            }
+
+            try {
+                await push(ref(db, "places"), {
+                    nombre,
+                    lat: selectedPlaceCoords.lat,
+                    lng: selectedPlaceCoords.lng,
+                    createdAt: Date.now()
+                });
+                showToast(`✅ "${nombre}" guardado y visible en la app.`);
+                document.getElementById("place-name-input").value = "";
+                selectedPlaceCoords = null;
+                document.getElementById("admin-coords-txt").textContent =
+                    "Tocá un punto en el mapa para seleccionar coordenadas";
+                if (selectedPinMarker && adminMap) {
+                    adminMap.removeLayer(selectedPinMarker);
+                    selectedPinMarker = null;
+                }
+            } catch {
+                showToast("❌ Error al guardar lugar en Firebase.", "error");
+            }
+        });
 
         function updateRainBtnUI() {
             const btn = document.getElementById("btn-toggle-rain");
@@ -155,6 +323,50 @@
             if (listenersStarted) return;
             listenersStarted = true;
 
+            // 1. Lugares rápidos guardados
+            onValue(ref(db, "places"), (snap) => {
+                const container = document.getElementById("adm-places-list");
+                const list = [];
+                snap.forEach((c) => list.push({ id: c.key, ...c.val() }));
+                document.getElementById("adm-places-count").textContent = `${list.length} lugar${list.length === 1 ? "" : "es"}`;
+
+                if (savedPlacesLayer) {
+                    savedPlacesLayer.clearLayers();
+                    const savedIcon = L.divIcon({
+                        html: `<div style="font-size:20px; filter:drop-shadow(0 1px 3px #000);">⭐</div>`,
+                        className: "",
+                        iconSize: [20, 20],
+                        iconAnchor: [10, 10]
+                    });
+                    list.forEach((p) => {
+                        if (typeof p.lat === "number" && typeof p.lng === "number") {
+                            L.marker([p.lat, p.lng], { icon: savedIcon })
+                                .bindTooltip(p.nombre, { direction: "top" })
+                                .addTo(savedPlacesLayer);
+                        }
+                    });
+                }
+
+                if (!list.length) {
+                    container.innerHTML = `<div style="font-size:0.72rem; color:var(--text-muted); text-align:center; padding:6px;">Todavía no cargaste lugares. Apenas agregues el primero, reemplazará los botones aproximados.</div>`;
+                    return;
+                }
+
+                container.innerHTML = list.map((p) => `
+                    <div class="history-card" style="flex-direction: row; justify-content: space-between; align-items: center; gap: 8px;">
+                        <div style="min-width: 0;">
+                            <div style="font-weight: 800; color: #fff;">⭐ ${escHtml(p.nombre)}</div>
+                            <div style="font-size: 0.65rem; color: var(--text-muted);">${p.lat}, ${p.lng}</div>
+                        </div>
+                        <div style="display: flex; gap: 5px; flex-shrink: 0;">
+                            <button type="button" class="mini-pill-btn" data-view-lat="${p.lat}" data-view-lng="${p.lng}">🗺️ Ver</button>
+                            <button type="button" class="mini-pill-btn remove" data-del-place="${p.id}">🗑️</button>
+                        </div>
+                    </div>
+                `).join("");
+            });
+
+            // 2. Configuración de tarifas
             onValue(ref(db, "config"), (snap) => {
                 currentCfg = { ...DEFAULT_CONFIG, ...(snap.val() || {}) };
                 document.getElementById("cfg-base").value = currentCfg.base;
@@ -166,6 +378,7 @@
                 updateRainBtnUI();
             });
 
+            // 3. Conductores
             onValue(ref(db, "drivers"), (snap) => {
                 const container = document.getElementById("adm-drivers-list");
                 const list = [];
@@ -215,6 +428,7 @@
                 }).join("");
             });
 
+            // 4. Viajes y métricas
             onValue(query(ref(db, "rides"), limitToLast(60)), (snap) => {
                 const container = document.getElementById("adm-rides-list");
                 const rides = [];
@@ -269,6 +483,23 @@
             });
         }
 
+        document.getElementById("adm-places-list").addEventListener("click", async (e) => {
+            const viewBtn = e.target.closest("button[data-view-lat]");
+            if (viewBtn && adminMap) {
+                const lat = Number(viewBtn.dataset.viewLat);
+                const lng = Number(viewBtn.dataset.viewLng);
+                adminMap.setView([lat, lng], 17);
+                document.getElementById("admin-map").scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
+            const delBtn = e.target.closest("button[data-del-place]");
+            if (delBtn) {
+                if (!confirm("¿Eliminar este lugar rápido?")) return;
+                await remove(ref(db, `places/${delBtn.dataset.delPlace}`));
+                showToast("🗑️ Lugar eliminado.");
+            }
+        });
+
         document.getElementById("btn-toggle-rain").addEventListener("click", async () => {
             const nextRain = !currentCfg.rainMode;
             await update(ref(db, "config"), { rainMode: nextRain });
@@ -317,6 +548,7 @@
         function openAdmin() {
             document.getElementById("admin-pin-screen").style.display = "none";
             document.getElementById("admin-dashboard").style.display = "flex";
+            initAdminMap();
             startAdminListeners();
         }
 
