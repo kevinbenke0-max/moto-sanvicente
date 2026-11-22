@@ -180,17 +180,24 @@
                 container.innerHTML = list.map((d) => {
                     const avg = d.ratingCount ? (d.ratingSum / d.ratingCount).toFixed(1) : "5.0";
                     const suspended = d.status === "suspended";
+                    const displayName = d.name ? escHtml(d.name) : "⚠️ Registro incompleto (eliminar)";
+                    const displayDni = d.dni ? escHtml(d.dni) : "Sin cargar";
+                    const displayMoto = d.moto ? escHtml(d.moto) : "—";
+                    const displayPlate = d.plate ? escHtml(d.plate) : "—";
+                    const displayPhone = d.phone ? escHtml(d.phone) : "—";
+
                     return `
                     <div class="history-card">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong>${escHtml(d.name)} <span class="rating-pill">⭐ ${avg}</span></strong>
+                            <strong>${displayName} <span class="rating-pill">⭐ ${avg}</span></strong>
                             <span class="tag-badge ${suspended ? "danger" : "pkg"}">
                                 ${suspended ? "SUSPENDIDO" : "HABILITADO"}
                             </span>
                         </div>
-                        <div style="color:#cbd5e1;">🏍️ ${escHtml(d.moto)} · Patente: <strong>${escHtml(d.plate)}</strong></div>
+                        <div style="color:#93c5fd; font-weight:700;">🪪 DNI: ${displayDni}</div>
+                        <div style="color:#cbd5e1;">🏍️ ${displayMoto} · Patente: <strong>${displayPlate}</strong></div>
                         <div style="font-size:0.68rem; color:var(--text-muted);">
-                            📱 ${escHtml(d.phone)} · Viajes completados: ${Number(d.completedTrips || 0)}
+                            📱 ${displayPhone} · Viajes completados: ${Number(d.completedTrips || 0)}
                         </div>
                         <div class="btn-grid-2" style="margin-top:4px;">
                             <button type="button" class="btn ${suspended ? "btn-green" : "btn-danger"}"
@@ -236,6 +243,9 @@
 
                 container.innerHTML = rides.slice(0, 25).map((r) => {
                     const isOpen = ["searching", "accepted", "arrived", "in_progress"].includes(r.status);
+                    const drvLabel = r.driver?.name
+                        ? `${escHtml(r.driver.name)}${r.driver.dni ? ` (DNI ${escHtml(r.driver.dni)})` : ""}`
+                        : "Sin asignar";
                     return `
                     <div class="history-card">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -245,7 +255,7 @@
                             </span>
                         </div>
                         <div style="color:#cbd5e1;">
-                            🧍 ${escHtml(r.passengerName)} → 🏍️ ${escHtml(r.driver?.name || "Sin asignar")}
+                            🧍 ${escHtml(r.passengerName)} → 🏍️ ${drvLabel}
                         </div>
                         <div style="font-size:0.7rem; color:var(--text-muted);">
                             🟢 ${escHtml(r.origin?.label)} ${r.stop ? `→ 🟡 ${escHtml(r.stop.label)}` : ""} → 🔴 ${escHtml(r.destination?.label)}
