@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MotoYa San Vicente - Pedí tu Moto</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="passenger-body">
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- BARRA SUPERIOR -->
+    <header class="app-topbar">
+        <div class="brand-group">
+            <span class="brand-logo">🏍️ MOTOYA</span>
+            <span class="city-tag">SAN VICENTE</span>
+        </div>
+        <a href="conductor.html" class="mode-switch-link">🪖 Soy Conductor</a>
+    </header>
+
+    <!-- MAPA INTERACTIVO -->
+    <div class="map-wrapper">
+        <div id="map"></div>
+
+        <div class="map-floating-controls">
+            <div class="map-hint-pill" id="map-hint">Tocá el mapa para marcar destino</div>
+            <button type="button" class="btn-gps" id="btn-gps">📍 Mi GPS</button>
+        </div>
+    </div>
+
+    <!-- PANEL INFERIOR -->
+    <section class="bottom-sheet">
+        <div id="config-alert" class="config-alert"></div>
+
+        <!-- MODO 1: COTIZAR Y PEDIR VIAJE -->
+        <div id="request-view" style="display: flex; flex-direction: column; gap: 10px;">
+            <div class="point-selector-row">
+                <div class="point-box" id="box-origin">
+                    <div class="point-label">🟢 Origen (Subida)</div>
+                    <div class="point-value" id="origin-text">Plaza San Martín</div>
+                </div>
+                <div class="point-box active-target" id="box-dest">
+                    <div class="point-label">🔴 Destino (Bajada)</div>
+                    <div class="point-value" id="dest-text">Tocá el mapa o elegí abajo</div>
+                </div>
+            </div>
+
+            <!-- PUNTOS RÁPIDOS DE SAN VICENTE -->
+            <div class="quick-places-scroll" id="quick-places"></div>
+
+            <!-- TARJETA DE TARIFA -->
+            <div class="fare-summary-card">
+                <div class="fare-info-left">
+                    <div class="moto-badge-icon">🏍️</div>
+                    <div>
+                        <div class="fare-title">MotoYa Express</div>
+                        <div class="fare-sub" id="trip-metrics">Elegí destino para calcular</div>
+                    </div>
+                </div>
+                <div class="fare-price-big" id="fare-display">$0</div>
+            </div>
+
+            <!-- DATOS DEL PASAJERO -->
+            <div class="passenger-inputs-grid">
+                <input type="text" id="passenger-name" class="field-input" placeholder="Tu nombre">
+                <input type="tel" id="passenger-phone" class="field-input" placeholder="WhatsApp (ej: 3755...)">
+            </div>
+
+            <div class="payment-row" id="payment-row">
+                <div class="pay-option selected" data-pay="Efectivo">💵 Efectivo</div>
+                <div class="pay-option" data-pay="Transferencia / MP">📱 Transferencia / MP</div>
+            </div>
+
+            <button type="button" id="btn-request-ride" class="btn btn-accent" disabled>
+                PEDIR MOTO AHORA
+            </button>
+        </div>
+
+        <!-- MODO 2: VIAJE EN CURSO -->
+        <div id="active-ride-view" class="active-ride-box" style="display: none;">
+            <div class="status-banner" id="ride-status-banner">
+                <div>
+                    <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: 800;">ESTADO DEL VIAJE</div>
+                    <div style="font-size: 0.9rem; font-weight: 900;" id="ride-status-title">Buscando moto cercana...</div>
+                </div>
+                <div class="pin-pill">PIN: <span id="ride-pin-txt">----</span></div>
+            </div>
+
+            <div id="assigned-driver-card" class="driver-card-live" style="display: none;">
+                <div>
+                    <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700;">CONDUCTOR ASIGNADO</div>
+                    <div style="font-size: 0.95rem; font-weight: 900;" id="drv-name">—</div>
+                    <div style="font-size: 0.75rem; color: #cbd5e1;" id="drv-moto">—</div>
+                    <span class="plate-tag" id="drv-plate">—</span>
+                </div>
+                <a id="btn-wa-driver" href="#" target="_blank" class="btn btn-green" style="width: auto; padding: 10px 12px; font-size: 0.78rem;">
+                    💬 WhatsApp
+                </a>
+            </div>
+
+            <div class="helmet-note">
+                🪖 El conductor lleva casco adicional reglamentario. Mostrale tu PIN al subir.
+            </div>
+
+            <div style="display: flex; justify-content: space-between; font-size: 0.76rem; color: var(--text-muted); padding: 0 4px;">
+                <span>Tarifa acordada: <strong style="color: var(--green);" id="active-fare-txt">$0</strong></span>
+                <span id="active-pay-txt">Efectivo</span>
+            </div>
+
+            <button type="button" id="btn-cancel-ride" class="btn btn-danger">
+                CANCELAR PEDIDO
+            </button>
+        </div>
+    </section>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module">
+        import {
+            db, ref, push, set, update, onValue,
+            SAN_VICENTE_CENTER, PUNTOS_LOCALES, isConfigured,
+            calcularTarifa, generarPin, limpiarTelefonoWhatsApp
+        } from "./firebase-config.js";
+
+        if (!isConfigured) {
+            const alertBox = document.getElementById("config-alert");
+            alertBox.textContent = "⚠️ Falta pegar tus credenciales de Firebase en firebase-config.js";
+            alertBox.classList.add("visible");
+        }
+
+        // Recuperar datos guardados del pasajero
+        document.getElementById("passenger-name").value = localStorage.getItem("motoya_p_name") || "";
+        document.getElementById("passenger-phone").value = localStorage.getItem("motoya_p_phone") || "";
+
+        let activeTarget = "dest"; // 'origin' o 'dest'
+        let originPoint = { lat: SAN_VICENTE_CENTER[0], lng: SAN_VICENTE_CENTER[1], label: "Plaza San Martín" };
+        let destPoint = null;
+        let currentDistanceKm = 0;
+        let currentFare = 0;
+        let selectedPayment = "Efectivo";
+        let activeRideId = localStorage.getItem("motoya_active_ride") || null;
+        let unsubscribeRide = null;
+
+        // Inicializar Mapa Leaflet
+        const map = L.map("map", { zoomControl: false }).setView(SAN_VICENTE_CENTER, 15);
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+            attribution: "&copy; OpenStreetMap",
+            maxZoom: 19
+        }).addTo(map);
+
+        const originIcon = L.divIcon({
+            html: `<div style="font-size:26px; filter:drop-shadow(0 2px 4px #000);">🟢</div>`,
+            className: "",
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+        });
+
+        const destIcon = L.divIcon({
+            html: `<div style="font-size:28px; filter:drop-shadow(0 2px 4px #000);">📍</div>`,
+            className: "",
+            iconSize: [28, 28],
+            iconAnchor: [14, 28]
+        });
+
+        const originMarker = L.marker([originPoint.lat, originPoint.lng], { icon: originIcon }).addTo(map);
+        let destMarker = null;
+        let routeLine = null;
+
+        function showToast(msg, type = "error") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 2800);
+        }
+
+        function setTargetMode(mode) {
+            activeTarget = mode;
+            document.getElementById("box-origin").classList.toggle("active-target", mode === "origin");
+            document.getElementById("box-dest").classList.toggle("active-target", mode === "dest");
+            document.getElementById("map-hint").textContent =
+                mode === "origin" ? "Tocá el mapa para mover tu subida" : "Tocá el mapa para marcar destino";
+        }
+
+        document.getElementById("box-origin").addEventListener("click", () => setTargetMode("origin"));
+        document.getElementById("box-dest").addEventListener("click", () => setTargetMode("dest"));
+
+        // Cargar botones de lugares conocidos de San Vicente
+        const quickContainer = document.getElementById("quick-places");
+        PUNTOS_LOCALES.forEach((lugar) => {
+            const chip = document.createElement("button");
+            chip.type = "button";
+            chip.className = "chip-place";
+            chip.textContent = lugar.nombre;
+            chip.addEventListener("click", () => {
+                applyPoint(activeTarget, lugar.lat, lugar.lng, lugar.nombre);
+                if (activeTarget === "origin" && !destPoint) setTargetMode("dest");
+            });
+            quickContainer.appendChild(chip);
+        });
+
+        // Click en cualquier punto del mapa
+        map.on("click", (e) => {
+            if (activeRideId) return;
+            const { lat, lng } = e.latlng;
+            const label = `Punto en mapa (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+            applyPoint(activeTarget, lat, lng, label);
+            if (activeTarget === "origin" && !destPoint) setTargetMode("dest");
+        });
+
+        // Botón GPS real del celular
+        document.getElementById("btn-gps").addEventListener("click", () => {
+            if (!navigator.geolocation) {
+                showToast("Tu navegador no soporta GPS.");
+                return;
+            }
+            showToast("Obteniendo ubicación GPS...", "success");
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const { latitude, longitude } = pos.coords;
+                    applyPoint("origin", latitude, longitude, "Mi ubicación GPS");
+                    map.setView([latitude, longitude], 16);
+                    if (!destPoint) setTargetMode("dest");
+                },
+                () => showToast("No se pudo obtener el GPS. Activá la ubicación."),
+                { enableHighAccuracy: true, timeout: 8000 }
+            );
+        });
+
+        function haversineKm(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = ((lat2 - lat1) * Math.PI) / 180;
+            const dLon = ((lon2 - lon1) * Math.PI) / 180;
+            const a =
+                Math.sin(dLat / 2) ** 2 +
+                Math.cos((lat1 * Math.PI) / 180) *
+                Math.cos((lat2 * Math.PI) / 180) *
+                Math.sin(dLon / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        async function applyPoint(target, lat, lng, label) {
+            if (target === "origin") {
+                originPoint = { lat, lng, label };
+                originMarker.setLatLng([lat, lng]);
+                document.getElementById("origin-text").textContent = label;
+            } else {
+                destPoint = { lat, lng, label };
+                if (!destMarker) {
+                    destMarker = L.marker([lat, lng], { icon: destIcon }).addTo(map);
+                } else {
+                    destMarker.setLatLng([lat, lng]);
+                }
+                document.getElementById("dest-text").textContent = label;
+            }
+
+            if (originPoint && destPoint) {
+                await calculateRouteAndFare();
+            }
+        }
+
+        async function calculateRouteAndFare() {
+            if (routeLine) {
+                map.removeLayer(routeLine);
+                routeLine = null;
+            }
+
+            let coords = [
+                [originPoint.lat, originPoint.lng],
+                [destPoint.lat, destPoint.lng]
+            ];
+            let km = haversineKm(originPoint.lat, originPoint.lng, destPoint.lat, destPoint.lng) * 1.25;
+            let mins = Math.max(3, Math.round(km * 2.5));
+
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${originPoint.lng},${originPoint.lat};${destPoint.lng},${destPoint.lat}?overview=full&geometries=geojson`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.routes && data.routes[0]) {
+                    km = data.routes[0].distance / 1000;
+                    mins = Math.max(2, Math.round(data.routes[0].duration / 60));
+                    coords = data.routes[0].geometry.coordinates.map(([lon, la]) => [la, lon]);
+                }
+            } catch {
+                // Usa el cálculo urbano de respaldo si OSRM no responde
+            }
+
+            currentDistanceKm = Math.max(0.3, Math.round(km * 10) / 10);
+            currentFare = calcularTarifa(currentDistanceKm);
+
+            routeLine = L.polyline(coords, { color: "#fbbf24", weight: 5, opacity: 0.9 }).addTo(map);
+            map.fitBounds(routeLine.getBounds(), { padding: [45, 45] });
+
+            document.getElementById("trip-metrics").textContent = `${currentDistanceKm} km · ~${mins} min`;
+            document.getElementById("fare-display").textContent = `$${currentFare.toLocaleString("es-AR")}`;
+            document.getElementById("btn-request-ride").disabled = !isConfigured;
+        }
+
+        // Selección de medio de pago
+        document.getElementById("payment-row").addEventListener("click", (e) => {
+            const opt = e.target.closest(".pay-option[data-pay]");
+            if (!opt) return;
+            document.querySelectorAll(".pay-option").forEach((el) => el.classList.remove("selected"));
+            opt.classList.add("selected");
+            selectedPayment = opt.dataset.pay;
+        });
+
+        // Solicitar viaje en Firebase
+        document.getElementById("btn-request-ride").addEventListener("click", async () => {
+            if (!isConfigured || !destPoint) return;
+
+            const name = document.getElementById("passenger-name").value.trim();
+            const phone = document.getElementById("passenger-phone").value.trim();
+
+            if (!name || !phone) {
+                showToast("⚠️ Completá tu nombre y WhatsApp para que el chofer te ubique.");
+                return;
+            }
+
+            localStorage.setItem("motoya_p_name", name);
+            localStorage.setItem("motoya_p_phone", phone);
+
+            const btn = document.getElementById("btn-request-ride");
+            btn.disabled = true;
+            btn.textContent = "PIDIENDO MOTO...";
+
+            try {
+                const newRideRef = push(ref(db, "rides"));
+                const rideData = {
+                    passengerName: name,
+                    passengerPhone: phone,
+                    origin: originPoint,
+                    destination: destPoint,
+                    distanceKm: currentDistanceKm,
+                    fare: currentFare,
+                    paymentMethod: selectedPayment,
+                    pin: generarPin(),
+                    status: "searching",
+                    createdAt: Date.now()
+                };
+
+                await set(newRideRef, rideData);
+                activeRideId = newRideRef.key;
+                localStorage.setItem("motoya_active_ride", activeRideId);
+                listenToActiveRide(activeRideId);
+            } catch (err) {
+                console.error(err);
+                showToast("❌ Error al pedir viaje. Revisá Firebase.");
+                btn.disabled = false;
+                btn.textContent = "PEDIR MOTO AHORA";
+            }
+        });
+
+        function listenToActiveRide(rideId) {
+            if (unsubscribeRide) unsubscribeRide();
+            document.getElementById("request-view").style.display = "none";
+            document.getElementById("active-ride-view").style.display = "flex";
+            document.getElementById("map-hint").textContent = "Viaje activo en seguimiento";
+
+            unsubscribeRide = onValue(ref(db, `rides/${rideId}`), (snap) => {
+                if (!snap.exists()) {
+                    resetToRequestView();
+                    return;
+                }
+
+                const ride = snap.val();
+                document.getElementById("ride-pin-txt").textContent = ride.pin || "----";
+                document.getElementById("active-fare-txt").textContent = `$${Number(ride.fare || 0).toLocaleString("es-AR")}`;
+                document.getElementById("active-pay-txt").textContent = ride.paymentMethod || "Efectivo";
+
+                const banner = document.getElementById("ride-status-banner");
+                const title = document.getElementById("ride-status-title");
+                const drvCard = document.getElementById("assigned-driver-card");
+                const cancelBtn = document.getElementById("btn-cancel-ride");
+
+                banner.classList.remove("arrived");
+
+                if (ride.status === "searching") {
+                    title.textContent = "🔍 Buscando moto cercana...";
+                    drvCard.style.display = "none";
+                    cancelBtn.style.display = "inline-flex";
+                } else if (ride.status === "accepted") {
+                    title.textContent = "🏍️ ¡Moto en camino hacia vos!";
+                    showDriverInfo(ride.driver, ride.pin);
+                    cancelBtn.style.display = "inline-flex";
+                } else if (ride.status === "arrived") {
+                    banner.classList.add("arrived");
+                    title.textContent = "📍 ¡El conductor llegó al punto!";
+                    showDriverInfo(ride.driver, ride.pin);
+                    cancelBtn.style.display = "none";
+                } else if (ride.status === "in_progress") {
+                    banner.classList.add("arrived");
+                    title.textContent = "🛣️ Viaje en curso hacia destino";
+                    showDriverInfo(ride.driver, ride.pin);
+                    cancelBtn.style.display = "none";
+                } else if (ride.status === "completed") {
+                    showToast("✅ ¡Llegaste a destino! Gracias por viajar.", "success");
+                    resetToRequestView();
+                } else if (ride.status === "cancelled") {
+                    showToast("El viaje fue cancelado.");
+                    resetToRequestView();
+                }
+            });
+        }
+
+        function showDriverInfo(driver, pin) {
+            if (!driver) return;
+            document.getElementById("assigned-driver-card").style.display = "flex";
+            document.getElementById("drv-name").textContent = driver.name || "Conductor";
+            document.getElementById("drv-moto").textContent = driver.moto || "Moto habilitada";
+            document.getElementById("drv-plate").textContent = (driver.plate || "").toUpperCase();
+
+            const waNum = limpiarTelefonoWhatsApp(driver.phone);
+            const msg = encodeURIComponent(`Hola ${driver.name}, soy tu pasajero de MotoYa (PIN ${pin}).`);
+            document.getElementById("btn-wa-driver").href = waNum ? `https://wa.me/${waNum}?text=${msg}` : "#";
+        }
+
+        function resetToRequestView() {
+            if (unsubscribeRide) {
+                unsubscribeRide();
+                unsubscribeRide = null;
+            }
+            localStorage.removeItem("motoya_active_ride");
+            activeRideId = null;
+            document.getElementById("active-ride-view").style.display = "none";
+            document.getElementById("request-view").style.display = "flex";
+            document.getElementById("btn-request-ride").disabled = !destPoint;
+            document.getElementById("btn-request-ride").textContent = "PEDIR MOTO AHORA";
+            setTargetMode("dest");
+        }
+
+        document.getElementById("btn-cancel-ride").addEventListener("click", async () => {
+            if (!activeRideId) return;
+            if (!confirm("¿Querés cancelar este pedido de moto?")) return;
+            await update(ref(db, `rides/${activeRideId}`), { status: "cancelled" });
+            resetToRequestView();
+        });
+
+        // Si había un viaje abierto antes de recargar, reconecta automáticamente
+        if (activeRideId && isConfigured) {
+            listenToActiveRide(activeRideId);
+        }
+    </script>
+</body>
+</html>
