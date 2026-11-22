@@ -130,11 +130,10 @@
             alertBox.classList.add("visible");
         }
 
-        // Recuperar datos guardados del pasajero
         document.getElementById("passenger-name").value = localStorage.getItem("motoya_p_name") || "";
         document.getElementById("passenger-phone").value = localStorage.getItem("motoya_p_phone") || "";
 
-        let activeTarget = "dest"; // 'origin' o 'dest'
+        let activeTarget = "dest";
         let originPoint = { lat: SAN_VICENTE_CENTER[0], lng: SAN_VICENTE_CENTER[1], label: "Plaza San Martín" };
         let destPoint = null;
         let currentDistanceKm = 0;
@@ -143,9 +142,9 @@
         let activeRideId = localStorage.getItem("motoya_active_ride") || null;
         let unsubscribeRide = null;
 
-        // Inicializar Mapa Leaflet
+        // Mapa oficial OpenStreetMap (gratuito y sin API Key)
         const map = L.map("map", { zoomControl: false }).setView(SAN_VICENTE_CENTER, 15);
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: "&copy; OpenStreetMap",
             maxZoom: 19
         }).addTo(map);
@@ -188,7 +187,6 @@
         document.getElementById("box-origin").addEventListener("click", () => setTargetMode("origin"));
         document.getElementById("box-dest").addEventListener("click", () => setTargetMode("dest"));
 
-        // Cargar botones de lugares conocidos de San Vicente
         const quickContainer = document.getElementById("quick-places");
         PUNTOS_LOCALES.forEach((lugar) => {
             const chip = document.createElement("button");
@@ -202,7 +200,6 @@
             quickContainer.appendChild(chip);
         });
 
-        // Click en cualquier punto del mapa
         map.on("click", (e) => {
             if (activeRideId) return;
             const { lat, lng } = e.latlng;
@@ -211,7 +208,6 @@
             if (activeTarget === "origin" && !destPoint) setTargetMode("dest");
         });
 
-        // Botón GPS real del celular
         document.getElementById("btn-gps").addEventListener("click", () => {
             if (!navigator.geolocation) {
                 showToast("Tu navegador no soporta GPS.");
@@ -285,13 +281,13 @@
                     coords = data.routes[0].geometry.coordinates.map(([lon, la]) => [la, lon]);
                 }
             } catch {
-                // Usa el cálculo urbano de respaldo si OSRM no responde
+                // Usa cálculo urbano de respaldo
             }
 
             currentDistanceKm = Math.max(0.3, Math.round(km * 10) / 10);
             currentFare = calcularTarifa(currentDistanceKm);
 
-            routeLine = L.polyline(coords, { color: "#fbbf24", weight: 5, opacity: 0.9 }).addTo(map);
+            routeLine = L.polyline(coords, { color: "#d97706", weight: 5, opacity: 0.9 }).addTo(map);
             map.fitBounds(routeLine.getBounds(), { padding: [45, 45] });
 
             document.getElementById("trip-metrics").textContent = `${currentDistanceKm} km · ~${mins} min`;
@@ -299,7 +295,6 @@
             document.getElementById("btn-request-ride").disabled = !isConfigured;
         }
 
-        // Selección de medio de pago
         document.getElementById("payment-row").addEventListener("click", (e) => {
             const opt = e.target.closest(".pay-option[data-pay]");
             if (!opt) return;
@@ -308,7 +303,6 @@
             selectedPayment = opt.dataset.pay;
         });
 
-        // Solicitar viaje en Firebase
         document.getElementById("btn-request-ride").addEventListener("click", async () => {
             if (!isConfigured || !destPoint) return;
 
@@ -439,7 +433,6 @@
             resetToRequestView();
         });
 
-        // Si había un viaje abierto antes de recargar, reconecta automáticamente
         if (activeRideId && isConfigured) {
             listenToActiveRide(activeRideId);
         }
