@@ -6,6 +6,159 @@
     <title>Modo Conductor - MotoYa San Vicente</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .finance-top-card {
+            background: linear-gradient(180deg, #16202b 0%, #0e151d 100%);
+            border: 1.5px solid var(--accent);
+            border-radius: 14px;
+            padding: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+        }
+        .finance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .finance-period-tabs {
+            display: flex;
+            gap: 4px;
+        }
+        .fin-tab {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.64rem;
+            font-weight: 800;
+            padding: 5px 8px;
+            border-radius: 7px;
+            cursor: pointer;
+        }
+        .fin-tab.active {
+            border-color: var(--accent-bright);
+            background: rgba(245, 158, 11, 0.18);
+            color: #fff;
+        }
+        .split-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .split-box {
+            background: var(--bg-input);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 9px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .split-box.driver-keep {
+            border-color: rgba(16, 185, 129, 0.55);
+            background: rgba(16, 185, 129, 0.08);
+        }
+        .split-box.admin-pay {
+            border-color: rgba(245, 158, 11, 0.65);
+            background: rgba(245, 158, 11, 0.09);
+        }
+        .split-lbl {
+            font-size: 0.62rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #cbd5e1;
+        }
+        .split-amount {
+            font-size: 1.25rem;
+            font-weight: 900;
+        }
+        .split-sub {
+            font-size: 0.63rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+        .finance-breakdown-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 10px;
+            font-size: 0.69rem;
+            color: #cbd5e1;
+            font-weight: 700;
+        }
+
+        /* REGLAS Y CONDICIONES DE REGISTRO */
+        .rules-card {
+            background: #0d131a;
+            border: 1.5px solid var(--accent);
+            border-radius: 12px;
+            padding: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+        .rules-card-title {
+            font-size: 0.84rem;
+            font-weight: 900;
+            color: var(--accent-bright);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .rules-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.74rem;
+            line-height: 1.48;
+            color: #e2e8f0;
+        }
+        .rules-list li {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid var(--accent);
+            padding: 7px 9px;
+            border-radius: 0 8px 8px 0;
+        }
+        .rules-list li.rule-danger {
+            border-left-color: var(--red);
+            background: rgba(239, 68, 68, 0.1);
+            color: #fecaca;
+        }
+        .rules-list strong {
+            color: #fff;
+        }
+        .rules-accept-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1.5px solid rgba(245, 158, 11, 0.5);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 0.73rem;
+            line-height: 1.4;
+            color: #f8fafc;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .rules-accept-label input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            accent-color: var(--accent);
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body class="driver-body">
 
@@ -18,21 +171,23 @@
             <span class="city-tag">SAN VICENTE</span>
         </div>
         <div class="topbar-actions">
+            <button type="button" id="btn-open-rules-modal" class="mode-switch-link" title="Ver reglas y condiciones">📜 Reglas</button>
             <a href="index.html" class="mode-switch-link">🧍 Pasajero</a>
         </div>
     </header>
 
     <main class="driver-container">
         <div id="suspended-alert" class="config-alert">
-            ⛔ Tu cuenta de conductor fue suspendida por el administrador. Contactá al coordinador de MotoYa.
+            ⛔ Tu cuenta de conductor fue suspendida o bloqueada por la administración. Contactá al coordinador de MotoYa.
         </div>
 
         <!-- REGISTRO / PERFIL DEL CONDUCTOR -->
         <section id="driver-setup-card" class="panel-card">
-            <div class="panel-title">🏍️ Datos del Conductor y la Moto</div>
-            <p style="font-size: 0.73rem; color: var(--text-muted); line-height: 1.4;">
-                Completá tus datos reales (incluyendo tu DNI). Serán visibles para el pasajero y el administrador por seguridad.
+            <div class="panel-title">🏍️ Registro de Conductor</div>
+            <p style="font-size: 0.73rem; color: var(--text-muted); line-height: 1.45;">
+                Completá tus datos reales (incluyendo tu DNI). Serán visibles para el pasajero y la administración por seguridad.
             </p>
+
             <input type="text" id="drv-input-name" class="field-input" placeholder="Tu nombre y apellido">
             <input type="text" inputmode="numeric" id="drv-input-dni" class="field-input" placeholder="N° de Documento / DNI (sin puntos)">
             <input type="text" id="drv-input-moto" class="field-input" placeholder="Modelo de moto (ej: Yamaha FZ25 negra)">
@@ -40,11 +195,42 @@
                 <input type="text" id="drv-input-plate" class="field-input" placeholder="Patente (ej: A123BCD)">
                 <input type="tel" id="drv-input-phone" class="field-input" placeholder="Tu WhatsApp (ej: 3755...)">
             </div>
-            <button type="button" id="btn-save-driver" class="btn btn-accent">GUARDAR Y ENTRAR</button>
+
+            <!-- REGLAS, CONDICIONES Y CONSECUENCIAS -->
+            <div class="rules-card">
+                <div class="rules-card-title">📜 Reglas, Condiciones y Consecuencias</div>
+                <ul class="rules-list">
+                    <li>
+                        <strong>💰 Comisión de Administración (<span class="dyn-admin-pct">15</span>%):</strong>
+                        De cada viaje o envío completado, vos te quedás con el <strong><span class="dyn-driver-pct">85</span>%</strong> y el <strong><span class="dyn-admin-pct">15</span>%</strong> corresponde a la administración de MotoYa. Debés rendir ese monto en tiempo y forma.
+                    </li>
+                    <li>
+                        <strong>🤝 Respeto Obligatorio al Cliente:</strong>
+                        Todos merecemos respeto. Debés dirigirte siempre con educación, amabilidad y paciencia a cada pasajero o cliente, sin excepciones.
+                    </li>
+                    <li>
+                        <strong>🛡️ Seguridad y Honestidad:</strong>
+                        Llevá casco reglamentario y casco adicional para el pasajero, respetá la tarifa exacta que marca la aplicación y cumplí con los pedidos aceptados.
+                    </li>
+                    <li class="rule-danger">
+                        <strong>⛔ Consecuencias (Suspensión o Bloqueo):</strong>
+                        Si <strong>no pagás la comisión</strong> correspondiente a administración, si <strong>faltás el respeto a un cliente</strong>, cobrás de más o incumplís estas normas, la administración puede <strong>suspender o bloquear tu cuenta de forma inmediata y definitiva</strong>.
+                    </li>
+                </ul>
+            </div>
+
+            <label class="rules-accept-label">
+                <input type="checkbox" id="drv-accept-rules">
+                <span>Leí y acepto las reglas, la comisión del <span class="dyn-admin-pct">15</span>% para administración, el trato respetuoso a los clientes y entiendo que mi cuenta puede ser bloqueada en caso de incumplimiento.</span>
+            </label>
+
+            <button type="button" id="btn-save-driver" class="btn btn-accent">ACEPTAR REGLAS Y ENTRAR</button>
         </section>
 
         <!-- PANEL OPERATIVO -->
         <section id="driver-dashboard" style="display: none; flex-direction: column; gap: 12px;">
+
+            <!-- ESTADO EN LÍNEA -->
             <div class="online-switch-card">
                 <div style="min-width: 0;">
                     <div style="font-size: 0.84rem; font-weight: 900;">
@@ -63,15 +249,46 @@
                 </div>
             </div>
 
+            <!-- RESUMEN DE GANANCIAS Y COMISIÓN BIEN ARRIBA -->
+            <section class="finance-top-card">
+                <div class="finance-header">
+                    <span style="font-size: 0.78rem; font-weight: 900; color: var(--accent-bright);">💰 TU CAJA Y COMISIÓN</span>
+                    <div class="finance-period-tabs" id="fin-period-tabs">
+                        <button type="button" class="fin-tab active" data-period="today">Hoy</button>
+                        <button type="button" class="fin-tab" data-period="week">7 días</button>
+                        <button type="button" class="fin-tab" data-period="all">Total</button>
+                    </div>
+                </div>
+
+                <div class="split-grid-2">
+                    <div class="split-box driver-keep">
+                        <span class="split-lbl">🏍️ Te quedás (<span class="dyn-driver-pct">85</span>%)</span>
+                        <span class="split-amount" style="color: var(--green);" id="fin-driver-keeps">$0</span>
+                        <span class="split-sub">Tu ganancia neta</span>
+                    </div>
+                    <div class="split-box admin-pay">
+                        <span class="split-lbl">🏦 Para Admin (<span class="dyn-admin-pct">15</span>%)</span>
+                        <span class="split-amount" style="color: var(--accent-bright);" id="fin-admin-cut">$0</span>
+                        <span class="split-sub">Monto a rendir</span>
+                    </div>
+                </div>
+
+                <div class="finance-breakdown-bar">
+                    <span>Total bruto: <strong style="color: #fff;" id="fin-gross-total">$0</strong></span>
+                    <span>💵 Efvo: <strong style="color: #a7f3d0;" id="fin-cash-total">$0</strong></span>
+                    <span>📱 Transf: <strong style="color: #93c5fd;" id="fin-transfer-total">$0</strong></span>
+                </div>
+            </section>
+
             <!-- ESTADÍSTICAS Y REPUTACIÓN -->
             <div class="stats-grid-3">
                 <div class="stat-box">
                     <div class="stat-num" id="stat-trips">0</div>
-                    <div class="stat-lbl">VIAJES HOY</div>
+                    <div class="stat-lbl" id="stat-trips-lbl">VIAJES HOY</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-num" id="stat-earnings">$0</div>
-                    <div class="stat-lbl">HOY ($)</div>
+                    <div class="stat-num" id="stat-all-trips" style="color: #93c5fd;">0</div>
+                    <div class="stat-lbl">TOTAL VIAJES</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-num" style="color: var(--accent-bright);" id="stat-rating">⭐ 5.0</div>
@@ -146,17 +363,51 @@
         </section>
     </main>
 
+    <!-- MODAL DE CONSULTA DE REGLAS -->
+    <div id="rules-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="panel-title">
+                <span>📜 Reglas y Condiciones MotoYa</span>
+                <button type="button" id="btn-close-rules-modal" class="mode-switch-link">✕</button>
+            </div>
+            <ul class="rules-list">
+                <li>
+                    <strong>💰 Comisión de Administración (<span class="dyn-admin-pct">15</span>%):</strong>
+                    De cada viaje o envío completado, vos te quedás con el <strong><span class="dyn-driver-pct">85</span>%</strong> y debés rendir el <strong><span class="dyn-admin-pct">15</span>%</strong> a la administración.
+                </li>
+                <li>
+                    <strong>🤝 Respeto Obligatorio al Cliente:</strong>
+                    Todos merecemos respeto. Trato educado, amable y responsable con cada pasajero o cliente en todo momento.
+                </li>
+                <li>
+                    <strong>🛡️ Seguridad y Honestidad:</strong>
+                    Casco reglamentario para vos y el pasajero, conducción segura y respeto por la tarifa calculada por la app.
+                </li>
+                <li class="rule-danger">
+                    <strong>⛔ Consecuencias:</strong>
+                    La falta de pago de la comisión, faltar el respeto a un cliente o incumplir estas reglas faculta a la administración a <strong>suspender o bloquear tu cuenta de manera inmediata y definitiva</strong>.
+                </li>
+            </ul>
+            <button type="button" id="btn-ok-rules-modal" class="btn btn-accent">ENTENDIDO</button>
+        </div>
+    </div>
+
     <script type="module">
         import {
-            db, ref, get, set, update, onValue, runTransaction, query, limitToLast,
+            db, ref, get, set, update, onValue, runTransaction,
             limpiarTelefonoWhatsApp, escHtml, formatHoraFecha
         } from "./firebase-config.js";
+
+        const DEFAULT_ADMIN_PCT = 15;
+        let adminPct = DEFAULT_ADMIN_PCT;
+        let selectedFinancePeriod = "today"; // 'today' | 'week' | 'all'
 
         let driverProfile = JSON.parse(localStorage.getItem("motoya_driver_profile") || "null");
         let driverServerState = { status: "active", ratingSum: 0, ratingCount: 0, completedTrips: 0 };
         let isOnline = false;
         let currentRideId = localStorage.getItem("motoya_driver_active_ride") || null;
         let currentRideData = null;
+        let lastSnapshotRides = [];
 
         let unsubscribeRides = null;
         let unsubscribeCurrentRide = null;
@@ -171,7 +422,7 @@
             toast.className = `toast ${type}`;
             toast.textContent = msg;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 2900);
+            setTimeout(() => toast.remove(), 3000);
         }
 
         function playAlertBeep() {
@@ -192,6 +443,16 @@
             } catch {}
         }
 
+        function updatePctLabels() {
+            const drvPct = Math.max(0, 100 - adminPct);
+            document.querySelectorAll(".dyn-admin-pct").forEach((el) => {
+                el.textContent = adminPct;
+            });
+            document.querySelectorAll(".dyn-driver-pct").forEach((el) => {
+                el.textContent = drvPct;
+            });
+        }
+
         function buildDriverId(dni, phone, plate) {
             const cleanDni = String(dni || "").replace(/\D/g, "");
             if (cleanDni) return `dni_${cleanDni}`;
@@ -200,14 +461,52 @@
             return `pat_${String(plate || Date.now()).replace(/[^A-Z0-9]/gi, "")}`;
         }
 
+        function rideBelongsToDriver(r, p) {
+            if (!r || !r.driver || !p) return false;
+            if (r.driver.id && p.id && r.driver.id === p.id) return true;
+            if (r.driver.dni && p.dni && String(r.driver.dni) === String(p.dni)) return true;
+            if (r.driver.plate && p.plate && String(r.driver.plate).toUpperCase() === String(p.plate).toUpperCase()) return true;
+            return false;
+        }
+
+        function isTransferPayment(method) {
+            const pm = String(method || "Efectivo").toLowerCase();
+            return pm.includes("transfer") || pm.includes("mp") || pm.includes("mercado");
+        }
+
+        function matchesPeriod(ts, period) {
+            if (period === "all") return true;
+            const date = new Date(ts || 0);
+            if (isNaN(date.getTime())) return false;
+            const now = new Date();
+
+            if (period === "today") {
+                return date.getFullYear() === now.getFullYear() &&
+                       date.getMonth() === now.getMonth() &&
+                       date.getDate() === now.getDate();
+            }
+            if (period === "week") {
+                return (now.getTime() - date.getTime()) <= 7 * 24 * 60 * 60 * 1000;
+            }
+            return true;
+        }
+
         function getDriverAvgRating() {
             const cnt = Number(driverServerState.ratingCount || 0);
             if (cnt === 0) return 5.0;
             return Math.round((Number(driverServerState.ratingSum || 0) / cnt) * 10) / 10;
         }
 
-        onValue(ref(db, "config/rainMode"), (snap) => {
-            document.getElementById("rain-banner-drv").style.display = snap.val() ? "inline-flex" : "none";
+        // Escucha configuración (modo lluvia + porcentaje de comisión del administrador)
+        onValue(ref(db, "config"), (snap) => {
+            const cfg = snap.val() || {};
+            document.getElementById("rain-banner-drv").style.display = cfg.rainMode ? "inline-flex" : "none";
+            const pct = Number(cfg.adminPct);
+            adminPct = (!isNaN(pct) && pct >= 0 && pct <= 100 && cfg.adminPct !== undefined) ? pct : DEFAULT_ADMIN_PCT;
+            updatePctLabels();
+            if (driverProfile) {
+                renderDriverHistoryAndStats(lastSnapshotRides);
+            }
         });
 
         async function syncDriverToFirebase(profile) {
@@ -226,6 +525,8 @@
                     plate: profile.plate,
                     phone: profile.phone,
                     status: "active",
+                    termsAccepted: true,
+                    termsAcceptedAt: profile.termsAcceptedAt || Date.now(),
                     ratingSum: 0,
                     ratingCount: 0,
                     completedTrips: 0,
@@ -238,7 +539,9 @@
                     dni: profile.dni,
                     moto: profile.moto,
                     plate: profile.plate,
-                    phone: profile.phone
+                    phone: profile.phone,
+                    termsAccepted: true,
+                    termsAcceptedAt: profile.termsAcceptedAt || Date.now()
                 });
             }
         }
@@ -267,6 +570,7 @@
             document.getElementById("driver-summary-txt").textContent =
                 `${driverProfile.name} · DNI ${driverProfile.dni} · ${driverProfile.moto} (${driverProfile.plate})`;
 
+            updatePctLabels();
             listenDriverProfileNode(driverProfile.id);
             startListeningAllRides();
 
@@ -282,6 +586,7 @@
             const moto = document.getElementById("drv-input-moto").value.trim();
             const plate = document.getElementById("drv-input-plate").value.trim().toUpperCase();
             const phone = document.getElementById("drv-input-phone").value.trim();
+            const accepted = document.getElementById("drv-accept-rules").checked;
 
             if (!name || !dni || !moto || !plate || !phone) {
                 showToast("⚠️ Completá todos los campos, incluyendo tu DNI.", "error");
@@ -291,25 +596,38 @@
                 showToast("⚠️ Ingresá un DNI válido (7 u 8 números sin puntos).", "error");
                 return;
             }
+            if (!accepted) {
+                showToast("⚠️ Debés leer y marcar que aceptás las reglas y condiciones.", "error");
+                return;
+            }
 
             const btn = document.getElementById("btn-save-driver");
             btn.disabled = true;
             btn.textContent = "GUARDANDO...";
 
             const cleanId = buildDriverId(dni, phone, plate);
-            driverProfile = { id: cleanId, name, dni, moto, plate, phone };
+            driverProfile = {
+                id: cleanId,
+                name,
+                dni,
+                moto,
+                plate,
+                phone,
+                termsAccepted: true,
+                termsAcceptedAt: Date.now()
+            };
             localStorage.setItem("motoya_driver_profile", JSON.stringify(driverProfile));
 
             try {
                 await syncDriverToFirebase(driverProfile);
-                showToast("✅ Perfil guardado y registrado en el panel.", "success");
+                showToast("✅ Perfil guardado y reglas aceptadas.", "success");
                 loadDashboard();
             } catch (err) {
                 console.error(err);
                 showToast("❌ Error al guardar perfil en Firebase.", "error");
             } finally {
                 btn.disabled = false;
-                btn.textContent = "GUARDAR Y ENTRAR";
+                btn.textContent = "ACEPTAR REGLAS Y ENTRAR";
             }
         });
 
@@ -320,6 +638,7 @@
             }
             setOnlineState(false);
             fillProfileForm(driverProfile);
+            document.getElementById("drv-accept-rules").checked = Boolean(driverProfile?.termsAccepted);
             document.getElementById("driver-dashboard").style.display = "none";
             document.getElementById("driver-setup-card").style.display = "flex";
         });
@@ -333,9 +652,34 @@
             document.getElementById("drv-input-phone").value = p.phone || "";
         }
 
+        // Modal de consulta de reglas
+        document.getElementById("btn-open-rules-modal").addEventListener("click", () => {
+            document.getElementById("rules-modal").classList.remove("hidden");
+        });
+        document.getElementById("btn-close-rules-modal").addEventListener("click", () => {
+            document.getElementById("rules-modal").classList.add("hidden");
+        });
+        document.getElementById("btn-ok-rules-modal").addEventListener("click", () => {
+            document.getElementById("rules-modal").classList.add("hidden");
+        });
+        document.getElementById("rules-modal").addEventListener("click", (e) => {
+            if (e.target.id === "rules-modal") document.getElementById("rules-modal").classList.add("hidden");
+        });
+
+        // Selector de período en el bloque financiero superior
+        document.getElementById("fin-period-tabs").addEventListener("click", (e) => {
+            const btn = e.target.closest(".fin-tab[data-period]");
+            if (!btn) return;
+            selectedFinancePeriod = btn.dataset.period;
+            document.querySelectorAll("#fin-period-tabs .fin-tab").forEach((b) => {
+                b.classList.toggle("active", b === btn);
+            });
+            renderDriverHistoryAndStats(lastSnapshotRides);
+        });
+
         function setOnlineState(state) {
             if (state && driverServerState.status === "suspended") {
-                showToast("⛔ Tu cuenta está suspendida por el administrador.", "error");
+                showToast("⛔ Tu cuenta está suspendida o bloqueada por la administración.", "error");
                 return;
             }
             isOnline = state;
@@ -360,15 +704,14 @@
             setOnlineState(!isOnline);
         });
 
-        let lastSnapshotRides = [];
-
         function startListeningAllRides() {
             if (unsubscribeRides) unsubscribeRides();
-            unsubscribeRides = onValue(query(ref(db, "rides"), limitToLast(60)), (snapshot) => {
+            unsubscribeRides = onValue(ref(db, "rides"), (snapshot) => {
                 const all = [];
                 snapshot.forEach((child) => {
                     all.push({ id: child.key, ...child.val() });
                 });
+                all.sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
                 lastSnapshotRides = all;
                 renderAvailableRides(all);
                 renderDriverHistoryAndStats(all);
@@ -422,7 +765,7 @@
                     <div style="font-size:0.7rem; color:var(--text-muted);">
                         📏 ${r.distanceKm} km · 💳 ${escHtml(r.paymentMethod)}
                     </div>
-                    <button type="button" class="btn btn-accent" data-accept-id="${r.id}" ${currentRideId ? "disabled" : ""}>
+                    <button type="button" class="btn btn-accent" data-accept-id="${escHtml(r.id)}" ${currentRideId ? "disabled" : ""}>
                         ✅ ACEPTAR PEDIDO
                     </button>
                 </div>`;
@@ -430,42 +773,70 @@
         }
 
         function renderDriverHistoryAndStats(allRides) {
-            const todayStr = new Date().toISOString().slice(0, 10);
-            const mine = allRides
-                .filter((r) => r.status === "completed" && r.driver && r.driver.id === driverProfile.id)
+            if (!driverProfile) return;
+
+            const mineAll = allRides
+                .filter((r) => r.status === "completed" && rideBelongsToDriver(r, driverProfile))
                 .reverse();
 
-            let todayTrips = 0;
-            let todayEarn = 0;
-            mine.forEach((r) => {
-                const dStr = new Date(r.completedAt || r.createdAt || 0).toISOString().slice(0, 10);
-                if (dStr === todayStr) {
-                    todayTrips++;
-                    todayEarn += Number(r.fare || 0);
-                }
+            const minePeriod = mineAll.filter((r) =>
+                matchesPeriod(r.completedAt || r.createdAt, selectedFinancePeriod)
+            );
+
+            let grossTotal = 0;
+            let cashTotal = 0;
+            let transferTotal = 0;
+
+            minePeriod.forEach((r) => {
+                const fare = Number(r.fare || 0);
+                grossTotal += fare;
+                if (isTransferPayment(r.paymentMethod)) transferTotal += fare;
+                else cashTotal += fare;
             });
 
-            document.getElementById("stat-trips").textContent = todayTrips;
-            document.getElementById("stat-earnings").textContent = `$${todayEarn.toLocaleString("es-AR")}`;
+            const adminCut = Math.round(grossTotal * (adminPct / 100));
+            const driverKeeps = grossTotal - adminCut;
+
+            document.getElementById("fin-driver-keeps").textContent = `$${driverKeeps.toLocaleString("es-AR")}`;
+            document.getElementById("fin-admin-cut").textContent = `$${adminCut.toLocaleString("es-AR")}`;
+            document.getElementById("fin-gross-total").textContent = `$${grossTotal.toLocaleString("es-AR")}`;
+            document.getElementById("fin-cash-total").textContent = `$${cashTotal.toLocaleString("es-AR")}`;
+            document.getElementById("fin-transfer-total").textContent = `$${transferTotal.toLocaleString("es-AR")}`;
+
+            const periodLabels = {
+                today: "VIAJES HOY",
+                week: "VIAJES 7 DÍAS",
+                all: "VIAJES TOTAL"
+            };
+            document.getElementById("stat-trips").textContent = minePeriod.length;
+            document.getElementById("stat-trips-lbl").textContent = periodLabels[selectedFinancePeriod];
+            document.getElementById("stat-all-trips").textContent = mineAll.length;
 
             const histFeed = document.getElementById("driver-history-feed");
-            if (!mine.length) {
+            if (!mineAll.length) {
                 histFeed.innerHTML = `<div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Sin viajes completados todavía.</div>`;
                 return;
             }
 
-            histFeed.innerHTML = mine.slice(0, 10).map((r) => `
+            histFeed.innerHTML = mineAll.slice(0, 15).map((r) => {
+                const isTr = isTransferPayment(r.paymentMethod);
+                return `
                 <div class="history-card">
                     <div style="display:flex; justify-content:space-between;">
                         <strong>${r.serviceType === "delivery" ? "📦" : "🏍️"} ${escHtml(r.passengerName)} · $${Number(r.fare).toLocaleString("es-AR")}</strong>
                         <span style="font-size:0.66rem; color:var(--text-muted);">${formatHoraFecha(r.completedAt || r.createdAt)}</span>
                     </div>
                     <div style="color:#cbd5e1;">🟢 ${escHtml(r.origin?.label)} → 🔴 ${escHtml(r.destination?.label)}</div>
-                    <div style="font-size:0.68rem; color:var(--accent-bright);">
-                        ${r.rating ? `Calificación recibida: ${"⭐".repeat(r.rating)}` : "Sin calificación aún"}
+                    <div style="display:flex; justify-content:space-between; font-size:0.67rem;">
+                        <span style="color:${isTr ? "#93c5fd" : "#a7f3d0"}; font-weight:700;">
+                            ${isTr ? "📱 Transferencia / MP" : "💵 Efectivo"}
+                        </span>
+                        <span style="color:var(--accent-bright);">
+                            ${r.rating ? `${"⭐".repeat(r.rating)}` : "Sin calificar"}
+                        </span>
                     </div>
-                </div>
-            `).join("");
+                </div>`;
+            }).join("");
         }
 
         // Aceptar pedido con transacción atómica
@@ -648,15 +1019,15 @@
             document.getElementById("available-rides-section").style.display = "flex";
         }
 
-        // Validación al iniciar: si falta DNI o ID (perfil viejo), pide completar el DNI
-        if (driverProfile && driverProfile.name && driverProfile.dni && driverProfile.moto && driverProfile.plate && driverProfile.phone) {
+        // Al iniciar: si el chofer ya tenía perfil pero nunca aceptó las reglas nuevas, se las muestra primero
+        if (driverProfile && driverProfile.name && driverProfile.dni && driverProfile.moto && driverProfile.plate && driverProfile.phone && driverProfile.termsAccepted) {
             if (!driverProfile.id) {
                 driverProfile.id = buildDriverId(driverProfile.dni, driverProfile.phone, driverProfile.plate);
             }
             syncDriverToFirebase(driverProfile).finally(loadDashboard);
         } else if (driverProfile) {
             fillProfileForm(driverProfile);
-            showToast("⚠️ Completá tu N° de Documento (DNI) para activar tu perfil.", "error");
+            showToast("📜 Leé y aceptá las reglas y condiciones para continuar.", "error");
         }
     </script>
 </body>
