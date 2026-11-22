@@ -20,8 +20,7 @@
         </div>
         <div class="topbar-actions">
             <button type="button" id="btn-open-history" class="mode-switch-link">🧾 Historial</button>
-            <a href="conductor.html" class="mode-switch-link">🪖 Chofer</a>
-            <a href="admin.html" class="mode-switch-link" title="Panel Administrador">⚙️</a>
+            <a href="conductor.html" class="mode-switch-link">🏍️ Chofer</a>
         </div>
     </header>
 
@@ -154,7 +153,7 @@
             </div>
 
             <div class="helmet-note" id="active-safety-note">
-                🪖 El conductor lleva casco adicional reglamentario. Mostrale tu PIN al subir.
+                🛡️ El conductor lleva casco adicional reglamentario. Mostrale tu PIN al subir.
             </div>
 
             <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-muted); padding: 0 4px;">
@@ -582,7 +581,7 @@
                 document.getElementById("active-safety-note").textContent =
                     ride.serviceType === "delivery"
                         ? "📦 Entregale el PIN al conductor para confirmar el retiro del paquete."
-                        : "🪖 El conductor lleva casco adicional reglamentario. Mostrale tu PIN al subir.";
+                        : "🛡️ El conductor lleva casco adicional reglamentario. Mostrale tu PIN al subir.";
 
                 // Actualizar ubicación de la moto en vivo en el mapa
                 if (ride.driverLocation && ride.driverLocation.lat && ride.driverLocation.lng) {
@@ -604,7 +603,7 @@
                     ride.stop ? `🟡 Parada: ${ride.stop.label}` : null,
                     `🔴 Destino: ${ride.destination?.label || "San Vicente"}`,
                     ride.driver
-                        ? `🪖 Chofer: ${ride.driver.name} | Moto: ${ride.driver.moto} (Patente ${ride.driver.plate})`
+                        ? `🏍️ Chofer: ${ride.driver.name} | Moto: ${ride.driver.moto} (Patente ${ride.driver.plate})`
                         : `🔍 Buscando chofer asignado...`,
                     `🔐 PIN de seguridad: ${ride.pin}`
                 ].filter(Boolean).join("\n");
