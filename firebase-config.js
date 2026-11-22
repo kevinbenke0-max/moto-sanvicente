@@ -2,14 +2,15 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
     getDatabase,
     ref,
+    get,
     set,
     push,
     update,
+    remove,
     onValue,
     runTransaction,
     query,
-    orderByChild,
-    equalTo
+    limitToLast
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
@@ -22,14 +23,16 @@ const firebaseConfig = {
     appId: "1:168625716940:web:cef89828e36ee0be110c69"
 };
 
-// 💰 CONFIGURACIÓN DE TARIFAS (SAN VICENTE, MISIONES)
-export const TARIFAS = {
-    BASE: 1200,      // Bajada de bandera ($)
-    POR_KM: 600,     // Valor por kilómetro recorrido ($)
-    MINIMO: 1500     // Viaje mínimo ($)
+export const DEFAULT_CONFIG = {
+    base: 1200,         // Bajada de bandera ($)
+    perKm: 600,         // Valor por km ($)
+    minimum: 1500,      // Tarifa mínima ($)
+    stopFee: 400,       // Adicional por parada intermedia ($)
+    nightPct: 25,       // Recargo nocturno 00:00 a 06:00 (%)
+    rainMode: false,    // Modo lluvia activable desde admin.html
+    rainPct: 20         // Recargo por lluvia (%)
 };
 
-// 📍 COORDENADAS CENTRO DE SAN VICENTE, MISIONES
 export const SAN_VICENTE_CENTER = [-26.9968, -54.4818];
 
 export const PUNTOS_LOCALES = [
@@ -44,12 +47,39 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 export const isConfigured = true;
-export { db, ref, set, push, update, onValue, runTransaction, query, orderByChild, equalTo };
+export { db, ref, get, set, push, update, remove, onValue, runTransaction, query, limitToLast };
 
-export function calcularTarifa(distanciaKm) {
-    const bruto = TARIFAS.BASE + distanciaKm * TARIFAS.POR_KM;
-    const redondeado = Math.ceil(bruto / 100) * 100;
-    return Math.max(TARIFAS.MINIMO, redondeado);
+export function esHorarioNocturno(dateObj = new Date()) {
+    const h = dateObj.getHours();
+    return h >= 0 && h < 6;
+}
+
+export function calcularTarifaDinamica(distanciaKm, config = DEFAULT_CONFIG, opts = {}) {
+    const cfg = { ...DEFAULT_CONFIG, ...config };
+    const hasStop = Boolean(opts.hasStop);
+    const refDate = opts.scheduledDate ? new Date(opts.scheduledDate) : new Date();
+    const isNight = !isNaN(refDate.getTime()) && esHorarioNocturno(refDate);
+    const isRain = Boolean(cfg.rainMode);
+
+    let subtotal = Number(cfg.base) + Number(distanciaKm) * Number(cfg.perKm);
+    if (hasStop) subtotal += Number(cfg.stopFee);
+
+    let recargoPct = 0;
+    if (isNight) recargoPct += Number(cfg.nightPct || 0);
+    if (isRain) recargoPct += Number(cfg.rainPct || 0);
+
+    const totalBruto = subtotal * (1 + recargoPct / 100);
+    const redondeado = Math.ceil(totalBruto / 100) * 100;
+    const finalPrice = Math.max(Number(cfg.minimum), redondeado);
+
+    return {
+        total: finalPrice,
+        isNight,
+        isRain,
+        hasStop,
+        nightPct: Number(cfg.nightPct || 0),
+        rainPct: Number(cfg.rainPct || 0)
+    };
 }
 
 export function generarPin() {
@@ -62,4 +92,35 @@ export function limpiarTelefonoWhatsApp(tel) {
     if (digits.startsWith("54")) return digits;
     if (digits.startsWith("0")) return "549" + digits.slice(1);
     return "549" + digits;
+}
+
+export function haversineKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export function escHtml(str) {
+    return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+}
+
+export function formatHoraFecha(ts) {
+    if (!ts) return "";
+    const d = new Date(ts);
+    return d.toLocaleString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
 }
