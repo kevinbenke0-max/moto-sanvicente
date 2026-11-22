@@ -12,15 +12,14 @@ import {
     equalTo
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// 👇 PEGÁ ACÁ LAS CREDENCIALES DE TU NUEVO PROYECTO DE FIREBASE
 const firebaseConfig = {
-    apiKey: "PEGA_AQUI_TU_API_KEY",
-    authDomain: "TU-PROYECTO.firebaseapp.com",
-    databaseURL: "https://TU-PROYECTO-default-rtdb.firebaseio.com",
-    projectId: "TU-PROYECTO",
-    storageBucket: "TU-PROYECTO.firebasestorage.app",
-    messagingSenderId: "000000000000",
-    appId: "1:000000000000:web:000000000000"
+    apiKey: "AIzaSyCsGCAlnCmnh8150oHtjMVk4McU0L71TOQ",
+    authDomain: "moto-sanvicente.firebaseapp.com",
+    databaseURL: "https://moto-sanvicente-default-rtdb.firebaseio.com",
+    projectId: "moto-sanvicente",
+    storageBucket: "moto-sanvicente.firebasestorage.app",
+    messagingSenderId: "168625716940",
+    appId: "1:168625716940:web:cef89828e36ee0be110c69"
 };
 
 // 💰 CONFIGURACIÓN DE TARIFAS (SAN VICENTE, MISIONES)
@@ -41,22 +40,15 @@ export const PUNTOS_LOCALES = [
     { nombre: "Zona Industrial / Ruta 13", lat: -26.9890, lng: -54.4745 }
 ];
 
-export const isConfigured =
-    firebaseConfig.apiKey !== "PEGA_AQUI_TU_API_KEY" &&
-    Boolean(firebaseConfig.databaseURL) &&
-    !firebaseConfig.databaseURL.includes("TU-PROYECTO");
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-let db = null;
-if (isConfigured) {
-    const app = initializeApp(firebaseConfig);
-    db = getDatabase(app);
-}
-
+export const isConfigured = true;
 export { db, ref, set, push, update, onValue, runTransaction, query, orderByChild, equalTo };
 
 export function calcularTarifa(distanciaKm) {
     const bruto = TARIFAS.BASE + distanciaKm * TARIFAS.POR_KM;
-    const redondeado = Math.ceil(bruto / 100) * 100; // Redondea a centenas
+    const redondeado = Math.ceil(bruto / 100) * 100;
     return Math.max(TARIFAS.MINIMO, redondeado);
 }
 
