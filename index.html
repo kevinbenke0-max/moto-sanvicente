@@ -44,7 +44,7 @@
                 <button type="button" class="seg-btn" data-type="delivery">📦 Envío / Cadetería</button>
             </div>
 
-            <!-- DETALLE DE ENVÍO (SOLO SI ELIGE CADETERÍA) -->
+            <!-- DETALLE DE ENVÍO -->
             <input type="text" id="package-notes" class="field-input" style="display: none;"
                    placeholder="¿Qué enviás y quién recibe? (Ej: Llaves, recibe Ana)">
 
@@ -126,10 +126,11 @@
             <div id="assigned-driver-card" class="driver-card-live" style="display: none;">
                 <div>
                     <div style="font-size: 0.65rem; color: var(--text-muted); font-weight: 700;">
-                        CONDUCTOR ASIGNADO
+                        CONDUCTOR VERIFICADO
                         <span class="rating-pill" id="drv-rating-pill">⭐ 5.0</span>
                     </div>
                     <div style="font-size: 0.92rem; font-weight: 900;" id="drv-name">—</div>
+                    <div style="font-size: 0.72rem; color: #93c5fd; font-weight: 700;">🪪 DNI: <span id="drv-dni">—</span></div>
                     <div style="font-size: 0.72rem; color: #cbd5e1;" id="drv-moto">—</div>
                     <span class="plate-tag" id="drv-plate">—</span>
                 </div>
@@ -214,10 +215,10 @@
         document.getElementById("passenger-phone").value = localStorage.getItem("motoya_p_phone") || "";
 
         let liveConfig = { ...DEFAULT_CONFIG };
-        let serviceType = "ride"; // 'ride' | 'delivery'
+        let serviceType = "ride";
         let stopEnabled = false;
         let scheduleEnabled = false;
-        let activeTarget = "dest"; // 'origin' | 'stop' | 'dest'
+        let activeTarget = "dest";
 
         let originPoint = { lat: SAN_VICENTE_CENTER[0], lng: SAN_VICENTE_CENTER[1], label: "Plaza San Martín" };
         let stopPoint = null;
@@ -232,7 +233,6 @@
         let pendingRatingInfo = null;
         let selectedStars = 5;
 
-        // Mapa OpenStreetMap (gratuito, sin API key)
         const map = L.map("map", { zoomControl: false }).setView(SAN_VICENTE_CENTER, 15);
         L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: "&copy; OpenStreetMap",
@@ -261,7 +261,6 @@
             setTimeout(() => toast.remove(), 2900);
         }
 
-        // Escucha tarifas y Modo Lluvia en vivo desde Firebase
         onValue(ref(db, "config"), (snap) => {
             if (snap.exists()) {
                 liveConfig = { ...DEFAULT_CONFIG, ...snap.val() };
@@ -296,7 +295,6 @@
         document.getElementById("box-dest").addEventListener("click", () => setTargetMode("dest"));
         document.getElementById("box-stop").addEventListener("click", () => setTargetMode("stop"));
 
-        // Selector Viaje vs Envío
         document.getElementById("service-type-row").addEventListener("click", (e) => {
             const btn = e.target.closest(".seg-btn[data-type]");
             if (!btn) return;
@@ -311,7 +309,6 @@
             updateRequestButtonText();
         });
 
-        // Parada intermedia
         document.getElementById("btn-toggle-stop").addEventListener("click", () => {
             stopEnabled = !stopEnabled;
             const btn = document.getElementById("btn-toggle-stop");
@@ -335,7 +332,6 @@
             else renderFareBadgesOnly();
         });
 
-        // Programar horario
         document.getElementById("btn-toggle-schedule").addEventListener("click", () => {
             scheduleEnabled = !scheduleEnabled;
             const btn = document.getElementById("btn-toggle-schedule");
@@ -369,7 +365,6 @@
             }
         }
 
-        // Puntos rápidos locales
         const quickContainer = document.getElementById("quick-places");
         PUNTOS_LOCALES.forEach((lugar) => {
             const chip = document.createElement("button");
@@ -492,7 +487,6 @@
             selectedPayment = opt.dataset.pay;
         });
 
-        // Pedir viaje o envío
         document.getElementById("btn-request-ride").addEventListener("click", async () => {
             if (!destPoint || !currentFareInfo) return;
 
@@ -583,7 +577,6 @@
                         ? "📦 Entregale el PIN al conductor para confirmar el retiro del paquete."
                         : "🛡️ El conductor lleva casco adicional reglamentario. Mostrale tu PIN al subir.";
 
-                // Actualizar ubicación de la moto en vivo en el mapa
                 if (ride.driverLocation && ride.driverLocation.lat && ride.driverLocation.lng) {
                     const { lat, lng } = ride.driverLocation;
                     if (!driverMarker) {
@@ -596,14 +589,13 @@
                     document.getElementById("live-gps-status").style.display = "none";
                 }
 
-                // Armar botón Compartir Viaje por WhatsApp
                 const shareLines = [
                     `🏍️ *Estoy viajando con MotoYa San Vicente*`,
                     `🟢 Origen: ${ride.origin?.label || "San Vicente"}`,
                     ride.stop ? `🟡 Parada: ${ride.stop.label}` : null,
                     `🔴 Destino: ${ride.destination?.label || "San Vicente"}`,
                     ride.driver
-                        ? `🏍️ Chofer: ${ride.driver.name} | Moto: ${ride.driver.moto} (Patente ${ride.driver.plate})`
+                        ? `🏍️ Chofer: ${ride.driver.name} (DNI: ${ride.driver.dni || "N/D"}) | Moto: ${ride.driver.moto} (Patente ${ride.driver.plate})`
                         : `🔍 Buscando chofer asignado...`,
                     `🔐 PIN de seguridad: ${ride.pin}`
                 ].filter(Boolean).join("\n");
@@ -656,6 +648,7 @@
             if (!driver) return;
             document.getElementById("assigned-driver-card").style.display = "flex";
             document.getElementById("drv-name").textContent = driver.name || "Conductor";
+            document.getElementById("drv-dni").textContent = driver.dni || "No informado";
             document.getElementById("drv-moto").textContent = driver.moto || "Moto habilitada";
             document.getElementById("drv-plate").textContent = (driver.plate || "").toUpperCase();
 
@@ -686,9 +679,6 @@
             resetToRequestView();
         });
 
-        // ================================
-        // SISTEMA DE CALIFICACIÓN (1 A 5)
-        // ================================
         function openRatingModal(rideId, driver) {
             pendingRatingInfo = { rideId, driverId: driver.id, driverName: driver.name };
             selectedStars = 5;
@@ -737,9 +727,6 @@
             pendingRatingInfo = null;
         });
 
-        // ================================
-        // HISTORIAL DEL PASAJERO
-        // ================================
         document.getElementById("btn-open-history").addEventListener("click", async () => {
             document.getElementById("history-modal").classList.remove("hidden");
             const list = document.getElementById("passenger-history-list");
