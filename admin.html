@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin - MotoYa San Vicente</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="driver-body">
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <header class="app-topbar">
+        <div class="brand-group">
+            <span class="brand-logo">⚙️ ADMIN MOTOYA</span>
+            <span class="city-tag">SAN VICENTE</span>
+        </div>
+        <div class="topbar-actions">
+            <a href="index.html" class="mode-switch-link">🧍 Pasajero</a>
+            <a href="conductor.html" class="mode-switch-link">🪖 Chofer</a>
+        </div>
+    </header>
+
+    <main class="driver-container">
+
+        <!-- ACCESO CON PIN -->
+        <section id="admin-pin-screen" class="panel-card" style="margin-top: 24px;">
+            <div class="panel-title">🔐 Panel de Control MotoYa</div>
+            <p style="font-size: 0.74rem; color: var(--text-muted);">
+                Ingresá tu PIN de administrador para gestionar tarifas, lluvia, conductores e historial.
+            </p>
+            <form id="admin-pin-form" style="display: flex; flex-direction: column; gap: 10px;">
+                <input type="password" id="admin-pin-input" inputmode="numeric" class="field-input" placeholder="PIN de acceso" required>
+                <button type="submit" class="btn btn-accent">DESBLOQUEAR PANEL</button>
+            </form>
+        </section>
+
+        <!-- DASHBOARD ADMINISTRADOR -->
+        <section id="admin-dashboard" style="display: none; flex-direction: column; gap: 14px;">
+
+            <!-- RESUMEN GENERAL -->
+            <div class="stats-grid-3">
+                <div class="stat-box">
+                    <div class="stat-num" id="adm-active-rides" style="color: var(--accent-bright);">0</div>
+                    <div class="stat-lbl">ACTIVOS AHORA</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num" id="adm-completed-rides">0</div>
+                    <div class="stat-lbl">COMPLETADOS</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num" id="adm-total-revenue">$0</div>
+                    <div class="stat-lbl">FACTURADO</div>
+                </div>
+            </div>
+
+            <!-- TARIFAS INTELIGENTES Y MODO LLUVIA -->
+            <section class="panel-card highlight">
+                <div class="panel-title">
+                    <span>💰 Tarifas Inteligentes y Clima</span>
+                    <button type="button" id="btn-toggle-rain" class="btn btn-secondary" style="width: auto; padding: 6px 10px; font-size: 0.72rem;">
+                        ☀️ Clima Normal
+                    </button>
+                </div>
+
+                <div class="form-grid-2">
+                    <div>
+                        <label class="input-label" for="cfg-base">Bajada bandera ($)</label>
+                        <input type="number" id="cfg-base" class="field-input">
+                    </div>
+                    <div>
+                        <label class="input-label" for="cfg-km">Precio por km ($)</label>
+                        <input type="number" id="cfg-km" class="field-input">
+                    </div>
+                    <div>
+                        <label class="input-label" for="cfg-min">Viaje mínimo ($)</label>
+                        <input type="number" id="cfg-min" class="field-input">
+                    </div>
+                    <div>
+                        <label class="input-label" for="cfg-stop">Adicional parada ($)</label>
+                        <input type="number" id="cfg-stop" class="field-input">
+                    </div>
+                    <div>
+                        <label class="input-label" for="cfg-night">Nocturna 00-06 (%)</label>
+                        <input type="number" id="cfg-night" class="field-input">
+                    </div>
+                    <div>
+                        <label class="input-label" for="cfg-rain-pct">Recargo lluvia (%)</label>
+                        <input type="number" id="cfg-rain-pct" class="field-input">
+                    </div>
+                </div>
+
+                <button type="button" id="btn-save-config" class="btn btn-accent">💾 GUARDAR TARIFAS EN VIVO</button>
+            </section>
+
+            <!-- GESTIÓN DE CONDUCTORES -->
+            <section class="panel-card">
+                <div class="panel-title">
+                    <span>🪖 Conductores Registrados</span>
+                    <span id="adm-drivers-count" style="font-size: 0.72rem; color: var(--text-muted);">0</span>
+                </div>
+                <div id="adm-drivers-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Cargando...</div>
+                </div>
+            </section>
+
+            <!-- HISTORIAL Y VIAJES EN VIVO -->
+            <section class="panel-card">
+                <div class="panel-title">🧾 Últimos Viajes y Envíos</div>
+                <div id="adm-rides-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Cargando...</div>
+                </div>
+            </section>
+
+            <button type="button" id="btn-lock-admin" class="btn btn-danger">🔒 BLOQUEAR PANEL</button>
+        </section>
+    </main>
+
+    <script type="module">
+        import {
+            db, ref, set, update, remove, onValue, query, limitToLast,
+            DEFAULT_CONFIG, escHtml, formatHoraFecha
+        } from "./firebase-config.js";
+
+        // Cambiá este PIN por el tuyo personal
+        const ADMIN_PIN = "1234";
+        let currentCfg = { ...DEFAULT_CONFIG };
+        let listenersStarted = false;
+
+        function showToast(msg, type = "success") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 2600);
+        }
+
+        function updateRainBtnUI() {
+            const btn = document.getElementById("btn-toggle-rain");
+            if (currentCfg.rainMode) {
+                btn.textContent = `🌧️ LLUVIA ACTIVA (+${currentCfg.rainPct}%)`;
+                btn.className = "btn btn-blue";
+            } else {
+                btn.textContent = "☀️ Clima Normal";
+                btn.className = "btn btn-secondary";
+            }
+            btn.style.width = "auto";
+            btn.style.padding = "6px 10px";
+            btn.style.fontSize = "0.72rem";
+        }
+
+        function startAdminListeners() {
+            if (listenersStarted) return;
+            listenersStarted = true;
+
+            // 1. Configuración de tarifas
+            onValue(ref(db, "config"), (snap) => {
+                currentCfg = { ...DEFAULT_CONFIG, ...(snap.val() || {}) };
+                document.getElementById("cfg-base").value = currentCfg.base;
+                document.getElementById("cfg-km").value = currentCfg.perKm;
+                document.getElementById("cfg-min").value = currentCfg.minimum;
+                document.getElementById("cfg-stop").value = currentCfg.stopFee;
+                document.getElementById("cfg-night").value = currentCfg.nightPct;
+                document.getElementById("cfg-rain-pct").value = currentCfg.rainPct;
+                updateRainBtnUI();
+            });
+
+            // 2. Conductores
+            onValue(ref(db, "drivers"), (snap) => {
+                const container = document.getElementById("adm-drivers-list");
+                const list = [];
+                snap.forEach((c) => list.push({ id: c.key, ...c.val() }));
+                document.getElementById("adm-drivers-count").textContent = `${list.length} chofer${list.length === 1 ? "" : "es"}`;
+
+                if (!list.length) {
+                    container.innerHTML = `<div style="font-size:0.74rem; color:var(--text-muted); text-align:center;">Ningún chofer registrado aún.</div>`;
+                    return;
+                }
+
+                container.innerHTML = list.map((d) => {
+                    const avg = d.ratingCount ? (d.ratingSum / d.ratingCount).toFixed(1) : "5.0";
+                    const suspended = d.status === "suspended";
+                    return `
+                    <div class="history-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>${escHtml(d.name)} <span class="rating-pill">⭐ ${avg}</span></strong>
+                            <span class="tag-badge ${suspended ? "danger" : "pkg"}">
+                                ${suspended ? "SUSPENDIDO" : "HABILITADO"}
+                            </span>
+                        </div>
+                        <div style="color:#cbd5e1;">🏍️ ${escHtml(d.moto)} · Patente: <strong>${escHtml(d.plate)}</strong></div>
+                        <div style="font-size:0.68rem; color:var(--text-muted);">
+                            📱 ${escHtml(d.phone)} · Viajes completados: ${Number(d.completedTrips || 0)}
+                        </div>
+                        <div class="btn-grid-2" style="margin-top:4px;">
+                            <button type="button" class="btn ${suspended ? "btn-green" : "btn-danger"}"
+                                    style="padding:7px; font-size:0.7rem;"
+                                    data-drv-toggle="${d.id}" data-next="${suspended ? "active" : "suspended"}">
+                                ${suspended ? "✅ Habilitar" : "⛔ Suspender"}
+                            </button>
+                            <button type="button" class="btn btn-secondary"
+                                    style="padding:7px; font-size:0.7rem;"
+                                    data-drv-delete="${d.id}">
+                                🗑️ Eliminar
+                            </button>
+                        </div>
+                    </div>`;
+                }).join("");
+            });
+
+            // 3. Viajes y métricas
+            onValue(query(ref(db, "rides"), limitToLast(60)), (snap) => {
+                const container = document.getElementById("adm-rides-list");
+                const rides = [];
+                snap.forEach((c) => rides.unshift({ id: c.key, ...c.val() }));
+
+                let activeCount = 0;
+                let completedCount = 0;
+                let revenue = 0;
+
+                rides.forEach((r) => {
+                    if (["searching", "accepted", "arrived", "in_progress"].includes(r.status)) activeCount++;
+                    if (r.status === "completed") {
+                        completedCount++;
+                        revenue += Number(r.fare || 0);
+                    }
+                });
+
+                document.getElementById("adm-active-rides").textContent = activeCount;
+                document.getElementById("adm-completed-rides").textContent = completedCount;
+                document.getElementById("adm-total-revenue").textContent = `$${revenue.toLocaleString("es-AR")}`;
+
+                if (!rides.length) {
+                    container.innerHTML = `<div style="font-size:0.74rem; color:var(--text-muted); text-align:center;">Sin viajes registrados todavía.</div>`;
+                    return;
+                }
+
+                container.innerHTML = rides.slice(0, 25).map((r) => {
+                    const isOpen = ["searching", "accepted", "arrived", "in_progress"].includes(r.status);
+                    return `
+                    <div class="history-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>${r.serviceType === "delivery" ? "📦 Envío" : "🏍️ Viaje"} · $${Number(r.fare || 0).toLocaleString("es-AR")}</strong>
+                            <span class="tag-badge ${r.status === "completed" ? "pkg" : r.status === "cancelled" ? "danger" : "stop"}">
+                                ${escHtml(r.status.toUpperCase())}
+                            </span>
+                        </div>
+                        <div style="color:#cbd5e1;">
+                            🧍 ${escHtml(r.passengerName)} → 🪖 ${escHtml(r.driver?.name || "Sin asignar")}
+                        </div>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">
+                            🟢 ${escHtml(r.origin?.label)} ${r.stop ? `→ 🟡 ${escHtml(r.stop.label)}` : ""} → 🔴 ${escHtml(r.destination?.label)}
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.66rem; color:var(--text-muted);">
+                            <span>${formatHoraFecha(r.createdAt)} ${r.rating ? `· ⭐ ${r.rating}/5` : ""}</span>
+                            ${isOpen ? `<button type="button" class="mini-pill-btn remove" data-cancel-ride="${r.id}">Cancelar</button>` : ""}
+                        </div>
+                    </div>`;
+                }).join("");
+            });
+        }
+
+        document.getElementById("btn-toggle-rain").addEventListener("click", async () => {
+            const nextRain = !currentCfg.rainMode;
+            await update(ref(db, "config"), { rainMode: nextRain });
+            showToast(nextRain ? "🌧️ Modo Lluvia ACTIVADO en toda la app." : "☀️ Clima normal restablecido.");
+        });
+
+        document.getElementById("btn-save-config").addEventListener("click", async () => {
+            const newCfg = {
+                base: Math.max(0, Number(document.getElementById("cfg-base").value) || 0),
+                perKm: Math.max(0, Number(document.getElementById("cfg-km").value) || 0),
+                minimum: Math.max(0, Number(document.getElementById("cfg-min").value) || 0),
+                stopFee: Math.max(0, Number(document.getElementById("cfg-stop").value) || 0),
+                nightPct: Math.max(0, Number(document.getElementById("cfg-night").value) || 0),
+                rainPct: Math.max(0, Number(document.getElementById("cfg-rain-pct").value) || 0),
+                rainMode: Boolean(currentCfg.rainMode)
+            };
+            await set(ref(db, "config"), newCfg);
+            showToast("✅ Tarifas actualizadas en tiempo real.");
+        });
+
+        document.getElementById("adm-drivers-list").addEventListener("click", async (e) => {
+            const toggleBtn = e.target.closest("button[data-drv-toggle]");
+            if (toggleBtn) {
+                const id = toggleBtn.dataset.drvToggle;
+                const next = toggleBtn.dataset.next;
+                await update(ref(db, `drivers/${id}`), { status: next });
+                showToast(next === "active" ? "✅ Conductor habilitado." : "⛔ Conductor suspendido.");
+                return;
+            }
+            const delBtn = e.target.closest("button[data-drv-delete]");
+            if (delBtn) {
+                if (!confirm("¿Eliminar este conductor de la base de datos?")) return;
+                await remove(ref(db, `drivers/${delBtn.dataset.drvDelete}`));
+                showToast("🗑️ Conductor eliminado.");
+            }
+        });
+
+        document.getElementById("adm-rides-list").addEventListener("click", async (e) => {
+            const btn = e.target.closest("button[data-cancel-ride]");
+            if (!btn) return;
+            if (!confirm("¿Cancelar este viaje activo?")) return;
+            await update(ref(db, `rides/${btn.dataset.cancelRide}`), { status: "cancelled" });
+            showToast("Viaje cancelado.");
+        });
+
+        function openAdmin() {
+            document.getElementById("admin-pin-screen").style.display = "none";
+            document.getElementById("admin-dashboard").style.display = "flex";
+            startAdminListeners();
+        }
+
+        document.getElementById("admin-pin-form").addEventListener("submit", (e) => {
+            e.preventDefault();
+            if (document.getElementById("admin-pin-input").value.trim() === ADMIN_PIN) {
+                sessionStorage.setItem("motoya_admin_auth", "1");
+                openAdmin();
+            } else {
+                showToast("❌ PIN incorrecto.", "error");
+            }
+        });
+
+        document.getElementById("btn-lock-admin").addEventListener("click", () => {
+            sessionStorage.removeItem("motoya_admin_auth");
+            document.getElementById("admin-dashboard").style.display = "none";
+            document.getElementById("admin-pin-screen").style.display = "flex";
+            document.getElementById("admin-pin-input").value = "";
+        });
+
+        if (sessionStorage.getItem("motoya_admin_auth") === "1") {
+            openAdmin();
+        }
+    </script>
+</body>
+</html>
