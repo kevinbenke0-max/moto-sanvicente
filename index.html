@@ -7,6 +7,73 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .search-bar-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .search-bar-row .field-input {
+            flex: 1;
+        }
+        .btn-search-go {
+            background: var(--bg-card);
+            border: 1px solid var(--accent);
+            color: var(--accent-bright);
+            border-radius: 8px;
+            padding: 8px 11px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .btn-search-go:active { transform: scale(0.96); }
+        .search-results-box {
+            display: none;
+            flex-direction: column;
+            background: var(--bg-input);
+            border: 1px solid var(--accent);
+            border-radius: 10px;
+            max-height: 170px;
+            overflow-y: auto;
+        }
+        .search-results-box.visible { display: flex; }
+        .search-result-item {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+            text-align: left;
+            padding: 9px 10px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:active { background: rgba(245, 158, 11, 0.16); }
+        .search-res-title {
+            font-size: 0.76rem;
+            font-weight: 800;
+            color: #fff;
+        }
+        .search-res-sub {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+        .star-map-tooltip {
+            background: rgba(11, 16, 22, 0.92);
+            border: 1px solid var(--accent);
+            color: #f8fafc;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 0.66rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+        }
+        .star-map-tooltip::before { display: none; }
+    </style>
 </head>
 <body class="passenger-body">
 
@@ -28,7 +95,7 @@
     <div class="map-wrapper">
         <div id="map"></div>
         <div class="map-floating-controls">
-            <div class="map-hint-pill" id="map-hint">Tocá el mapa para marcar destino</div>
+            <div class="map-hint-pill" id="map-hint">Tocá el mapa, una ⭐ o buscá una calle</div>
             <button type="button" class="btn-gps" id="btn-gps">📍 Mi GPS</button>
         </div>
     </div>
@@ -56,16 +123,24 @@
                 </div>
                 <div class="point-box active-target" id="box-dest">
                     <div class="point-label"><span>🔴 Destino</span></div>
-                    <div class="point-value" id="dest-text">Tocá el mapa o elegí abajo</div>
+                    <div class="point-value" id="dest-text">Tocá el mapa o buscá abajo</div>
                 </div>
                 <div class="point-box full-width" id="box-stop" style="display: none;">
                     <div class="point-label">
                         <span>🟡 Parada intermedia</span>
                         <span id="stop-fee-tag" style="color: var(--accent-bright);">+$400</span>
                     </div>
-                    <div class="point-value" id="stop-text">Tocá el mapa para ubicar la parada</div>
+                    <div class="point-value" id="stop-text">Tocá el mapa o buscá la parada</div>
                 </div>
             </div>
+
+            <!-- BUSCADOR DE CALLES Y LUGARES POR TEXTO -->
+            <div class="search-bar-row">
+                <input type="search" id="street-search-input" class="field-input"
+                       placeholder="🔍 Buscar calle o lugar para Destino..." autocomplete="off">
+                <button type="button" id="btn-street-search" class="btn-search-go">Buscar</button>
+            </div>
+            <div id="street-results-box" class="search-results-box"></div>
 
             <!-- CONTROLES PARADA + PROGRAMACIÓN -->
             <div class="stop-toggle-row">
@@ -79,7 +154,7 @@
                 <input type="datetime-local" id="schedule-datetime" class="field-input">
             </div>
 
-            <!-- PUNTOS RÁPIDOS DE SAN VICENTE -->
+            <!-- PUNTOS RÁPIDOS DE SAN VICENTE (EN VIVO DESDE FIREBASE) -->
             <div class="quick-places-scroll" id="quick-places"></div>
 
             <!-- TARJETA DE TARIFA INTELIGENTE -->
@@ -215,6 +290,7 @@
         document.getElementById("passenger-phone").value = localStorage.getItem("motoya_p_phone") || "";
 
         let liveConfig = { ...DEFAULT_CONFIG };
+        let currentPlaces = [...PUNTOS_LOCALES];
         let serviceType = "ride";
         let stopEnabled = false;
         let scheduleEnabled = false;
@@ -246,7 +322,8 @@
             iconAnchor: [size / 2, anchorY]
         });
 
-        const originMarker = L.marker([originPoint.lat, originPoint.lng], { icon: makeIcon("🟢", 24, 12) }).addTo(map);
+        const savedPlacesLayer = L.layerGroup().addTo(map);
+        const originMarker = L.marker([originPoint.lat, originPoint.lng], { icon: makeIcon("🟢", 24, 12), zIndexOffset: 500 }).addTo(map);
         let stopMarker = null;
         let destMarker = null;
         let driverMarker = null;
@@ -260,6 +337,200 @@
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 2900);
         }
+
+        // Renderiza botones rápidos Y estrellas ⭐ tocables sobre el mapa
+        const quickContainer = document.getElementById("quick-places");
+        function renderQuickPlacesAndStars(placesList) {
+            currentPlaces = placesList;
+            quickContainer.innerHTML = "";
+            savedPlacesLayer.clearLayers();
+
+            const starIcon = makeIcon("⭐", 22, 11);
+
+            placesList.forEach((lugar) => {
+                const lat = Number(lugar.lat);
+                const lng = Number(lugar.lng);
+                if (isNaN(lat) || isNaN(lng)) return;
+
+                // Botón rápido abajo
+                const chip = document.createElement("button");
+                chip.type = "button";
+                chip.className = "chip-place";
+                chip.textContent = `⭐ ${lugar.nombre}`;
+                chip.addEventListener("click", () => {
+                    applyPoint(activeTarget, lat, lng, lugar.nombre);
+                });
+                quickContainer.appendChild(chip);
+
+                // Estrella ⭐ directa en el mapa
+                const m = L.marker([lat, lng], { icon: starIcon, zIndexOffset: 100 })
+                    .bindTooltip(lugar.nombre, {
+                        direction: "top",
+                        offset: [0, -10],
+                        className: "star-map-tooltip"
+                    })
+                    .addTo(savedPlacesLayer);
+
+                m.on("click", (ev) => {
+                    L.DomEvent.stopPropagation(ev);
+                    if (activeRideId) return;
+                    applyPoint(activeTarget, lat, lng, lugar.nombre);
+                    showToast(`⭐ ${lugar.nombre} seleccionado`, "success");
+                });
+            });
+        }
+
+        renderQuickPlacesAndStars(PUNTOS_LOCALES);
+        onValue(ref(db, "places"), (snap) => {
+            if (!snap.exists()) {
+                renderQuickPlacesAndStars(PUNTOS_LOCALES);
+                return;
+            }
+            const saved = [];
+            snap.forEach((c) => {
+                const p = c.val();
+                if (p && p.nombre && typeof p.lat === "number" && typeof p.lng === "number") {
+                    saved.push(p);
+                }
+            });
+            renderQuickPlacesAndStars(saved.length ? saved : PUNTOS_LOCALES);
+        });
+
+        // ================================
+        // BUSCADOR DE CALLES Y LUGARES
+        // ================================
+        const searchInput = document.getElementById("street-search-input");
+        const searchResultsBox = document.getElementById("street-results-box");
+        let searchDebounceTimer = null;
+        let lastSearchSeq = 0;
+
+        function formatOsmResult(item) {
+            const addr = item.address || {};
+            const road = addr.road || addr.pedestrian || addr.residential || addr.amenity || addr.shop || "";
+            const num = addr.house_number ? ` ${addr.house_number}` : "";
+            const barrio = addr.suburb || addr.neighbourhood || addr.quarter || addr.town || addr.city || "San Vicente";
+
+            const title = road ? `${road}${num}` : (item.display_name || "Ubicación").split(",")[0];
+            const sub = road ? `${barrio}, Misiones` : (item.display_name || "").split(",").slice(1, 3).join(",").trim();
+            return { title, sub };
+        }
+
+        function renderSearchResults(items, loadingText = "") {
+            if (loadingText) {
+                searchResultsBox.innerHTML = `<div style="padding:10px; font-size:0.72rem; color:var(--text-muted); text-align:center;">${loadingText}</div>`;
+                searchResultsBox.classList.add("visible");
+                return;
+            }
+
+            if (!items.length) {
+                searchResultsBox.innerHTML = `<div style="padding:10px; font-size:0.72rem; color:var(--text-muted); text-align:center;">No se encontraron calles o lugares. Probá tocar en el mapa.</div>`;
+                searchResultsBox.classList.add("visible");
+                return;
+            }
+
+            searchResultsBox.innerHTML = items.map((it) => `
+                <button type="button" class="search-result-item"
+                        data-res-lat="${it.lat}" data-res-lng="${it.lng}" data-res-label="${escHtml(it.title)}">
+                    <span class="search-res-title">${it.isSaved ? "⭐" : "📍"} ${escHtml(it.title)}</span>
+                    ${it.sub ? `<span class="search-res-sub">${escHtml(it.sub)}</span>` : ""}
+                </button>
+            `).join("");
+            searchResultsBox.classList.add("visible");
+        }
+
+        async function runStreetSearch(includeOsm = true) {
+            const q = searchInput.value.trim();
+            if (!q) {
+                searchResultsBox.classList.remove("visible");
+                searchResultsBox.innerHTML = "";
+                return;
+            }
+
+            const qNorm = q.toLowerCase();
+            const localMatches = currentPlaces
+                .filter((p) => p.nombre.toLowerCase().includes(qNorm))
+                .map((p) => ({
+                    title: p.nombre,
+                    sub: "Lugar destacado de San Vicente",
+                    lat: Number(p.lat),
+                    lng: Number(p.lng),
+                    isSaved: true
+                }));
+
+            if (!includeOsm || q.length < 3) {
+                if (localMatches.length) renderSearchResults(localMatches);
+                else searchResultsBox.classList.remove("visible");
+                return;
+            }
+
+            const seq = ++lastSearchSeq;
+            if (localMatches.length) renderSearchResults(localMatches);
+            else renderSearchResults([], "🔍 Buscando calles en San Vicente...");
+
+            try {
+                const viewbox = "-54.56,-26.92,-54.40,-27.08";
+                const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=ar&viewbox=${viewbox}&q=${encodeURIComponent(q + ", San Vicente, Misiones")}`;
+                const res = await fetch(url, { headers: { "Accept-Language": "es" } });
+                const data = await res.json();
+                if (seq !== lastSearchSeq) return;
+
+                const osmMatches = (Array.isArray(data) ? data : []).map((item) => {
+                    const fmt = formatOsmResult(item);
+                    return {
+                        title: fmt.title,
+                        sub: fmt.sub,
+                        lat: Number(item.lat),
+                        lng: Number(item.lon),
+                        isSaved: false
+                    };
+                });
+
+                renderSearchResults([...localMatches, ...osmMatches]);
+            } catch {
+                if (seq !== lastSearchSeq) return;
+                if (localMatches.length) renderSearchResults(localMatches);
+                else renderSearchResults([], "⚠️ No se pudo buscar ahora. Marcá el punto en el mapa.");
+            }
+        }
+
+        searchInput.addEventListener("input", () => {
+            clearTimeout(searchDebounceTimer);
+            const q = searchInput.value.trim();
+            if (!q) {
+                searchResultsBox.classList.remove("visible");
+                return;
+            }
+            runStreetSearch(false); // Coincidencias locales instantáneas
+            if (q.length >= 3) {
+                searchDebounceTimer = setTimeout(() => runStreetSearch(true), 650);
+            }
+        });
+
+        searchInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                clearTimeout(searchDebounceTimer);
+                runStreetSearch(true);
+            }
+        });
+
+        document.getElementById("btn-street-search").addEventListener("click", () => {
+            clearTimeout(searchDebounceTimer);
+            runStreetSearch(true);
+        });
+
+        searchResultsBox.addEventListener("click", (e) => {
+            const btn = e.target.closest("button[data-res-lat]");
+            if (!btn) return;
+            const lat = Number(btn.dataset.resLat);
+            const lng = Number(btn.dataset.resLng);
+            const label = btn.dataset.resLabel;
+
+            applyPoint(activeTarget, lat, lng, label);
+            map.setView([lat, lng], 16);
+            searchInput.value = "";
+            searchResultsBox.classList.remove("visible");
+        });
 
         onValue(ref(db, "config"), (snap) => {
             if (snap.exists()) {
@@ -284,11 +555,17 @@
             document.getElementById("box-stop").classList.toggle("active-target", mode === "stop");
 
             const hints = {
-                origin: "Tocá el mapa para mover el origen",
-                stop: "Tocá el mapa para marcar la parada intermedia",
-                dest: "Tocá el mapa para marcar destino"
+                origin: "Tocá el mapa, una ⭐ o buscá el origen",
+                stop: "Tocá el mapa, una ⭐ o buscá la parada",
+                dest: "Tocá el mapa, una ⭐ o buscá el destino"
+            };
+            const placeholders = {
+                origin: "🔍 Buscar calle o lugar para Origen...",
+                stop: "🔍 Buscar calle o lugar para Parada...",
+                dest: "🔍 Buscar calle o lugar para Destino..."
             };
             document.getElementById("map-hint").textContent = hints[mode];
+            searchInput.placeholder = placeholders[mode];
         }
 
         document.getElementById("box-origin").addEventListener("click", () => setTargetMode("origin"));
@@ -324,7 +601,7 @@
                 btn.textContent = "➕ Agregar parada";
                 btn.classList.remove("remove");
                 stopPoint = null;
-                document.getElementById("stop-text").textContent = "Tocá el mapa para ubicar la parada";
+                document.getElementById("stop-text").textContent = "Tocá el mapa o buscá la parada";
                 if (stopMarker) { map.removeLayer(stopMarker); stopMarker = null; }
                 setTargetMode("dest");
             }
@@ -365,18 +642,6 @@
             }
         }
 
-        const quickContainer = document.getElementById("quick-places");
-        PUNTOS_LOCALES.forEach((lugar) => {
-            const chip = document.createElement("button");
-            chip.type = "button";
-            chip.className = "chip-place";
-            chip.textContent = lugar.nombre;
-            chip.addEventListener("click", () => {
-                applyPoint(activeTarget, lugar.lat, lugar.lng, lugar.nombre);
-            });
-            quickContainer.appendChild(chip);
-        });
-
         map.on("click", (e) => {
             if (activeRideId) return;
             const { lat, lng } = e.latlng;
@@ -410,13 +675,13 @@
                 if (!destPoint) setTargetMode("dest");
             } else if (target === "stop") {
                 stopPoint = { lat, lng, label };
-                if (!stopMarker) stopMarker = L.marker([lat, lng], { icon: makeIcon("🟡", 24, 12) }).addTo(map);
+                if (!stopMarker) stopMarker = L.marker([lat, lng], { icon: makeIcon("🟡", 24, 12), zIndexOffset: 500 }).addTo(map);
                 else stopMarker.setLatLng([lat, lng]);
                 document.getElementById("stop-text").textContent = label;
                 if (!destPoint) setTargetMode("dest");
             } else {
                 destPoint = { lat, lng, label };
-                if (!destMarker) destMarker = L.marker([lat, lng], { icon: makeIcon("📍", 28, 28) }).addTo(map);
+                if (!destMarker) destMarker = L.marker([lat, lng], { icon: makeIcon("📍", 28, 28), zIndexOffset: 600 }).addTo(map);
                 else destMarker.setLatLng([lat, lng]);
                 document.getElementById("dest-text").textContent = label;
             }
@@ -580,7 +845,7 @@
                 if (ride.driverLocation && ride.driverLocation.lat && ride.driverLocation.lng) {
                     const { lat, lng } = ride.driverLocation;
                     if (!driverMarker) {
-                        driverMarker = L.marker([lat, lng], { icon: makeIcon("🏍️", 30, 15) }).addTo(map);
+                        driverMarker = L.marker([lat, lng], { icon: makeIcon("🏍️", 30, 15), zIndexOffset: 700 }).addTo(map);
                     } else {
                         driverMarker.setLatLng([lat, lng]);
                     }
