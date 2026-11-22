@@ -94,6 +94,51 @@
             color: #cbd5e1;
             font-weight: 700;
         }
+        .rendition-box {
+            background: rgba(11, 16, 22, 0.78);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .rendition-top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.74rem;
+        }
+        .alias-copy-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px dashed var(--accent);
+            border-radius: 8px;
+            padding: 7px 9px;
+        }
+        .alias-text-wrap {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .btn-copy-alias {
+            background: var(--accent);
+            color: #090d10;
+            border: none;
+            border-radius: 7px;
+            padding: 6px 10px;
+            font-size: 0.7rem;
+            font-weight: 900;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-copy-alias:active { transform: scale(0.95); }
 
         /* REGLAS Y CONDICIONES DE REGISTRO */
         .rules-card {
@@ -133,9 +178,7 @@
             background: rgba(239, 68, 68, 0.1);
             color: #fecaca;
         }
-        .rules-list strong {
-            color: #fff;
-        }
+        .rules-list strong { color: #fff; }
         .rules-accept-label {
             display: flex;
             align-items: flex-start;
@@ -249,7 +292,7 @@
                 </div>
             </div>
 
-            <!-- RESUMEN DE GANANCIAS Y COMISIÓN BIEN ARRIBA -->
+            <!-- RESUMEN DE GANANCIAS, COMISIÓN, ALIAS Y COMPROBANTE -->
             <section class="finance-top-card">
                 <div class="finance-header">
                     <span style="font-size: 0.78rem; font-weight: 900; color: var(--accent-bright);">💰 TU CAJA Y COMISIÓN</span>
@@ -269,14 +312,51 @@
                     <div class="split-box admin-pay">
                         <span class="split-lbl">🏦 Para Admin (<span class="dyn-admin-pct">15</span>%)</span>
                         <span class="split-amount" style="color: var(--accent-bright);" id="fin-admin-cut">$0</span>
-                        <span class="split-sub">Monto a rendir</span>
+                        <span class="split-sub">Comisión del período</span>
                     </div>
                 </div>
 
                 <div class="finance-breakdown-bar">
-                    <span>Total bruto: <strong style="color: #fff;" id="fin-gross-total">$0</strong></span>
+                    <span>Bruto: <strong style="color: #fff;" id="fin-gross-total">$0</strong></span>
                     <span>💵 Efvo: <strong style="color: #a7f3d0;" id="fin-cash-total">$0</strong></span>
                     <span>📱 Transf: <strong style="color: #93c5fd;" id="fin-transfer-total">$0</strong></span>
+                </div>
+
+                <!-- SALDO PENDIENTE REAL + ALIAS + WHATSAPP COMPROBANTE -->
+                <div class="rendition-box">
+                    <div class="rendition-top-row">
+                        <div>
+                            <div style="font-size: 0.63rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">
+                                SALDO PENDIENTE A RENDIR
+                            </div>
+                            <div style="font-size: 1.08rem; font-weight: 900; color: #fca5a5;" id="fin-real-pending">$0</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.63rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">
+                                YA PAGADO
+                            </div>
+                            <div style="font-size: 0.92rem; font-weight: 900; color: var(--green);" id="fin-real-paid">$0</div>
+                        </div>
+                    </div>
+
+                    <div class="alias-copy-row">
+                        <div class="alias-text-wrap">
+                            <span style="font-size: 0.6rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">
+                                ALIAS ADMINISTRACIÓN
+                            </span>
+                            <span style="font-size: 0.82rem; font-weight: 900; color: #fff; word-break: break-all;" id="drv-admin-alias-txt">
+                                Sin configurar aún
+                            </span>
+                            <span style="font-size: 0.65rem; color: #cbd5e1;" id="drv-admin-holder-txt"></span>
+                        </div>
+                        <button type="button" id="btn-copy-alias" class="btn-copy-alias" style="display: none;">
+                            📋 Copiar
+                        </button>
+                    </div>
+
+                    <a id="btn-send-receipt-wa" href="#" target="_blank" class="btn btn-green" style="font-size: 0.76rem; padding: 10px;">
+                        💬 Enviar Comprobante por WhatsApp
+                    </a>
                 </div>
             </section>
 
@@ -360,6 +440,14 @@
                     <div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Sin viajes completados todavía.</div>
                 </div>
             </div>
+
+            <!-- PAGOS DE COMISIÓN CONFIRMADOS POR ADMIN -->
+            <div class="panel-card">
+                <div class="panel-title">✅ Mis Pagos de Comisión Registrados</div>
+                <div id="driver-payments-feed" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Todavía no hay pagos confirmados por administración.</div>
+                </div>
+            </div>
         </section>
     </main>
 
@@ -400,6 +488,9 @@
 
         const DEFAULT_ADMIN_PCT = 15;
         let adminPct = DEFAULT_ADMIN_PCT;
+        let adminAlias = "";
+        let adminHolder = "";
+        let adminPhone = "";
         let selectedFinancePeriod = "today"; // 'today' | 'week' | 'all'
 
         let driverProfile = JSON.parse(localStorage.getItem("motoya_driver_profile") || "null");
@@ -408,8 +499,10 @@
         let currentRideId = localStorage.getItem("motoya_driver_active_ride") || null;
         let currentRideData = null;
         let lastSnapshotRides = [];
+        let lastSnapshotPayments = [];
 
         let unsubscribeRides = null;
+        let unsubscribePayments = null;
         let unsubscribeCurrentRide = null;
         let unsubscribeDriverNode = null;
         let gpsWatchId = null;
@@ -453,6 +546,21 @@
             });
         }
 
+        function updateAdminPaymentInfoUI() {
+            const aliasEl = document.getElementById("drv-admin-alias-txt");
+            const holderEl = document.getElementById("drv-admin-holder-txt");
+            const copyBtn = document.getElementById("btn-copy-alias");
+
+            if (adminAlias) {
+                aliasEl.textContent = adminAlias;
+                copyBtn.style.display = "inline-block";
+            } else {
+                aliasEl.textContent = "A confirmar por administración";
+                copyBtn.style.display = "none";
+            }
+            holderEl.textContent = adminHolder ? `Titular: ${adminHolder}` : "";
+        }
+
         function buildDriverId(dni, phone, plate) {
             const cleanDni = String(dni || "").replace(/\D/g, "");
             if (cleanDni) return `dni_${cleanDni}`;
@@ -466,6 +574,13 @@
             if (r.driver.id && p.id && r.driver.id === p.id) return true;
             if (r.driver.dni && p.dni && String(r.driver.dni) === String(p.dni)) return true;
             if (r.driver.plate && p.plate && String(r.driver.plate).toUpperCase() === String(p.plate).toUpperCase()) return true;
+            return false;
+        }
+
+        function paymentBelongsToDriver(pay, prof) {
+            if (!pay || !prof) return false;
+            if (pay.driverId && prof.id && pay.driverId === prof.id) return true;
+            if (pay.driverDni && prof.dni && String(pay.driverDni) === String(prof.dni)) return true;
             return false;
         }
 
@@ -497,13 +612,34 @@
             return Math.round((Number(driverServerState.ratingSum || 0) / cnt) * 10) / 10;
         }
 
-        // Escucha configuración (modo lluvia + porcentaje de comisión del administrador)
+        // Copiar alias al portapapeles
+        document.getElementById("btn-copy-alias").addEventListener("click", async () => {
+            if (!adminAlias) return;
+            try {
+                await navigator.clipboard.writeText(adminAlias);
+                showToast(`📋 Alias copiado: ${adminAlias}`);
+            } catch {
+                const ta = document.createElement("textarea");
+                ta.value = adminAlias;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                ta.remove();
+                showToast(`📋 Alias copiado: ${adminAlias}`);
+            }
+        });
+
+        // Escucha configuración (lluvia, %, alias, titular, WhatsApp admin)
         onValue(ref(db, "config"), (snap) => {
             const cfg = snap.val() || {};
             document.getElementById("rain-banner-drv").style.display = cfg.rainMode ? "inline-flex" : "none";
             const pct = Number(cfg.adminPct);
             adminPct = (!isNaN(pct) && pct >= 0 && pct <= 100 && cfg.adminPct !== undefined) ? pct : DEFAULT_ADMIN_PCT;
+            adminAlias = String(cfg.adminAlias || "").trim();
+            adminHolder = String(cfg.adminHolder || "").trim();
+            adminPhone = String(cfg.adminPhone || "").trim();
             updatePctLabels();
+            updateAdminPaymentInfoUI();
             if (driverProfile) {
                 renderDriverHistoryAndStats(lastSnapshotRides);
             }
@@ -571,8 +707,10 @@
                 `${driverProfile.name} · DNI ${driverProfile.dni} · ${driverProfile.moto} (${driverProfile.plate})`;
 
             updatePctLabels();
+            updateAdminPaymentInfoUI();
             listenDriverProfileNode(driverProfile.id);
             startListeningAllRides();
+            startListeningMyPayments();
 
             if (currentRideId) {
                 setOnlineState(true);
@@ -666,7 +804,7 @@
             if (e.target.id === "rules-modal") document.getElementById("rules-modal").classList.add("hidden");
         });
 
-        // Selector de período en el bloque financiero superior
+        // Selector de período
         document.getElementById("fin-period-tabs").addEventListener("click", (e) => {
             const btn = e.target.closest(".fin-tab[data-period]");
             if (!btn) return;
@@ -715,6 +853,19 @@
                 lastSnapshotRides = all;
                 renderAvailableRides(all);
                 renderDriverHistoryAndStats(all);
+            });
+        }
+
+        function startListeningMyPayments() {
+            if (unsubscribePayments) unsubscribePayments();
+            unsubscribePayments = onValue(ref(db, "payments"), (snapshot) => {
+                const list = [];
+                snapshot.forEach((child) => {
+                    list.push({ id: child.key, ...child.val() });
+                });
+                list.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+                lastSnapshotPayments = list;
+                renderDriverHistoryAndStats(lastSnapshotRides);
             });
         }
 
@@ -797,11 +948,41 @@
             const adminCut = Math.round(grossTotal * (adminPct / 100));
             const driverKeeps = grossTotal - adminCut;
 
+            // Cuenta corriente histórica real (coincide exacto con admin.html)
+            const totalAllEarned = mineAll.reduce((acc, r) => acc + Number(r.fare || 0), 0);
+            const totalAllAdminCut = Math.round(totalAllEarned * (adminPct / 100));
+            const myPayments = lastSnapshotPayments.filter((p) => paymentBelongsToDriver(p, driverProfile));
+            const totalPaidByMe = myPayments.reduce((acc, p) => acc + Number(p.amount || 0), 0);
+            const realPending = Math.max(0, totalAllAdminCut - totalPaidByMe);
+
             document.getElementById("fin-driver-keeps").textContent = `$${driverKeeps.toLocaleString("es-AR")}`;
             document.getElementById("fin-admin-cut").textContent = `$${adminCut.toLocaleString("es-AR")}`;
             document.getElementById("fin-gross-total").textContent = `$${grossTotal.toLocaleString("es-AR")}`;
             document.getElementById("fin-cash-total").textContent = `$${cashTotal.toLocaleString("es-AR")}`;
             document.getElementById("fin-transfer-total").textContent = `$${transferTotal.toLocaleString("es-AR")}`;
+
+            const pendingEl = document.getElementById("fin-real-pending");
+            pendingEl.textContent = realPending > 0 ? `$${realPending.toLocaleString("es-AR")}` : "$0 (Al día ✅)";
+            pendingEl.style.color = realPending > 0 ? "#fca5a5" : "var(--green)";
+            document.getElementById("fin-real-paid").textContent = `$${totalPaidByMe.toLocaleString("es-AR")}`;
+
+            // Armar botón WhatsApp para mandar el comprobante al administrador
+            const amountToReport = realPending > 0 ? realPending : adminCut;
+            const waAdminNum = limpiarTelefonoWhatsApp(adminPhone);
+            const receiptMsg = [
+                `💸 *Comprobante de Comisión - MotoYa San Vicente*`,
+                `🏍️ Chofer: ${driverProfile.name}`,
+                `🪪 DNI: ${driverProfile.dni}`,
+                `🔖 Patente: ${driverProfile.plate}`,
+                `💰 Monto transferido (${adminPct}%): *$${amountToReport.toLocaleString("es-AR")}*`,
+                adminAlias ? `🏦 Alias destino: ${adminAlias}` : null,
+                `📎 *Adjunto captura del comprobante de pago.*`
+            ].filter(Boolean).join("\n");
+
+            const waReceiptBtn = document.getElementById("btn-send-receipt-wa");
+            waReceiptBtn.href = waAdminNum
+                ? `https://wa.me/${waAdminNum}?text=${encodeURIComponent(receiptMsg)}`
+                : `https://wa.me/?text=${encodeURIComponent(receiptMsg)}`;
 
             const periodLabels = {
                 today: "VIAJES HOY",
@@ -812,31 +993,51 @@
             document.getElementById("stat-trips-lbl").textContent = periodLabels[selectedFinancePeriod];
             document.getElementById("stat-all-trips").textContent = mineAll.length;
 
+            // Lista de viajes completados
             const histFeed = document.getElementById("driver-history-feed");
             if (!mineAll.length) {
                 histFeed.innerHTML = `<div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Sin viajes completados todavía.</div>`;
-                return;
+            } else {
+                histFeed.innerHTML = mineAll.slice(0, 15).map((r) => {
+                    const isTr = isTransferPayment(r.paymentMethod);
+                    return `
+                    <div class="history-card">
+                        <div style="display:flex; justify-content:space-between;">
+                            <strong>${r.serviceType === "delivery" ? "📦" : "🏍️"} ${escHtml(r.passengerName)} · $${Number(r.fare).toLocaleString("es-AR")}</strong>
+                            <span style="font-size:0.66rem; color:var(--text-muted);">${formatHoraFecha(r.completedAt || r.createdAt)}</span>
+                        </div>
+                        <div style="color:#cbd5e1;">🟢 ${escHtml(r.origin?.label)} → 🔴 ${escHtml(r.destination?.label)}</div>
+                        <div style="display:flex; justify-content:space-between; font-size:0.67rem;">
+                            <span style="color:${isTr ? "#93c5fd" : "#a7f3d0"}; font-weight:700;">
+                                ${isTr ? "📱 Transferencia / MP" : "💵 Efectivo"}
+                            </span>
+                            <span style="color:var(--accent-bright);">
+                                ${r.rating ? `${"⭐".repeat(r.rating)}` : "Sin calificar"}
+                            </span>
+                        </div>
+                    </div>`;
+                }).join("");
             }
 
-            histFeed.innerHTML = mineAll.slice(0, 15).map((r) => {
-                const isTr = isTransferPayment(r.paymentMethod);
-                return `
-                <div class="history-card">
-                    <div style="display:flex; justify-content:space-between;">
-                        <strong>${r.serviceType === "delivery" ? "📦" : "🏍️"} ${escHtml(r.passengerName)} · $${Number(r.fare).toLocaleString("es-AR")}</strong>
-                        <span style="font-size:0.66rem; color:var(--text-muted);">${formatHoraFecha(r.completedAt || r.createdAt)}</span>
-                    </div>
-                    <div style="color:#cbd5e1;">🟢 ${escHtml(r.origin?.label)} → 🔴 ${escHtml(r.destination?.label)}</div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.67rem;">
-                        <span style="color:${isTr ? "#93c5fd" : "#a7f3d0"}; font-weight:700;">
-                            ${isTr ? "📱 Transferencia / MP" : "💵 Efectivo"}
-                        </span>
-                        <span style="color:var(--accent-bright);">
-                            ${r.rating ? `${"⭐".repeat(r.rating)}` : "Sin calificar"}
-                        </span>
-                    </div>
-                </div>`;
-            }).join("");
+            // Lista de pagos de comisión registrados por el administrador
+            const payFeed = document.getElementById("driver-payments-feed");
+            if (!myPayments.length) {
+                payFeed.innerHTML = `<div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Todavía no hay pagos confirmados por administración.</div>`;
+            } else {
+                payFeed.innerHTML = myPayments.slice(0, 15).map((p) => {
+                    const isTr = isTransferPayment(p.method);
+                    return `
+                    <div class="history-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong style="color:var(--green);">✅ Pagado: $${Number(p.amount || 0).toLocaleString("es-AR")}</strong>
+                            <span style="font-size:0.65rem; color:var(--text-muted);">${formatHoraFecha(p.createdAt)}</span>
+                        </div>
+                        <div style="font-size:0.68rem; color:#cbd5e1;">
+                            ${isTr ? "📱" : "💵"} ${escHtml(p.method || "Transferencia / MP")}${p.note ? ` · 📝 ${escHtml(p.note)}` : ""}
+                        </div>
+                    </div>`;
+                }).join("");
+            }
         }
 
         // Aceptar pedido con transacción atómica
@@ -1019,7 +1220,6 @@
             document.getElementById("available-rides-section").style.display = "flex";
         }
 
-        // Al iniciar: si el chofer ya tenía perfil pero nunca aceptó las reglas nuevas, se las muestra primero
         if (driverProfile && driverProfile.name && driverProfile.dni && driverProfile.moto && driverProfile.plate && driverProfile.phone && driverProfile.termsAccepted) {
             if (!driverProfile.id) {
                 driverProfile.id = buildDriverId(driverProfile.dni, driverProfile.phone, driverProfile.plate);
