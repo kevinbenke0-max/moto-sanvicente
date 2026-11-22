@@ -29,11 +29,12 @@
 
         <!-- REGISTRO / PERFIL DEL CONDUCTOR -->
         <section id="driver-setup-card" class="panel-card">
-            <div class="panel-title">🏍️ Datos de tu Moto</div>
+            <div class="panel-title">🏍️ Datos del Conductor y la Moto</div>
             <p style="font-size: 0.73rem; color: var(--text-muted); line-height: 1.4;">
-                Completá tus datos una sola vez para recibir pedidos y acumular tu reputación con estrellas.
+                Completá tus datos reales (incluyendo tu DNI). Serán visibles para el pasajero y el administrador por seguridad.
             </p>
             <input type="text" id="drv-input-name" class="field-input" placeholder="Tu nombre y apellido">
+            <input type="text" inputmode="numeric" id="drv-input-dni" class="field-input" placeholder="N° de Documento / DNI (sin puntos)">
             <input type="text" id="drv-input-moto" class="field-input" placeholder="Modelo de moto (ej: Yamaha FZ25 negra)">
             <div class="btn-grid-2">
                 <input type="text" id="drv-input-plate" class="field-input" placeholder="Patente (ej: A123BCD)">
@@ -191,6 +192,14 @@
             } catch {}
         }
 
+        function buildDriverId(dni, phone, plate) {
+            const cleanDni = String(dni || "").replace(/\D/g, "");
+            if (cleanDni) return `dni_${cleanDni}`;
+            const cleanPhone = limpiarTelefonoWhatsApp(phone);
+            if (cleanPhone) return `tel_${cleanPhone}`;
+            return `pat_${String(plate || Date.now()).replace(/[^A-Z0-9]/gi, "")}`;
+        }
+
         function getDriverAvgRating() {
             const cnt = Number(driverServerState.ratingCount || 0);
             if (cnt === 0) return 5.0;
@@ -202,12 +211,17 @@
         });
 
         async function syncDriverToFirebase(profile) {
-            const drvRef = ref(db, `drivers/${profile.id}`);
+            const safeId = profile.id || buildDriverId(profile.dni, profile.phone, profile.plate);
+            profile.id = safeId;
+            localStorage.setItem("motoya_driver_profile", JSON.stringify(profile));
+
+            const drvRef = ref(db, `drivers/${safeId}`);
             const snap = await get(drvRef);
             if (!snap.exists()) {
                 await set(drvRef, {
-                    id: profile.id,
+                    id: safeId,
                     name: profile.name,
+                    dni: profile.dni,
                     moto: profile.moto,
                     plate: profile.plate,
                     phone: profile.phone,
@@ -219,7 +233,9 @@
                 });
             } else {
                 await update(drvRef, {
+                    id: safeId,
                     name: profile.name,
+                    dni: profile.dni,
                     moto: profile.moto,
                     plate: profile.plate,
                     phone: profile.phone
@@ -249,7 +265,7 @@
             document.getElementById("driver-setup-card").style.display = "none";
             document.getElementById("driver-dashboard").style.display = "flex";
             document.getElementById("driver-summary-txt").textContent =
-                `${driverProfile.name} · ${driverProfile.moto} (${driverProfile.plate})`;
+                `${driverProfile.name} · DNI ${driverProfile.dni} · ${driverProfile.moto} (${driverProfile.plate})`;
 
             listenDriverProfileNode(driverProfile.id);
             startListeningAllRides();
@@ -262,24 +278,38 @@
 
         document.getElementById("btn-save-driver").addEventListener("click", async () => {
             const name = document.getElementById("drv-input-name").value.trim();
+            const dni = document.getElementById("drv-input-dni").value.replace(/\D/g, "");
             const moto = document.getElementById("drv-input-moto").value.trim();
             const plate = document.getElementById("drv-input-plate").value.trim().toUpperCase();
             const phone = document.getElementById("drv-input-phone").value.trim();
 
-            if (!name || !moto || !plate || !phone) {
-                showToast("⚠️ Completá todos los datos de tu moto.", "error");
+            if (!name || !dni || !moto || !plate || !phone) {
+                showToast("⚠️ Completá todos los campos, incluyendo tu DNI.", "error");
+                return;
+            }
+            if (dni.length < 7 || dni.length > 9) {
+                showToast("⚠️ Ingresá un DNI válido (7 u 8 números sin puntos).", "error");
                 return;
             }
 
-            const cleanId = limpiarTelefonoWhatsApp(phone) || plate.replace(/[^A-Z0-9]/g, "");
-            driverProfile = { id: cleanId, name, moto, plate, phone };
+            const btn = document.getElementById("btn-save-driver");
+            btn.disabled = true;
+            btn.textContent = "GUARDANDO...";
+
+            const cleanId = buildDriverId(dni, phone, plate);
+            driverProfile = { id: cleanId, name, dni, moto, plate, phone };
             localStorage.setItem("motoya_driver_profile", JSON.stringify(driverProfile));
 
             try {
                 await syncDriverToFirebase(driverProfile);
+                showToast("✅ Perfil guardado y registrado en el panel.", "success");
                 loadDashboard();
-            } catch {
+            } catch (err) {
+                console.error(err);
                 showToast("❌ Error al guardar perfil en Firebase.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "GUARDAR Y ENTRAR";
             }
         });
 
@@ -289,13 +319,19 @@
                 return;
             }
             setOnlineState(false);
-            document.getElementById("drv-input-name").value = driverProfile.name;
-            document.getElementById("drv-input-moto").value = driverProfile.moto;
-            document.getElementById("drv-input-plate").value = driverProfile.plate;
-            document.getElementById("drv-input-phone").value = driverProfile.phone;
+            fillProfileForm(driverProfile);
             document.getElementById("driver-dashboard").style.display = "none";
             document.getElementById("driver-setup-card").style.display = "flex";
         });
+
+        function fillProfileForm(p) {
+            if (!p) return;
+            document.getElementById("drv-input-name").value = p.name || "";
+            document.getElementById("drv-input-dni").value = p.dni || "";
+            document.getElementById("drv-input-moto").value = p.moto || "";
+            document.getElementById("drv-input-plate").value = p.plate || "";
+            document.getElementById("drv-input-phone").value = p.phone || "";
+        }
 
         function setOnlineState(state) {
             if (state && driverServerState.status === "suspended") {
@@ -467,7 +503,6 @@
             }
         });
 
-        // Transmisión de GPS en tiempo real del chofer al mapa del pasajero
         function startGpsBroadcast(rideId) {
             stopGpsBroadcast();
             if (!navigator.geolocation) {
@@ -613,8 +648,15 @@
             document.getElementById("available-rides-section").style.display = "flex";
         }
 
-        if (driverProfile) {
+        // Validación al iniciar: si falta DNI o ID (perfil viejo), pide completar el DNI
+        if (driverProfile && driverProfile.name && driverProfile.dni && driverProfile.moto && driverProfile.plate && driverProfile.phone) {
+            if (!driverProfile.id) {
+                driverProfile.id = buildDriverId(driverProfile.dni, driverProfile.phone, driverProfile.plate);
+            }
             syncDriverToFirebase(driverProfile).finally(loadDashboard);
+        } else if (driverProfile) {
+            fillProfileForm(driverProfile);
+            showToast("⚠️ Completá tu N° de Documento (DNI) para activar tu perfil.", "error");
         }
     </script>
 </body>
