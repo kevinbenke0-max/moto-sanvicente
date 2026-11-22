@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Modo Conductor - MotoYa San Vicente</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body class="driver-body">
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- BARRA SUPERIOR -->
+    <header class="app-topbar">
+        <div class="brand-group">
+            <span class="brand-logo">🪖 CHOFER MOTOYA</span>
+            <span class="city-tag">SAN VICENTE</span>
+        </div>
+        <a href="index.html" class="mode-switch-link">🧍 Modo Pasajero</a>
+    </header>
+
+    <main class="driver-container">
+        <div id="config-alert" class="config-alert"></div>
+
+        <!-- PERFIL DEL CONDUCTOR -->
+        <section id="driver-setup-card" class="panel-card">
+            <div style="font-size: 0.95rem; font-weight: 900; color: var(--accent-bright);">
+                🏍️ Datos de tu Moto
+            </div>
+            <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.4;">
+                Completá tus datos una sola vez para que el pasajero te identifique al llegar.
+            </p>
+            <input type="text" id="drv-input-name" class="field-input" placeholder="Tu nombre y apellido">
+            <input type="text" id="drv-input-moto" class="field-input" placeholder="Modelo de moto (ej: Yamaha FZ25 negra)">
+            <div class="btn-grid-2">
+                <input type="text" id="drv-input-plate" class="field-input" placeholder="Patente (ej: A123BCD)">
+                <input type="tel" id="drv-input-phone" class="field-input" placeholder="Tu WhatsApp">
+            </div>
+            <button type="button" id="btn-save-driver" class="btn btn-accent">GUARDAR Y ENTRAR</button>
+        </section>
+
+        <!-- PANEL OPERATIVO DEL CHOFER -->
+        <section id="driver-dashboard" style="display: none; flex-direction: column; gap: 12px;">
+            <div class="online-switch-card">
+                <div>
+                    <div style="font-size: 0.85rem; font-weight: 900;">
+                        <span class="status-dot" id="online-dot"></span>
+                        <span id="online-label">DESCONECTADO</span>
+                    </div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;" id="driver-summary-txt">
+                        —
+                    </div>
+                </div>
+                <div style="display: flex; gap: 6px;">
+                    <button type="button" id="btn-toggle-online" class="btn btn-green" style="width: auto; padding: 9px 12px; font-size: 0.76rem;">
+                        CONECTARME
+                    </button>
+                    <button type="button" id="btn-edit-profile" class="btn btn-secondary" style="width: auto; padding: 9px 10px; font-size: 0.76rem;">
+                        ✏️
+                    </button>
+                </div>
+            </div>
+
+            <!-- CAJA DEL DÍA -->
+            <div class="stats-grid-2">
+                <div class="stat-box">
+                    <div class="stat-num" id="stat-trips">0</div>
+                    <div class="stat-lbl">VIAJES HOY</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num" id="stat-earnings">$0</div>
+                    <div class="stat-lbl">RECAUDADO HOY</div>
+                </div>
+            </div>
+
+            <!-- VIAJE ACTIVO DEL CONDUCTOR -->
+            <div id="driver-active-ride" class="panel-card highlight" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="city-tag">VIAJE EN CURSO</span>
+                    <span style="font-size: 0.85rem; font-weight: 900; color: var(--accent-bright);">
+                        PIN: <span id="drv-ride-pin">----</span>
+                    </span>
+                </div>
+
+                <div>
+                    <div style="font-size: 0.95rem; font-weight: 900;" id="drv-p-name">Pasajero</div>
+                    <div style="font-size: 0.74rem; color: var(--text-muted);" id="drv-p-pay">Efectivo</div>
+                </div>
+
+                <div class="ride-route-line">
+                    <div>🟢 <strong>Subida:</strong> <span id="drv-p-origin">—</span></div>
+                    <div style="margin-top: 4px;">🔴 <strong>Destino:</strong> <span id="drv-p-dest">—</span></div>
+                </div>
+
+                <div style="font-size: 1.2rem; font-weight: 900; color: var(--green);">
+                    A cobrar: <span id="drv-p-fare">$0</span>
+                </div>
+
+                <div class="btn-grid-2">
+                    <a id="btn-nav-gmaps" href="#" target="_blank" class="btn btn-blue" style="font-size: 0.76rem;">
+                        🗺️ Abrir Ruta GPS
+                    </a>
+                    <a id="btn-wa-passenger" href="#" target="_blank" class="btn btn-secondary" style="font-size: 0.76rem;">
+                        💬 WhatsApp
+                    </a>
+                </div>
+
+                <button type="button" id="btn-next-step" class="btn btn-accent">
+                    LLEGUÉ AL PUNTO DE SUBIDA
+                </button>
+            </div>
+
+            <!-- LISTA DE PEDIDOS ENTRANTES -->
+            <div id="available-rides-section" class="panel-card">
+                <div style="font-size: 0.85rem; font-weight: 900; color: var(--accent-bright);">
+                    📡 Pedidos en San Vicente
+                </div>
+                <div id="rides-feed" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="font-size: 0.78rem; color: var(--text-muted); text-align: center; padding: 14px 0;">
+                        Conectate para recibir solicitudes de viaje.
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import {
+            db, ref, update, onValue, runTransaction, query, orderByChild, equalTo,
+            isConfigured, limpiarTelefonoWhatsApp
+        } from "./firebase-config.js";
+
+        if (!isConfigured) {
+            const alertBox = document.getElementById("config-alert");
+            alertBox.textContent = "⚠️ Falta pegar tus credenciales de Firebase en firebase-config.js";
+            alertBox.classList.add("visible");
+        }
+
+        let driverProfile = JSON.parse(localStorage.getItem("motoya_driver_profile") || "null");
+        let isOnline = false;
+        let currentRideId = localStorage.getItem("motoya_driver_active_ride") || null;
+        let currentRideData = null;
+        let unsubscribeSearching = null;
+        let unsubscribeCurrentRide = null;
+        let knownRideIds = new Set();
+
+        // Estadísticas diarias locales
+        const todayKey = new Date().toISOString().slice(0, 10);
+        let dailyStats = JSON.parse(localStorage.getItem("motoya_driver_stats") || "null");
+        if (!dailyStats || dailyStats.date !== todayKey) {
+            dailyStats = { date: todayKey, trips: 0, earnings: 0 };
+            localStorage.setItem("motoya_driver_stats", JSON.stringify(dailyStats));
+        }
+
+        function refreshStatsUI() {
+            document.getElementById("stat-trips").textContent = dailyStats.trips;
+            document.getElementById("stat-earnings").textContent = `$${dailyStats.earnings.toLocaleString("es-AR")}`;
+        }
+
+        function showToast(msg, type = "success") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 2800);
+        }
+
+        function playAlertBeep() {
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const ac = new AudioContext();
+                [880, 1174].forEach((freq, idx) => {
+                    const osc = ac.createOscillator();
+                    const gain = ac.createGain();
+                    osc.frequency.setValueAtTime(freq, ac.currentTime + idx * 0.14);
+                    gain.gain.setValueAtTime(0.08, ac.currentTime + idx * 0.14);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + idx * 0.14 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(ac.destination);
+                    osc.start(ac.currentTime + idx * 0.14);
+                    osc.stop(ac.currentTime + idx * 0.14 + 0.26);
+                });
+            } catch {}
+        }
+
+        function loadDashboard() {
+            document.getElementById("driver-setup-card").style.display = "none";
+            document.getElementById("driver-dashboard").style.display = "flex";
+            document.getElementById("driver-summary-txt").textContent =
+                `${driverProfile.name} · ${driverProfile.moto} (${driverProfile.plate.toUpperCase()})`;
+            refreshStatsUI();
+
+            if (currentRideId) {
+                setOnlineState(true);
+                attachActiveRide(currentRideId);
+            }
+        }
+
+        document.getElementById("btn-save-driver").addEventListener("click", () => {
+            const name = document.getElementById("drv-input-name").value.trim();
+            const moto = document.getElementById("drv-input-moto").value.trim();
+            const plate = document.getElementById("drv-input-plate").value.trim().toUpperCase();
+            const phone = document.getElementById("drv-input-phone").value.trim();
+
+            if (!name || !moto || !plate || !phone) {
+                showToast("⚠️ Completá todos los datos de tu moto.", "error");
+                return;
+            }
+
+            driverProfile = { name, moto, plate, phone };
+            localStorage.setItem("motoya_driver_profile", JSON.stringify(driverProfile));
+            loadDashboard();
+        });
+
+        document.getElementById("btn-edit-profile").addEventListener("click", () => {
+            if (currentRideId) {
+                showToast("Terminá el viaje actual antes de editar tu perfil.", "error");
+                return;
+            }
+            setOnlineState(false);
+            document.getElementById("drv-input-name").value = driverProfile.name;
+            document.getElementById("drv-input-moto").value = driverProfile.moto;
+            document.getElementById("drv-input-plate").value = driverProfile.plate;
+            document.getElementById("drv-input-phone").value = driverProfile.phone;
+            document.getElementById("driver-dashboard").style.display = "none";
+            document.getElementById("driver-setup-card").style.display = "flex";
+        });
+
+        function setOnlineState(state) {
+            isOnline = state;
+            const dot = document.getElementById("online-dot");
+            const lbl = document.getElementById("online-label");
+            const btn = document.getElementById("btn-toggle-online");
+
+            dot.classList.toggle("online", isOnline);
+            lbl.textContent = isOnline ? "EN LÍNEA (RECIBIENDO)" : "DESCONECTADO";
+            btn.textContent = isOnline ? "DESCONECTAR" : "CONECTARME";
+            btn.className = isOnline ? "btn btn-danger" : "btn btn-green";
+            btn.style.width = "auto";
+            btn.style.padding = "9px 12px";
+            btn.style.fontSize = "0.76rem";
+
+            if (isOnline && isConfigured) {
+                startListeningRides();
+            } else {
+                if (unsubscribeSearching) {
+                    unsubscribeSearching();
+                    unsubscribeSearching = null;
+                }
+                document.getElementById("rides-feed").innerHTML = `
+                    <div style="font-size: 0.78rem; color: var(--text-muted); text-align: center; padding: 14px 0;">
+                        Conectate para recibir solicitudes de viaje.
+                    </div>`;
+            }
+        }
+
+        document.getElementById("btn-toggle-online").addEventListener("click", () => {
+            if (currentRideId && isOnline) {
+                showToast("Tenés un viaje activo en curso.", "error");
+                return;
+            }
+            setOnlineState(!isOnline);
+        });
+
+        function startListeningRides() {
+            if (unsubscribeSearching) unsubscribeSearching();
+            const q = query(ref(db, "rides"), orderByChild("status"), equalTo("searching"));
+
+            unsubscribeSearching = onValue(q, (snapshot) => {
+                const feed = document.getElementById("rides-feed");
+                const rides = [];
+                snapshot.forEach((child) => {
+                    rides.push({ id: child.key, ...child.val() });
+                });
+
+                if (!rides.length) {
+                    knownRideIds.clear();
+                    feed.innerHTML = `
+                        <div style="font-size: 0.78rem; color: var(--text-muted); text-align: center; padding: 14px 0;">
+                            ⏳ Esperando pasajeros en San Vicente...
+                        </div>`;
+                    return;
+                }
+
+                // Aviso sonoro si entra un pedido nuevo
+                let hasNew = false;
+                rides.forEach((r) => {
+                    if (!knownRideIds.has(r.id)) hasNew = true;
+                });
+                knownRideIds = new Set(rides.map((r) => r.id));
+                if (hasNew && !currentRideId) playAlertBeep();
+
+                feed.innerHTML = rides.map((r) => `
+                    <div class="ride-request-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>🧍 ${r.passengerName}</strong>
+                            <span style="font-size:1.1rem; font-weight:900; color:var(--green);">
+                                $${Number(r.fare).toLocaleString("es-AR")}
+                            </span>
+                        </div>
+                        <div class="ride-route-line">
+                            <div>🟢 <strong>Subida:</strong> ${r.origin?.label || "Mapa"}</div>
+                            <div>🔴 <strong>Destino:</strong> ${r.destination?.label || "Mapa"}</div>
+                        </div>
+                        <div style="font-size:0.7rem; color:var(--text-muted);">
+                            📏 ${r.distanceKm} km · 💳 ${r.paymentMethod}
+                        </div>
+                        <button type="button" class="btn btn-accent" data-accept-id="${r.id}" ${currentRideId ? "disabled" : ""}>
+                            ✅ ACEPTAR VIAJE
+                        </button>
+                    </div>
+                `).join("");
+            });
+        }
+
+        // Aceptar pedido usando transacción para evitar que dos choferes tomen el mismo viaje
+        document.getElementById("rides-feed").addEventListener("click", async (e) => {
+            const btn = e.target.closest("button[data-accept-id]");
+            if (!btn || currentRideId) return;
+
+            const rideId = btn.dataset.acceptId;
+            btn.disabled = true;
+            btn.textContent = "TOMANDO VIAJE...";
+
+            try {
+                const rideRef = ref(db, `rides/${rideId}`);
+                const tx = await runTransaction(rideRef, (ride) => {
+                    if (!ride || ride.status !== "searching") return; // Otro chofer lo tomó antes
+                    ride.status = "accepted";
+                    ride.driver = driverProfile;
+                    return ride;
+                });
+
+                if (!tx.committed) {
+                    showToast("❌ Otro conductor ya tomó este viaje.", "error");
+                    return;
+                }
+
+                currentRideId = rideId;
+                localStorage.setItem("motoya_driver_active_ride", rideId);
+                attachActiveRide(rideId);
+                showToast("🏍️ ¡Viaje aceptado! Dirigite al punto de subida.");
+            } catch (err) {
+                console.error(err);
+                showToast("❌ Error al aceptar viaje.", "error");
+            }
+        });
+
+        function attachActiveRide(rideId) {
+            if (unsubscribeCurrentRide) unsubscribeCurrentRide();
+            document.getElementById("driver-active-ride").style.display = "flex";
+            document.getElementById("available-rides-section").style.display = "none";
+
+            unsubscribeCurrentRide = onValue(ref(db, `rides/${rideId}`), (snap) => {
+                if (!snap.exists()) {
+                    clearDriverActiveRide();
+                    return;
+                }
+
+                const ride = snap.val();
+                currentRideData = ride;
+
+                if (ride.status === "cancelled") {
+                    showToast("⚠️ El pasajero canceló el viaje.", "error");
+                    clearDriverActiveRide();
+                    return;
+                }
+
+                if (ride.status === "completed") {
+                    clearDriverActiveRide();
+                    return;
+                }
+
+                document.getElementById("drv-ride-pin").textContent = ride.pin || "----";
+                document.getElementById("drv-p-name").textContent = ride.passengerName;
+                document.getElementById("drv-p-pay").textContent = `Pago: ${ride.paymentMethod}`;
+                document.getElementById("drv-p-origin").textContent = ride.origin?.label || "Origen";
+                document.getElementById("drv-p-dest").textContent = ride.destination?.label || "Destino";
+                document.getElementById("drv-p-fare").textContent = `$${Number(ride.fare).toLocaleString("es-AR")}`;
+
+                const waNum = limpiarTelefonoWhatsApp(ride.passengerPhone);
+                const msg = encodeURIComponent(`Hola ${ride.passengerName}, soy ${driverProfile.name} de MotoYa (${driverProfile.moto}, patente ${driverProfile.plate}).`);
+                document.getElementById("btn-wa-passenger").href = waNum ? `https://wa.me/${waNum}?text=${msg}` : "#";
+
+                const targetCoords = ride.status === "in_progress" ? ride.destination : ride.origin;
+                if (targetCoords) {
+                    document.getElementById("btn-nav-gmaps").href =
+                        `https://www.google.com/maps/dir/?api=1&destination=${targetCoords.lat},${targetCoords.lng}&travelmode=motorcycle`;
+                }
+
+                const nextBtn = document.getElementById("btn-next-step");
+                if (ride.status === "accepted") {
+                    nextBtn.textContent = "📍 LLEGUÉ AL PUNTO DE SUBIDA";
+                    nextBtn.className = "btn btn-accent";
+                } else if (ride.status === "arrived") {
+                    nextBtn.textContent = "▶️ VALIDAR PIN E INICIAR VIAJE";
+                    nextBtn.className = "btn btn-green";
+                } else if (ride.status === "in_progress") {
+                    nextBtn.textContent = "✅ FINALIZAR VIAJE Y COBRAR";
+                    nextBtn.className = "btn btn-green";
+                }
+            });
+        }
+
+        document.getElementById("btn-next-step").addEventListener("click", async () => {
+            if (!currentRideId || !currentRideData) return;
+            const rideRef = ref(db, `rides/${currentRideId}`);
+
+            if (currentRideData.status === "accepted") {
+                await update(rideRef, { status: "arrived" });
+                showToast("Le avisamos al pasajero que llegaste.");
+            } else if (currentRideData.status === "arrived") {
+                const enteredPin = prompt("Pedile al pasajero su PIN de 4 dígitos:");
+                if (enteredPin === null) return;
+                if (enteredPin.trim() !== String(currentRideData.pin)) {
+                    showToast("❌ PIN incorrecto. Verificalo con el pasajero.", "error");
+                    return;
+                }
+                await update(rideRef, { status: "in_progress" });
+                showToast("🛣️ ¡Viaje iniciado! Buen recorrido.");
+            } else if (currentRideData.status === "in_progress") {
+                const fare = Number(currentRideData.fare || 0);
+                await update(rideRef, { status: "completed", completedAt: Date.now() });
+
+                dailyStats.trips += 1;
+                dailyStats.earnings += fare;
+                localStorage.setItem("motoya_driver_stats", JSON.stringify(dailyStats));
+                refreshStatsUI();
+
+                showToast(`💰 ¡Viaje finalizado! Cobrá $${fare.toLocaleString("es-AR")}`);
+                clearDriverActiveRide();
+            }
+        });
+
+        function clearDriverActiveRide() {
+            if (unsubscribeCurrentRide) {
+                unsubscribeCurrentRide();
+                unsubscribeCurrentRide = null;
+            }
+            localStorage.removeItem("motoya_driver_active_ride");
+            currentRideId = null;
+            currentRideData = null;
+            document.getElementById("driver-active-ride").style.display = "none";
+            document.getElementById("available-rides-section").style.display = "flex";
+        }
+
+        if (driverProfile) {
+            loadDashboard();
+        }
+    </script>
+</body>
+</html>
