@@ -18,7 +18,7 @@
         </div>
         <div class="topbar-actions">
             <a href="index.html" class="mode-switch-link">🧍 Pasajero</a>
-            <a href="conductor.html" class="mode-switch-link">🪖 Chofer</a>
+            <a href="conductor.html" class="mode-switch-link">🏍️ Chofer</a>
         </div>
     </header>
 
@@ -97,7 +97,7 @@
             <!-- GESTIÓN DE CONDUCTORES -->
             <section class="panel-card">
                 <div class="panel-title">
-                    <span>🪖 Conductores Registrados</span>
+                    <span>🏍️ Conductores Registrados</span>
                     <span id="adm-drivers-count" style="font-size: 0.72rem; color: var(--text-muted);">0</span>
                 </div>
                 <div id="adm-drivers-list" style="display: flex; flex-direction: column; gap: 8px;">
@@ -155,7 +155,6 @@
             if (listenersStarted) return;
             listenersStarted = true;
 
-            // 1. Configuración de tarifas
             onValue(ref(db, "config"), (snap) => {
                 currentCfg = { ...DEFAULT_CONFIG, ...(snap.val() || {}) };
                 document.getElementById("cfg-base").value = currentCfg.base;
@@ -167,7 +166,6 @@
                 updateRainBtnUI();
             });
 
-            // 2. Conductores
             onValue(ref(db, "drivers"), (snap) => {
                 const container = document.getElementById("adm-drivers-list");
                 const list = [];
@@ -210,7 +208,6 @@
                 }).join("");
             });
 
-            // 3. Viajes y métricas
             onValue(query(ref(db, "rides"), limitToLast(60)), (snap) => {
                 const container = document.getElementById("adm-rides-list");
                 const rides = [];
@@ -248,7 +245,7 @@
                             </span>
                         </div>
                         <div style="color:#cbd5e1;">
-                            🧍 ${escHtml(r.passengerName)} → 🪖 ${escHtml(r.driver?.name || "Sin asignar")}
+                            🧍 ${escHtml(r.passengerName)} → 🏍️ ${escHtml(r.driver?.name || "Sin asignar")}
                         </div>
                         <div style="font-size:0.7rem; color:var(--text-muted);">
                             🟢 ${escHtml(r.origin?.label)} ${r.stop ? `→ 🟡 ${escHtml(r.stop.label)}` : ""} → 🔴 ${escHtml(r.destination?.label)}
