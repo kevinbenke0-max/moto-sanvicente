@@ -14,112 +14,133 @@
     <!-- BARRA SUPERIOR -->
     <header class="app-topbar">
         <div class="brand-group">
-            <span class="brand-logo"> CHOFER MOTOYA</span>
+            <span class="brand-logo">🪖 CHOFER MOTOYA</span>
             <span class="city-tag">SAN VICENTE</span>
         </div>
-        <a href="index.html" class="mode-switch-link">🧍 Modo Pasajero</a>
+        <div class="topbar-actions">
+            <a href="index.html" class="mode-switch-link">🧍 Pasajero</a>
+            <a href="admin.html" class="mode-switch-link" title="Panel Admin">⚙️</a>
+        </div>
     </header>
 
     <main class="driver-container">
-        <div id="config-alert" class="config-alert"></div>
+        <div id="suspended-alert" class="config-alert">
+            ⛔ Tu cuenta de conductor fue suspendida por el administrador. Contactá al coordinador de MotoYa.
+        </div>
 
-        <!-- PERFIL DEL CONDUCTOR -->
+        <!-- REGISTRO / PERFIL DEL CONDUCTOR -->
         <section id="driver-setup-card" class="panel-card">
-            <div style="font-size: 0.95rem; font-weight: 900; color: var(--accent-bright);">
-                🏍️ Datos de tu Moto
-            </div>
-            <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.4;">
-                Completá tus datos una sola vez para que el pasajero te identifique al llegar.
+            <div class="panel-title">🏍️ Datos de tu Moto</div>
+            <p style="font-size: 0.73rem; color: var(--text-muted); line-height: 1.4;">
+                Completá tus datos una sola vez para recibir pedidos y acumular tu reputación con estrellas.
             </p>
             <input type="text" id="drv-input-name" class="field-input" placeholder="Tu nombre y apellido">
             <input type="text" id="drv-input-moto" class="field-input" placeholder="Modelo de moto (ej: Yamaha FZ25 negra)">
             <div class="btn-grid-2">
                 <input type="text" id="drv-input-plate" class="field-input" placeholder="Patente (ej: A123BCD)">
-                <input type="tel" id="drv-input-phone" class="field-input" placeholder="Tu WhatsApp">
+                <input type="tel" id="drv-input-phone" class="field-input" placeholder="Tu WhatsApp (ej: 3755...)">
             </div>
             <button type="button" id="btn-save-driver" class="btn btn-accent">GUARDAR Y ENTRAR</button>
         </section>
 
-        <!-- PANEL OPERATIVO DEL CHOFER -->
+        <!-- PANEL OPERATIVO -->
         <section id="driver-dashboard" style="display: none; flex-direction: column; gap: 12px;">
             <div class="online-switch-card">
-                <div>
-                    <div style="font-size: 0.85rem; font-weight: 900;">
+                <div style="min-width: 0;">
+                    <div style="font-size: 0.84rem; font-weight: 900;">
                         <span class="status-dot" id="online-dot"></span>
                         <span id="online-label">DESCONECTADO</span>
                     </div>
-                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;" id="driver-summary-txt">
-                        —
-                    </div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;" id="driver-summary-txt">—</div>
                 </div>
-                <div style="display: flex; gap: 6px;">
-                    <button type="button" id="btn-toggle-online" class="btn btn-green" style="width: auto; padding: 9px 12px; font-size: 0.76rem;">
+                <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                    <button type="button" id="btn-toggle-online" class="btn btn-green" style="width: auto; padding: 8px 11px; font-size: 0.74rem;">
                         CONECTARME
                     </button>
-                    <button type="button" id="btn-edit-profile" class="btn btn-secondary" style="width: auto; padding: 9px 10px; font-size: 0.76rem;">
+                    <button type="button" id="btn-edit-profile" class="btn btn-secondary" style="width: auto; padding: 8px 9px; font-size: 0.74rem;">
                         ✏️
                     </button>
                 </div>
             </div>
 
-            <!-- CAJA DEL DÍA -->
-            <div class="stats-grid-2">
+            <!-- ESTADÍSTICAS Y REPUTACIÓN -->
+            <div class="stats-grid-3">
                 <div class="stat-box">
                     <div class="stat-num" id="stat-trips">0</div>
                     <div class="stat-lbl">VIAJES HOY</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-num" id="stat-earnings">$0</div>
-                    <div class="stat-lbl">RECAUDADO HOY</div>
+                    <div class="stat-lbl">HOY ($)</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-num" style="color: var(--accent-bright);" id="stat-rating">⭐ 5.0</div>
+                    <div class="stat-lbl" id="stat-rating-cnt">0 OPINIONES</div>
                 </div>
             </div>
 
             <!-- VIAJE ACTIVO DEL CONDUCTOR -->
             <div id="driver-active-ride" class="panel-card highlight" style="display: none;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span class="city-tag">VIAJE EN CURSO</span>
-                    <span style="font-size: 0.85rem; font-weight: 900; color: var(--accent-bright);">
+                    <div class="badges-wrap" id="drv-active-badges"></div>
+                    <span style="font-size: 0.84rem; font-weight: 900; color: var(--accent-bright);">
                         PIN: <span id="drv-ride-pin">----</span>
                     </span>
                 </div>
 
                 <div>
-                    <div style="font-size: 0.95rem; font-weight: 900;" id="drv-p-name">Pasajero</div>
-                    <div style="font-size: 0.74rem; color: var(--text-muted);" id="drv-p-pay">Efectivo</div>
+                    <div style="font-size: 0.94rem; font-weight: 900;" id="drv-p-name">Pasajero</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);" id="drv-p-pay">Efectivo</div>
+                    <div id="drv-p-pkg" style="display: none; margin-top: 5px; font-size: 0.74rem; color: #a7f3d0; background: rgba(16,185,129,0.12); padding: 6px 8px; border-radius: 7px;"></div>
                 </div>
 
                 <div class="ride-route-line">
                     <div>🟢 <strong>Subida:</strong> <span id="drv-p-origin">—</span></div>
-                    <div style="margin-top: 4px;">🔴 <strong>Destino:</strong> <span id="drv-p-dest">—</span></div>
+                    <div id="drv-p-stop-row" style="display: none; margin-top: 3px;">🟡 <strong>Parada:</strong> <span id="drv-p-stop">—</span></div>
+                    <div style="margin-top: 3px;">🔴 <strong>Destino:</strong> <span id="drv-p-dest">—</span></div>
                 </div>
 
-                <div style="font-size: 1.2rem; font-weight: 900; color: var(--green);">
-                    A cobrar: <span id="drv-p-fare">$0</span>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 1.18rem; font-weight: 900; color: var(--green);">
+                        A cobrar: <span id="drv-p-fare">$0</span>
+                    </div>
+                    <span id="gps-broadcast-pill" style="font-size: 0.66rem; color: #93c5fd; font-weight: 800;">
+                        🛰️ GPS en vivo activo
+                    </span>
                 </div>
 
                 <div class="btn-grid-2">
-                    <a id="btn-nav-gmaps" href="#" target="_blank" class="btn btn-blue" style="font-size: 0.76rem;">
+                    <a id="btn-nav-gmaps" href="#" target="_blank" class="btn btn-blue" style="font-size: 0.75rem;">
                         🗺️ Abrir Ruta GPS
                     </a>
-                    <a id="btn-wa-passenger" href="#" target="_blank" class="btn btn-secondary" style="font-size: 0.76rem;">
+                    <a id="btn-wa-passenger" href="#" target="_blank" class="btn btn-secondary" style="font-size: 0.75rem;">
                         💬 WhatsApp
                     </a>
                 </div>
 
                 <button type="button" id="btn-next-step" class="btn btn-accent">
-                    LLEGUÉ AL PUNTO DE SUBIDA
+                    📍 LLEGUÉ AL PUNTO DE SUBIDA
                 </button>
             </div>
 
-            <!-- LISTA DE PEDIDOS ENTRANTES -->
+            <!-- PEDIDOS ENTRANTES -->
             <div id="available-rides-section" class="panel-card">
-                <div style="font-size: 0.85rem; font-weight: 900; color: var(--accent-bright);">
-                    📡 Pedidos en San Vicente
+                <div class="panel-title">
+                    <span>📡 Pedidos en San Vicente</span>
+                    <span id="rain-banner-drv" class="tag-badge rain" style="display: none;">🌧️ Lluvia activa</span>
                 </div>
                 <div id="rides-feed" style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="font-size: 0.78rem; color: var(--text-muted); text-align: center; padding: 14px 0;">
-                        Conectate para recibir solicitudes de viaje.
+                    <div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">
+                        Conectate para recibir solicitudes de viaje y envíos.
                     </div>
+                </div>
+            </div>
+
+            <!-- HISTORIAL DEL CHOFER -->
+            <div class="panel-card">
+                <div class="panel-title">🧾 Mis Últimos Viajes Completados</div>
+                <div id="driver-history-feed" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Sin viajes completados todavía.</div>
                 </div>
             </div>
         </section>
@@ -127,36 +148,22 @@
 
     <script type="module">
         import {
-            db, ref, update, onValue, runTransaction, query, orderByChild, equalTo,
-            isConfigured, limpiarTelefonoWhatsApp
+            db, ref, get, set, update, onValue, runTransaction, query, limitToLast,
+            limpiarTelefonoWhatsApp, escHtml, formatHoraFecha
         } from "./firebase-config.js";
 
-        if (!isConfigured) {
-            const alertBox = document.getElementById("config-alert");
-            alertBox.textContent = "⚠️ Falta pegar tus credenciales de Firebase en firebase-config.js";
-            alertBox.classList.add("visible");
-        }
-
         let driverProfile = JSON.parse(localStorage.getItem("motoya_driver_profile") || "null");
+        let driverServerState = { status: "active", ratingSum: 0, ratingCount: 0, completedTrips: 0 };
         let isOnline = false;
         let currentRideId = localStorage.getItem("motoya_driver_active_ride") || null;
         let currentRideData = null;
-        let unsubscribeSearching = null;
+
+        let unsubscribeRides = null;
         let unsubscribeCurrentRide = null;
+        let unsubscribeDriverNode = null;
+        let gpsWatchId = null;
+        let lastGpsSentAt = 0;
         let knownRideIds = new Set();
-
-        // Estadísticas diarias locales
-        const todayKey = new Date().toISOString().slice(0, 10);
-        let dailyStats = JSON.parse(localStorage.getItem("motoya_driver_stats") || "null");
-        if (!dailyStats || dailyStats.date !== todayKey) {
-            dailyStats = { date: todayKey, trips: 0, earnings: 0 };
-            localStorage.setItem("motoya_driver_stats", JSON.stringify(dailyStats));
-        }
-
-        function refreshStatsUI() {
-            document.getElementById("stat-trips").textContent = dailyStats.trips;
-            document.getElementById("stat-earnings").textContent = `$${dailyStats.earnings.toLocaleString("es-AR")}`;
-        }
 
         function showToast(msg, type = "success") {
             const container = document.getElementById("toast-container");
@@ -164,7 +171,7 @@
             toast.className = `toast ${type}`;
             toast.textContent = msg;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 2800);
+            setTimeout(() => toast.remove(), 2900);
         }
 
         function playAlertBeep() {
@@ -185,12 +192,69 @@
             } catch {}
         }
 
+        function getDriverAvgRating() {
+            const cnt = Number(driverServerState.ratingCount || 0);
+            if (cnt === 0) return 5.0;
+            return Math.round((Number(driverServerState.ratingSum || 0) / cnt) * 10) / 10;
+        }
+
+        // Mostrar aviso si modo lluvia está activo
+        onValue(ref(db, "config/rainMode"), (snap) => {
+            document.getElementById("rain-banner-drv").style.display = snap.val() ? "inline-flex" : "none";
+        });
+
+        async function syncDriverToFirebase(profile) {
+            const drvRef = ref(db, `drivers/${profile.id}`);
+            const snap = await get(drvRef);
+            if (!snap.exists()) {
+                await set(drvRef, {
+                    id: profile.id,
+                    name: profile.name,
+                    moto: profile.moto,
+                    plate: profile.plate,
+                    phone: profile.phone,
+                    status: "active",
+                    ratingSum: 0,
+                    ratingCount: 0,
+                    completedTrips: 0,
+                    createdAt: Date.now()
+                });
+            } else {
+                await update(drvRef, {
+                    name: profile.name,
+                    moto: profile.moto,
+                    plate: profile.plate,
+                    phone: profile.phone
+                });
+            }
+        }
+
+        function listenDriverProfileNode(driverId) {
+            if (unsubscribeDriverNode) unsubscribeDriverNode();
+            unsubscribeDriverNode = onValue(ref(db, `drivers/${driverId}`), (snap) => {
+                if (snap.exists()) {
+                    driverServerState = snap.val();
+                }
+                const cnt = Number(driverServerState.ratingCount || 0);
+                document.getElementById("stat-rating").textContent = `⭐ ${getDriverAvgRating().toFixed(1)}`;
+                document.getElementById("stat-rating-cnt").textContent = `${cnt} OPINI${cnt === 1 ? "ÓN" : "ONES"}`;
+
+                const isSuspended = driverServerState.status === "suspended";
+                document.getElementById("suspended-alert").classList.toggle("visible", isSuspended);
+                if (isSuspended && isOnline) {
+                    setOnlineState(false);
+                }
+            });
+        }
+
         function loadDashboard() {
             document.getElementById("driver-setup-card").style.display = "none";
             document.getElementById("driver-dashboard").style.display = "flex";
             document.getElementById("driver-summary-txt").textContent =
-                `${driverProfile.name} · ${driverProfile.moto} (${driverProfile.plate.toUpperCase()})`;
-            refreshStatsUI();
+                `${driverProfile.name} · ${driverProfile.moto} (${driverProfile.plate})`;
+
+            listenDriverProfileNode(driverProfile.id);
+            startListeningAllRides();
 
             if (currentRideId) {
                 setOnlineState(true);
@@ -198,7 +262,7 @@
             }
         }
 
-        document.getElementById("btn-save-driver").addEventListener("click", () => {
+        document.getElementById("btn-save-driver").addEventListener("click", async () => {
             const name = document.getElementById("drv-input-name").value.trim();
             const moto = document.getElementById("drv-input-moto").value.trim();
             const plate = document.getElementById("drv-input-plate").value.trim().toUpperCase();
@@ -209,9 +273,16 @@
                 return;
             }
 
-            driverProfile = { name, moto, plate, phone };
+            const cleanId = limpiarTelefonoWhatsApp(phone) || plate.replace(/[^A-Z0-9]/g, "");
+            driverProfile = { id: cleanId, name, moto, plate, phone };
             localStorage.setItem("motoya_driver_profile", JSON.stringify(driverProfile));
-            loadDashboard();
+
+            try {
+                await syncDriverToFirebase(driverProfile);
+                loadDashboard();
+            } catch {
+                showToast("❌ Error al guardar perfil en Firebase.", "error");
+            }
         });
 
         document.getElementById("btn-edit-profile").addEventListener("click", () => {
@@ -229,31 +300,22 @@
         });
 
         function setOnlineState(state) {
+            if (state && driverServerState.status === "suspended") {
+                showToast("⛔ Tu cuenta está suspendida por el administrador.", "error");
+                return;
+            }
             isOnline = state;
-            const dot = document.getElementById("online-dot");
-            const lbl = document.getElementById("online-label");
-            const btn = document.getElementById("btn-toggle-online");
+            document.getElementById("online-dot").classList.toggle("online", isOnline);
+            document.getElementById("online-label").textContent = isOnline ? "EN LÍNEA (RECIBIENDO)" : "DESCONECTADO";
 
-            dot.classList.toggle("online", isOnline);
-            lbl.textContent = isOnline ? "EN LÍNEA (RECIBIENDO)" : "DESCONECTADO";
+            const btn = document.getElementById("btn-toggle-online");
             btn.textContent = isOnline ? "DESCONECTAR" : "CONECTARME";
             btn.className = isOnline ? "btn btn-danger" : "btn btn-green";
             btn.style.width = "auto";
-            btn.style.padding = "9px 12px";
-            btn.style.fontSize = "0.76rem";
+            btn.style.padding = "8px 11px";
+            btn.style.fontSize = "0.74rem";
 
-            if (isOnline && isConfigured) {
-                startListeningRides();
-            } else {
-                if (unsubscribeSearching) {
-                    unsubscribeSearching();
-                    unsubscribeSearching = null;
-                }
-                document.getElementById("rides-feed").innerHTML = `
-                    <div style="font-size: 0.78rem; color: var(--text-muted); text-align: center; padding: 14px 0;">
-                        Conectate para recibir solicitudes de viaje.
-                    </div>`;
-            }
+            renderAvailableRides(lastSnapshotRides);
         }
 
         document.getElementById("btn-toggle-online").addEventListener("click", () => {
@@ -264,119 +326,230 @@
             setOnlineState(!isOnline);
         });
 
-        function startListeningRides() {
-            if (unsubscribeSearching) unsubscribeSearching();
-            const q = query(ref(db, "rides"), orderByChild("status"), equalTo("searching"));
+        let lastSnapshotRides = [];
 
-            unsubscribeSearching = onValue(q, (snapshot) => {
-                const feed = document.getElementById("rides-feed");
-                const rides = [];
+        function startListeningAllRides() {
+            if (unsubscribeRides) unsubscribeRides();
+            unsubscribeRides = onValue(query(ref(db, "rides"), limitToLast(60)), (snapshot) => {
+                const all = [];
                 snapshot.forEach((child) => {
-                    rides.push({ id: child.key, ...child.val() });
+                    all.push({ id: child.key, ...child.val() });
                 });
-
-                if (!rides.length) {
-                    knownRideIds.clear();
-                    feed.innerHTML = `
-                        <div style="font-size: 0.78rem; color: var(--text-muted); text-align: center; padding: 14px 0;">
-                            ⏳ Esperando pasajeros en San Vicente...
-                        </div>`;
-                    return;
-                }
-
-                // Aviso sonoro si entra un pedido nuevo
-                let hasNew = false;
-                rides.forEach((r) => {
-                    if (!knownRideIds.has(r.id)) hasNew = true;
-                });
-                knownRideIds = new Set(rides.map((r) => r.id));
-                if (hasNew && !currentRideId) playAlertBeep();
-
-                feed.innerHTML = rides.map((r) => `
-                    <div class="ride-request-card">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong>🧍 ${r.passengerName}</strong>
-                            <span style="font-size:1.1rem; font-weight:900; color:var(--green);">
-                                $${Number(r.fare).toLocaleString("es-AR")}
-                            </span>
-                        </div>
-                        <div class="ride-route-line">
-                            <div>🟢 <strong>Subida:</strong> ${r.origin?.label || "Mapa"}</div>
-                            <div>🔴 <strong>Destino:</strong> ${r.destination?.label || "Mapa"}</div>
-                        </div>
-                        <div style="font-size:0.7rem; color:var(--text-muted);">
-                            📏 ${r.distanceKm} km · 💳 ${r.paymentMethod}
-                        </div>
-                        <button type="button" class="btn btn-accent" data-accept-id="${r.id}" ${currentRideId ? "disabled" : ""}>
-                            ✅ ACEPTAR VIAJE
-                        </button>
-                    </div>
-                `).join("");
+                lastSnapshotRides = all;
+                renderAvailableRides(all);
+                renderDriverHistoryAndStats(all);
             });
         }
 
-        // Aceptar pedido usando transacción para evitar que dos choferes tomen el mismo viaje
+        function renderAvailableRides(allRides) {
+            const feed = document.getElementById("rides-feed");
+            if (!isOnline) {
+                feed.innerHTML = `<div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">Conectate para recibir solicitudes de viaje y envíos.</div>`;
+                return;
+            }
+
+            const searching = allRides.filter((r) => r.status === "searching").reverse();
+            if (!searching.length) {
+                knownRideIds.clear();
+                feed.innerHTML = `<div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">⏳ Esperando pedidos en San Vicente...</div>`;
+                return;
+            }
+
+            let hasNew = false;
+            searching.forEach((r) => { if (!knownRideIds.has(r.id)) hasNew = true; });
+            knownRideIds = new Set(searching.map((r) => r.id));
+            if (hasNew && !currentRideId) playAlertBeep();
+
+            feed.innerHTML = searching.map((r) => {
+                const badges = [];
+                badges.push(r.serviceType === "delivery"
+                    ? `<span class="tag-badge pkg">📦 ENVÍO</span>`
+                    : `<span class="tag-badge stop">🏍️ VIAJE</span>`);
+                if (r.scheduledFor) badges.push(`<span class="tag-badge sched">📅 ${escHtml(r.scheduledFor.replace("T", " "))}</span>`);
+                if (r.stop) badges.push(`<span class="tag-badge stop">🟡 +1 PARADA</span>`);
+                if (r.isRainTariff) badges.push(`<span class="tag-badge rain">🌧️ LLUVIA</span>`);
+                if (r.isNightTariff) badges.push(`<span class="tag-badge night">🌙 NOCTURNA</span>`);
+
+                return `
+                <div class="ride-request-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div class="badges-wrap">${badges.join("")}</div>
+                        <span style="font-size:1.12rem; font-weight:900; color:var(--green);">
+                            $${Number(r.fare).toLocaleString("es-AR")}
+                        </span>
+                    </div>
+                    <div style="font-size:0.84rem; font-weight:800;">🧍 ${escHtml(r.passengerName)}</div>
+                    ${r.packageNotes ? `<div style="font-size:0.74rem; color:#a7f3d0;">📦 Detalle: ${escHtml(r.packageNotes)}</div>` : ""}
+                    <div class="ride-route-line">
+                        <div>🟢 <strong>Subida:</strong> ${escHtml(r.origin?.label)}</div>
+                        ${r.stop ? `<div>🟡 <strong>Parada:</strong> ${escHtml(r.stop.label)}</div>` : ""}
+                        <div>🔴 <strong>Destino:</strong> ${escHtml(r.destination?.label)}</div>
+                    </div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);">
+                        📏 ${r.distanceKm} km · 💳 ${escHtml(r.paymentMethod)}
+                    </div>
+                    <button type="button" class="btn btn-accent" data-accept-id="${r.id}" ${currentRideId ? "disabled" : ""}>
+                        ✅ ACEPTAR PEDIDO
+                    </button>
+                </div>`;
+            }).join("");
+        }
+
+        function renderDriverHistoryAndStats(allRides) {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            const mine = allRides
+                .filter((r) => r.status === "completed" && r.driver && r.driver.id === driverProfile.id)
+                .reverse();
+
+            let todayTrips = 0;
+            let todayEarn = 0;
+            mine.forEach((r) => {
+                const dStr = new Date(r.completedAt || r.createdAt || 0).toISOString().slice(0, 10);
+                if (dStr === todayStr) {
+                    todayTrips++;
+                    todayEarn += Number(r.fare || 0);
+                }
+            });
+
+            document.getElementById("stat-trips").textContent = todayTrips;
+            document.getElementById("stat-earnings").textContent = `$${todayEarn.toLocaleString("es-AR")}`;
+
+            const histFeed = document.getElementById("driver-history-feed");
+            if (!mine.length) {
+                histFeed.innerHTML = `<div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Sin viajes completados todavía.</div>`;
+                return;
+            }
+
+            histFeed.innerHTML = mine.slice(0, 10).map((r) => `
+                <div class="history-card">
+                    <div style="display:flex; justify-content:space-between;">
+                        <strong>${r.serviceType === "delivery" ? "📦" : "🏍️"} ${escHtml(r.passengerName)} · $${Number(r.fare).toLocaleString("es-AR")}</strong>
+                        <span style="font-size:0.66rem; color:var(--text-muted);">${formatHoraFecha(r.completedAt || r.createdAt)}</span>
+                    </div>
+                    <div style="color:#cbd5e1;">🟢 ${escHtml(r.origin?.label)} → 🔴 ${escHtml(r.destination?.label)}</div>
+                    <div style="font-size:0.68rem; color:var(--accent-bright);">
+                        ${r.rating ? `Calificación recibida: ${"⭐".repeat(r.rating)}` : "Sin calificación aún"}
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        // Aceptar pedido con transacción atómica
         document.getElementById("rides-feed").addEventListener("click", async (e) => {
             const btn = e.target.closest("button[data-accept-id]");
             if (!btn || currentRideId) return;
 
             const rideId = btn.dataset.acceptId;
             btn.disabled = true;
-            btn.textContent = "TOMANDO VIAJE...";
+            btn.textContent = "TOMANDO PEDIDO...";
 
             try {
-                const rideRef = ref(db, `rides/${rideId}`);
-                const tx = await runTransaction(rideRef, (ride) => {
-                    if (!ride || ride.status !== "searching") return; // Otro chofer lo tomó antes
+                const tx = await runTransaction(ref(db, `rides/${rideId}`), (ride) => {
+                    if (!ride || ride.status !== "searching") return;
                     ride.status = "accepted";
-                    ride.driver = driverProfile;
+                    ride.driver = {
+                        ...driverProfile,
+                        ratingAvg: getDriverAvgRating()
+                    };
                     return ride;
                 });
 
                 if (!tx.committed) {
-                    showToast("❌ Otro conductor ya tomó este viaje.", "error");
+                    showToast("❌ Otro conductor ya tomó este pedido.", "error");
                     return;
                 }
 
                 currentRideId = rideId;
                 localStorage.setItem("motoya_driver_active_ride", rideId);
                 attachActiveRide(rideId);
-                showToast("🏍️ ¡Viaje aceptado! Dirigite al punto de subida.");
+                showToast("🏍️ ¡Pedido aceptado! Transmitiendo tu ubicación GPS.");
             } catch (err) {
                 console.error(err);
-                showToast("❌ Error al aceptar viaje.", "error");
+                showToast("❌ Error al aceptar pedido.", "error");
             }
         });
+
+        // Transmisión de GPS en tiempo real del chofer al mapa del pasajero
+        function startGpsBroadcast(rideId) {
+            stopGpsBroadcast();
+            if (!navigator.geolocation) {
+                document.getElementById("gps-broadcast-pill").textContent = "⚠️ GPS no disponible";
+                return;
+            }
+            document.getElementById("gps-broadcast-pill").textContent = "🛰️ GPS en vivo activo";
+            gpsWatchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const now = Date.now();
+                    if (now - lastGpsSentAt < 3500) return;
+                    lastGpsSentAt = now;
+                    update(ref(db, `rides/${rideId}/driverLocation`), {
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        updatedAt: now
+                    }).catch(() => {});
+                },
+                () => {
+                    document.getElementById("gps-broadcast-pill").textContent = "⚠️ Activá GPS para rastreo";
+                },
+                { enableHighAccuracy: true, maximumAge: 3000, timeout: 10000 }
+            );
+        }
+
+        function stopGpsBroadcast() {
+            if (gpsWatchId !== null && navigator.geolocation) {
+                navigator.geolocation.clearWatch(gpsWatchId);
+                gpsWatchId = null;
+            }
+        }
 
         function attachActiveRide(rideId) {
             if (unsubscribeCurrentRide) unsubscribeCurrentRide();
             document.getElementById("driver-active-ride").style.display = "flex";
             document.getElementById("available-rides-section").style.display = "none";
+            startGpsBroadcast(rideId);
 
             unsubscribeCurrentRide = onValue(ref(db, `rides/${rideId}`), (snap) => {
-                if (!snap.exists()) {
-                    clearDriverActiveRide();
-                    return;
-                }
-
+                if (!snap.exists()) { clearDriverActiveRide(); return; }
                 const ride = snap.val();
                 currentRideData = ride;
 
                 if (ride.status === "cancelled") {
-                    showToast("⚠️ El pasajero canceló el viaje.", "error");
+                    showToast("⚠️ El cliente canceló el pedido.", "error");
                     clearDriverActiveRide();
                     return;
                 }
-
                 if (ride.status === "completed") {
                     clearDriverActiveRide();
                     return;
                 }
 
+                const badges = [
+                    ride.serviceType === "delivery"
+                        ? `<span class="tag-badge pkg">📦 ENVÍO</span>`
+                        : `<span class="tag-badge stop">🏍️ VIAJE</span>`
+                ];
+                if (ride.scheduledFor) badges.push(`<span class="tag-badge sched">📅 ${escHtml(ride.scheduledFor.replace("T", " "))}</span>`);
+                document.getElementById("drv-active-badges").innerHTML = badges.join("");
+
                 document.getElementById("drv-ride-pin").textContent = ride.pin || "----";
                 document.getElementById("drv-p-name").textContent = ride.passengerName;
                 document.getElementById("drv-p-pay").textContent = `Pago: ${ride.paymentMethod}`;
+
+                const pkgEl = document.getElementById("drv-p-pkg");
+                if (ride.packageNotes) {
+                    pkgEl.style.display = "block";
+                    pkgEl.textContent = `📦 Paquete: ${ride.packageNotes}`;
+                } else {
+                    pkgEl.style.display = "none";
+                }
+
                 document.getElementById("drv-p-origin").textContent = ride.origin?.label || "Origen";
+                if (ride.stop) {
+                    document.getElementById("drv-p-stop-row").style.display = "block";
+                    document.getElementById("drv-p-stop").textContent = ride.stop.label;
+                } else {
+                    document.getElementById("drv-p-stop-row").style.display = "none";
+                }
                 document.getElementById("drv-p-dest").textContent = ride.destination?.label || "Destino";
                 document.getElementById("drv-p-fare").textContent = `$${Number(ride.fare).toLocaleString("es-AR")}`;
 
@@ -384,21 +557,25 @@
                 const msg = encodeURIComponent(`Hola ${ride.passengerName}, soy ${driverProfile.name} de MotoYa (${driverProfile.moto}, patente ${driverProfile.plate}).`);
                 document.getElementById("btn-wa-passenger").href = waNum ? `https://wa.me/${waNum}?text=${msg}` : "#";
 
-                const targetCoords = ride.status === "in_progress" ? ride.destination : ride.origin;
-                if (targetCoords) {
-                    document.getElementById("btn-nav-gmaps").href =
-                        `https://www.google.com/maps/dir/?api=1&destination=${targetCoords.lat},${targetCoords.lng}&travelmode=motorcycle`;
+                // Ruta en Google Maps (incluye parada intermedia si ya inició el viaje)
+                let navUrl = "#";
+                if (ride.status === "in_progress" && ride.destination) {
+                    const wp = ride.stop ? `&waypoints=${ride.stop.lat},${ride.stop.lng}` : "";
+                    navUrl = `https://www.google.com/maps/dir/?api=1&destination=${ride.destination.lat},${ride.destination.lng}${wp}&travelmode=motorcycle`;
+                } else if (ride.origin) {
+                    navUrl = `https://www.google.com/maps/dir/?api=1&destination=${ride.origin.lat},${ride.origin.lng}&travelmode=motorcycle`;
                 }
+                document.getElementById("btn-nav-gmaps").href = navUrl;
 
                 const nextBtn = document.getElementById("btn-next-step");
                 if (ride.status === "accepted") {
                     nextBtn.textContent = "📍 LLEGUÉ AL PUNTO DE SUBIDA";
                     nextBtn.className = "btn btn-accent";
                 } else if (ride.status === "arrived") {
-                    nextBtn.textContent = "▶️ VALIDAR PIN E INICIAR VIAJE";
+                    nextBtn.textContent = "▶️ VALIDAR PIN E INICIAR";
                     nextBtn.className = "btn btn-green";
                 } else if (ride.status === "in_progress") {
-                    nextBtn.textContent = "✅ FINALIZAR VIAJE Y COBRAR";
+                    nextBtn.textContent = "✅ FINALIZAR Y COBRAR";
                     nextBtn.className = "btn btn-green";
                 }
             });
@@ -410,35 +587,28 @@
 
             if (currentRideData.status === "accepted") {
                 await update(rideRef, { status: "arrived" });
-                showToast("Le avisamos al pasajero que llegaste.");
+                showToast("Le avisamos al cliente que llegaste.");
             } else if (currentRideData.status === "arrived") {
-                const enteredPin = prompt("Pedile al pasajero su PIN de 4 dígitos:");
+                const enteredPin = prompt("Pedile al cliente su PIN de 4 dígitos:");
                 if (enteredPin === null) return;
                 if (enteredPin.trim() !== String(currentRideData.pin)) {
-                    showToast("❌ PIN incorrecto. Verificalo con el pasajero.", "error");
+                    showToast("❌ PIN incorrecto.", "error");
                     return;
                 }
                 await update(rideRef, { status: "in_progress" });
-                showToast("🛣️ ¡Viaje iniciado! Buen recorrido.");
+                showToast("🛣️ ¡Traslado iniciado!");
             } else if (currentRideData.status === "in_progress") {
                 const fare = Number(currentRideData.fare || 0);
                 await update(rideRef, { status: "completed", completedAt: Date.now() });
-
-                dailyStats.trips += 1;
-                dailyStats.earnings += fare;
-                localStorage.setItem("motoya_driver_stats", JSON.stringify(dailyStats));
-                refreshStatsUI();
-
-                showToast(`💰 ¡Viaje finalizado! Cobrá $${fare.toLocaleString("es-AR")}`);
+                await runTransaction(ref(db, `drivers/${driverProfile.id}/completedTrips`), (c) => Number(c || 0) + 1);
+                showToast(`💰 ¡Completado! Cobrá $${fare.toLocaleString("es-AR")}`);
                 clearDriverActiveRide();
             }
         });
 
         function clearDriverActiveRide() {
-            if (unsubscribeCurrentRide) {
-                unsubscribeCurrentRide();
-                unsubscribeCurrentRide = null;
-            }
+            stopGpsBroadcast();
+            if (unsubscribeCurrentRide) { unsubscribeCurrentRide(); unsubscribeCurrentRide = null; }
             localStorage.removeItem("motoya_driver_active_ride");
             currentRideId = null;
             currentRideData = null;
@@ -447,7 +617,7 @@
         }
 
         if (driverProfile) {
-            loadDashboard();
+            syncDriverToFirebase(driverProfile).finally(loadDashboard);
         }
     </script>
 </body>
