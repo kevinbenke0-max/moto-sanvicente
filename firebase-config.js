@@ -12,6 +12,12 @@ import {
     query,
     limitToLast
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import {
+    getAuth,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCsGCAlnCmnh8150oHtjMVk4McU0L71TOQ",
@@ -45,9 +51,14 @@ export const PUNTOS_LOCALES = [
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 
 export const isConfigured = true;
-export { db, ref, get, set, push, update, remove, onValue, runTransaction, query, limitToLast };
+export {
+    db, auth,
+    ref, get, set, push, update, remove, onValue, runTransaction, query, limitToLast,
+    signInWithEmailAndPassword, signOut, onAuthStateChanged
+};
 
 export function esHorarioNocturno(dateObj = new Date()) {
     const h = dateObj.getHours();
