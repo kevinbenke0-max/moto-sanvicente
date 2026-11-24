@@ -7,6 +7,127 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        /* NAVEGACIÓN POR PESTAÑAS */
+        .driver-tabs-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            background: var(--bg-panel);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 5px;
+            position: sticky;
+            top: 6px;
+            z-index: 400;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
+        }
+        .drv-tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 9px 4px;
+            border-radius: 9px;
+            cursor: pointer;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .drv-tab-btn.active {
+            background: rgba(245, 158, 11, 0.18);
+            border-color: var(--accent-bright);
+            color: #fff;
+        }
+        .tab-count-badge {
+            background: var(--accent);
+            color: #090d10;
+            font-size: 0.62rem;
+            font-weight: 900;
+            padding: 1px 6px;
+            border-radius: 10px;
+            display: none;
+        }
+        .tab-count-badge.visible { display: inline-block; }
+        .drv-tab-panel {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .drv-tab-panel.active { display: flex; }
+
+        /* ALERTAS DE ESTADO */
+        .pending-alert {
+            background: rgba(245, 158, 11, 0.14);
+            border: 1.5px solid var(--accent);
+            color: #fde68a;
+            font-size: 0.74rem;
+            font-weight: 700;
+            padding: 10px 12px;
+            border-radius: 10px;
+            text-align: center;
+            line-height: 1.45;
+            display: none;
+        }
+        .pending-alert.visible { display: block; }
+
+        /* CARGA DE FOTOS DNI */
+        .dni-upload-section {
+            background: #0d131a;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+        .dni-upload-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .dni-upload-box {
+            background: var(--bg-input);
+            border: 1.5px dashed var(--accent);
+            border-radius: 10px;
+            padding: 10px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-align: center;
+            cursor: pointer;
+            min-height: 118px;
+            position: relative;
+            overflow: hidden;
+        }
+        .dni-upload-box.loaded {
+            border-style: solid;
+            border-color: var(--green);
+            padding: 4px;
+        }
+        .dni-upload-box input[type="file"] {
+            display: none;
+        }
+        .dni-preview-img {
+            width: 100%;
+            height: 92px;
+            object-fit: cover;
+            border-radius: 7px;
+            display: none;
+        }
+        .dni-upload-box.loaded .dni-preview-img { display: block; }
+        .dni-upload-box.loaded .dni-placeholder { display: none; }
+        .dni-upload-label {
+            font-size: 0.67rem;
+            font-weight: 800;
+            color: #cbd5e1;
+        }
+
+        /* CAJA Y COMISIÓN */
         .finance-top-card {
             background: linear-gradient(180deg, #16202b 0%, #0e151d 100%);
             border: 1.5px solid var(--accent);
@@ -15,7 +136,6 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
         }
         .finance-header {
             display: flex;
@@ -23,10 +143,7 @@
             align-items: center;
             gap: 8px;
         }
-        .finance-period-tabs {
-            display: flex;
-            gap: 4px;
-        }
+        .finance-period-tabs { display: flex; gap: 4px; }
         .fin-tab {
             background: var(--bg-input);
             border: 1px solid var(--border);
@@ -65,21 +182,9 @@
             border-color: rgba(245, 158, 11, 0.65);
             background: rgba(245, 158, 11, 0.09);
         }
-        .split-lbl {
-            font-size: 0.62rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: #cbd5e1;
-        }
-        .split-amount {
-            font-size: 1.25rem;
-            font-weight: 900;
-        }
-        .split-sub {
-            font-size: 0.63rem;
-            color: var(--text-muted);
-            font-weight: 700;
-        }
+        .split-lbl { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; color: #cbd5e1; }
+        .split-amount { font-size: 1.25rem; font-weight: 900; }
+        .split-sub { font-size: 0.63rem; color: var(--text-muted); font-weight: 700; }
         .finance-breakdown-bar {
             display: flex;
             justify-content: space-between;
@@ -120,12 +225,7 @@
             border-radius: 8px;
             padding: 7px 9px;
         }
-        .alias-text-wrap {
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
+        .alias-text-wrap { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
         .btn-copy-alias {
             background: var(--accent);
             color: #090d10;
@@ -140,7 +240,7 @@
         }
         .btn-copy-alias:active { transform: scale(0.95); }
 
-        /* REGLAS Y CONDICIONES DE REGISTRO */
+        /* REGLAS Y CONDICIONES */
         .rules-card {
             background: #0d131a;
             border: 1.5px solid var(--accent);
@@ -150,21 +250,14 @@
             flex-direction: column;
             gap: 9px;
         }
-        .rules-card-title {
-            font-size: 0.84rem;
-            font-weight: 900;
-            color: var(--accent-bright);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+        .rules-card-title { font-size: 0.84rem; font-weight: 900; color: var(--accent-bright); }
         .rules-list {
             list-style: none;
             display: flex;
             flex-direction: column;
             gap: 8px;
-            font-size: 0.74rem;
-            line-height: 1.48;
+            font-size: 0.73rem;
+            line-height: 1.46;
             color: #e2e8f0;
         }
         .rules-list li {
@@ -182,24 +275,47 @@
         .rules-accept-label {
             display: flex;
             align-items: flex-start;
-            gap: 9px;
-            background: rgba(245, 158, 11, 0.1);
-            border: 1.5px solid rgba(245, 158, 11, 0.5);
+            gap: 10px;
+            background: rgba(245, 158, 11, 0.08);
+            border: 1.5px solid var(--border);
             border-radius: 10px;
-            padding: 10px;
+            padding: 11px;
             font-size: 0.73rem;
             line-height: 1.4;
             color: #f8fafc;
             font-weight: 700;
             cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .rules-accept-label.checked {
+            border-color: var(--green);
+            background: rgba(16, 185, 129, 0.12);
+        }
+        .rules-accept-label.error-flash {
+            border-color: var(--red);
+            background: rgba(239, 68, 68, 0.16);
+        }
+        .custom-check-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 2px solid var(--accent-bright);
+            background: var(--bg-input);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 900;
+            color: #031a11;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+        .rules-accept-label.checked .custom-check-box {
+            background: var(--green);
+            border-color: var(--green);
         }
         .rules-accept-label input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            margin-top: 2px;
-            accent-color: var(--accent);
-            flex-shrink: 0;
-            cursor: pointer;
+            display: none;
         }
     </style>
 </head>
@@ -214,7 +330,7 @@
             <span class="city-tag">SAN VICENTE</span>
         </div>
         <div class="topbar-actions">
-            <button type="button" id="btn-open-rules-modal" class="mode-switch-link" title="Ver reglas y condiciones">📜 Reglas</button>
+            <button type="button" id="btn-open-rules-modal" class="mode-switch-link" title="Ver reglas">📜 Reglas</button>
             <a href="index.html" class="mode-switch-link">🧍 Pasajero</a>
         </div>
     </header>
@@ -224,11 +340,15 @@
             ⛔ Tu cuenta de conductor fue suspendida o bloqueada por la administración. Contactá al coordinador de MotoYa.
         </div>
 
+        <div id="pending-alert" class="pending-alert">
+            ⏳ <strong>Verificación pendiente:</strong> Recibimos tus datos y las fotos de tu DNI. Apenas la administración apruebe tu identidad vas a poder conectarte y tomar viajes.
+        </div>
+
         <!-- REGISTRO / PERFIL DEL CONDUCTOR -->
         <section id="driver-setup-card" class="panel-card">
             <div class="panel-title">🏍️ Registro de Conductor</div>
             <p style="font-size: 0.73rem; color: var(--text-muted); line-height: 1.45;">
-                Completá tus datos reales (incluyendo tu DNI). Serán visibles para el pasajero y la administración por seguridad.
+                Completá tus datos reales y adjuntá frente y dorso de tu DNI. Las fotos son privadas y solo las revisa la administración para verificar tu identidad.
             </p>
 
             <input type="text" id="drv-input-name" class="field-input" placeholder="Tu nombre y apellido">
@@ -237,6 +357,39 @@
             <div class="btn-grid-2">
                 <input type="text" id="drv-input-plate" class="field-input" placeholder="Patente (ej: A123BCD)">
                 <input type="tel" id="drv-input-phone" class="field-input" placeholder="Tu WhatsApp (ej: 3755...)">
+            </div>
+
+            <!-- FOTOS DEL DNI (FRENTE Y DORSO) -->
+            <div class="dni-upload-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px;">
+                    <span style="font-size: 0.78rem; font-weight: 900; color: #93c5fd;">🪪 Fotos del DNI (Obligatorio)</span>
+                    <span id="dni-existing-badge" class="tag-badge pkg" style="display: none;">✅ Ya cargado</span>
+                </div>
+                <p style="font-size: 0.68rem; color: var(--text-muted); line-height: 1.35;">
+                    Sacá una foto clara y legible de ambos lados. Nadie fuera de administración puede ver estas imágenes.
+                </p>
+
+                <div class="dni-upload-grid">
+                    <label class="dni-upload-box" id="box-dni-front">
+                        <input type="file" id="dni-front-input" accept="image/*">
+                        <img id="dni-front-preview" class="dni-preview-img" alt="Frente DNI">
+                        <div class="dni-placeholder">
+                            <div style="font-size: 1.6rem;">📷</div>
+                            <div class="dni-upload-label">Subir FRENTE del DNI</div>
+                        </div>
+                        <span style="font-size: 0.62rem; color: var(--accent-bright); font-weight: 800;" id="dni-front-status">Tocar para cargar</span>
+                    </label>
+
+                    <label class="dni-upload-box" id="box-dni-back">
+                        <input type="file" id="dni-back-input" accept="image/*">
+                        <img id="dni-back-preview" class="dni-preview-img" alt="Dorso DNI">
+                        <div class="dni-placeholder">
+                            <div style="font-size: 1.6rem;">📷</div>
+                            <div class="dni-upload-label">Subir DORSO del DNI</div>
+                        </div>
+                        <span style="font-size: 0.62rem; color: var(--accent-bright); font-weight: 800;" id="dni-back-status">Tocar para cargar</span>
+                    </label>
+                </div>
             </div>
 
             <!-- REGLAS, CONDICIONES Y CONSECUENCIAS -->
@@ -253,199 +406,238 @@
                     </li>
                     <li>
                         <strong>🛡️ Seguridad y Honestidad:</strong>
-                        Llevá casco reglamentario y casco adicional para el pasajero, respetá la tarifa exacta que marca la aplicación y cumplí con los pedidos aceptados.
+                        Llevá casco reglamentario y casco adicional para el pasajero, respetá la tarifa exacta de la app y cumplí con los pedidos aceptados.
                     </li>
                     <li class="rule-danger">
                         <strong>⛔ Consecuencias (Suspensión o Bloqueo):</strong>
-                        Si <strong>no pagás la comisión</strong> correspondiente a administración, si <strong>faltás el respeto a un cliente</strong>, cobrás de más o incumplís estas normas, la administración puede <strong>suspender o bloquear tu cuenta de forma inmediata y definitiva</strong>.
+                        Si <strong>no pagás la comisión</strong>, si <strong>faltás el respeto a un cliente</strong>, cobrás de más o incumplís estas normas, la administración puede <strong>suspender o bloquear tu cuenta de forma inmediata y definitiva</strong>.
                     </li>
                 </ul>
             </div>
 
-            <label class="rules-accept-label">
+            <label class="rules-accept-label" id="rules-accept-box">
                 <input type="checkbox" id="drv-accept-rules">
-                <span>Leí y acepto las reglas, la comisión del <span class="dyn-admin-pct">15</span>% para administración, el trato respetuoso a los clientes y entiendo que mi cuenta puede ser bloqueada en caso de incumplimiento.</span>
+                <span class="custom-check-box" id="rules-check-icon"></span>
+                <span>
+                    <strong id="rules-check-hint" style="color: var(--accent-bright); display: block; margin-bottom: 2px;">
+                        👆 Tocá acá para marcar que aceptás:
+                    </strong>
+                    Leí y acepto las reglas, la comisión del <span class="dyn-admin-pct">15</span>% para administración, el trato respetuoso a los clientes y entiendo que mi cuenta puede ser bloqueada por incumplimiento.
+                </span>
             </label>
 
-            <button type="button" id="btn-save-driver" class="btn btn-accent">ACEPTAR REGLAS Y ENTRAR</button>
+            <button type="button" id="btn-save-driver" class="btn btn-accent">GUARDAR Y ENVIAR REGISTRO</button>
         </section>
 
-        <!-- PANEL OPERATIVO -->
-        <section id="driver-dashboard" style="display: none; flex-direction: column; gap: 12px;">
+        <!-- PANEL OPERATIVO POR PESTAÑAS -->
+        <section id="driver-dashboard" style="display: none; flex-direction: column; gap: 11px;">
 
-            <!-- ESTADO EN LÍNEA -->
+            <!-- ESTADO EN LÍNEA SIEMPRE VISIBLE -->
             <div class="online-switch-card">
                 <div style="min-width: 0;">
                     <div style="font-size: 0.84rem; font-weight: 900;">
                         <span class="status-dot" id="online-dot"></span>
                         <span id="online-label">DESCONECTADO</span>
                     </div>
-                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 2px;" id="driver-summary-txt">—</div>
+                    <div style="font-size: 0.69rem; color: var(--text-muted); margin-top: 2px;" id="driver-summary-txt">—</div>
                 </div>
                 <div style="display: flex; gap: 6px; flex-shrink: 0;">
                     <button type="button" id="btn-toggle-online" class="btn btn-green" style="width: auto; padding: 8px 11px; font-size: 0.74rem;">
                         CONECTARME
                     </button>
-                    <button type="button" id="btn-edit-profile" class="btn btn-secondary" style="width: auto; padding: 8px 9px; font-size: 0.74rem;">
+                    <button type="button" id="btn-edit-profile" class="btn btn-secondary" style="width: auto; padding: 8px 9px; font-size: 0.74rem;" title="Editar perfil">
                         ✏️
                     </button>
                 </div>
             </div>
 
-            <!-- RESUMEN DE GANANCIAS, COMISIÓN, ALIAS Y COMPROBANTE -->
-            <section class="finance-top-card">
-                <div class="finance-header">
-                    <span style="font-size: 0.78rem; font-weight: 900; color: var(--accent-bright);">💰 TU CAJA Y COMISIÓN</span>
-                    <div class="finance-period-tabs" id="fin-period-tabs">
-                        <button type="button" class="fin-tab active" data-period="today">Hoy</button>
-                        <button type="button" class="fin-tab" data-period="week">7 días</button>
-                        <button type="button" class="fin-tab" data-period="all">Total</button>
-                    </div>
-                </div>
-
-                <div class="split-grid-2">
-                    <div class="split-box driver-keep">
-                        <span class="split-lbl">🏍️ Te quedás (<span class="dyn-driver-pct">85</span>%)</span>
-                        <span class="split-amount" style="color: var(--green);" id="fin-driver-keeps">$0</span>
-                        <span class="split-sub">Tu ganancia neta</span>
-                    </div>
-                    <div class="split-box admin-pay">
-                        <span class="split-lbl">🏦 Para Admin (<span class="dyn-admin-pct">15</span>%)</span>
-                        <span class="split-amount" style="color: var(--accent-bright);" id="fin-admin-cut">$0</span>
-                        <span class="split-sub">Comisión del período</span>
-                    </div>
-                </div>
-
-                <div class="finance-breakdown-bar">
-                    <span>Bruto: <strong style="color: #fff;" id="fin-gross-total">$0</strong></span>
-                    <span>💵 Efvo: <strong style="color: #a7f3d0;" id="fin-cash-total">$0</strong></span>
-                    <span>📱 Transf: <strong style="color: #93c5fd;" id="fin-transfer-total">$0</strong></span>
-                </div>
-
-                <!-- SALDO PENDIENTE REAL + ALIAS + WHATSAPP COMPROBANTE -->
-                <div class="rendition-box">
-                    <div class="rendition-top-row">
-                        <div>
-                            <div style="font-size: 0.63rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">
-                                SALDO PENDIENTE A RENDIR
-                            </div>
-                            <div style="font-size: 1.08rem; font-weight: 900; color: #fca5a5;" id="fin-real-pending">$0</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 0.63rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">
-                                YA PAGADO
-                            </div>
-                            <div style="font-size: 0.92rem; font-weight: 900; color: var(--green);" id="fin-real-paid">$0</div>
-                        </div>
-                    </div>
-
-                    <div class="alias-copy-row">
-                        <div class="alias-text-wrap">
-                            <span style="font-size: 0.6rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">
-                                ALIAS ADMINISTRACIÓN
-                            </span>
-                            <span style="font-size: 0.82rem; font-weight: 900; color: #fff; word-break: break-all;" id="drv-admin-alias-txt">
-                                Sin configurar aún
-                            </span>
-                            <span style="font-size: 0.65rem; color: #cbd5e1;" id="drv-admin-holder-txt"></span>
-                        </div>
-                        <button type="button" id="btn-copy-alias" class="btn-copy-alias" style="display: none;">
-                            📋 Copiar
-                        </button>
-                    </div>
-
-                    <a id="btn-send-receipt-wa" href="#" target="_blank" class="btn btn-green" style="font-size: 0.76rem; padding: 10px;">
-                        💬 Enviar Comprobante por WhatsApp
-                    </a>
-                </div>
-            </section>
-
-            <!-- ESTADÍSTICAS Y REPUTACIÓN -->
-            <div class="stats-grid-3">
-                <div class="stat-box">
-                    <div class="stat-num" id="stat-trips">0</div>
-                    <div class="stat-lbl" id="stat-trips-lbl">VIAJES HOY</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-num" id="stat-all-trips" style="color: #93c5fd;">0</div>
-                    <div class="stat-lbl">TOTAL VIAJES</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-num" style="color: var(--accent-bright);" id="stat-rating">⭐ 5.0</div>
-                    <div class="stat-lbl" id="stat-rating-cnt">0 OPINIONES</div>
-                </div>
-            </div>
-
-            <!-- VIAJE ACTIVO DEL CONDUCTOR -->
-            <div id="driver-active-ride" class="panel-card highlight" style="display: none;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="badges-wrap" id="drv-active-badges"></div>
-                    <span style="font-size: 0.84rem; font-weight: 900; color: var(--accent-bright);">
-                        PIN: <span id="drv-ride-pin">----</span>
-                    </span>
-                </div>
-
-                <div>
-                    <div style="font-size: 0.94rem; font-weight: 900;" id="drv-p-name">Pasajero</div>
-                    <div style="font-size: 0.72rem; color: var(--text-muted);" id="drv-p-pay">Efectivo</div>
-                    <div id="drv-p-pkg" style="display: none; margin-top: 5px; font-size: 0.74rem; color: #a7f3d0; background: rgba(16,185,129,0.12); padding: 6px 8px; border-radius: 7px;"></div>
-                </div>
-
-                <div class="ride-route-line">
-                    <div>🟢 <strong>Subida:</strong> <span id="drv-p-origin">—</span></div>
-                    <div id="drv-p-stop-row" style="display: none; margin-top: 3px;">🟡 <strong>Parada:</strong> <span id="drv-p-stop">—</span></div>
-                    <div style="margin-top: 3px;">🔴 <strong>Destino:</strong> <span id="drv-p-dest">—</span></div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="font-size: 1.18rem; font-weight: 900; color: var(--green);">
-                        A cobrar: <span id="drv-p-fare">$0</span>
-                    </div>
-                    <span id="gps-broadcast-pill" style="font-size: 0.66rem; color: #93c5fd; font-weight: 800;">
-                        🛰️ GPS en vivo activo
-                    </span>
-                </div>
-
-                <div class="btn-grid-2">
-                    <a id="btn-nav-gmaps" href="#" target="_blank" class="btn btn-blue" style="font-size: 0.75rem;">
-                        🗺️ Abrir Ruta GPS
-                    </a>
-                    <a id="btn-wa-passenger" href="#" target="_blank" class="btn btn-secondary" style="font-size: 0.75rem;">
-                        💬 WhatsApp
-                    </a>
-                </div>
-
-                <button type="button" id="btn-next-step" class="btn btn-accent">
-                    📍 LLEGUÉ AL PUNTO DE SUBIDA
+            <!-- BARRA DE 3 PESTAÑAS -->
+            <nav class="driver-tabs-bar" id="driver-tabs-bar">
+                <button type="button" class="drv-tab-btn active" data-tab="pedidos">
+                    📡 Pedidos <span class="tab-count-badge" id="tab-badge-rides">0</span>
                 </button>
-            </div>
+                <button type="button" class="drv-tab-btn" data-tab="caja">
+                    💰 Mi Caja
+                </button>
+                <button type="button" class="drv-tab-btn" data-tab="historial">
+                    🧾 Historial
+                </button>
+            </nav>
 
-            <!-- PEDIDOS ENTRANTES -->
-            <div id="available-rides-section" class="panel-card">
-                <div class="panel-title">
-                    <span>📡 Pedidos en San Vicente</span>
-                    <span id="rain-banner-drv" class="tag-badge rain" style="display: none;">🌧️ Lluvia activa</span>
+            <!-- ========================
+                 PESTAÑA 1: PEDIDOS
+            ======================== -->
+            <div id="tab-pedidos" class="drv-tab-panel active">
+                <!-- VIAJE ACTIVO DEL CONDUCTOR -->
+                <div id="driver-active-ride" class="panel-card highlight" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="badges-wrap" id="drv-active-badges"></div>
+                        <span style="font-size: 0.84rem; font-weight: 900; color: var(--accent-bright);">
+                            PIN: <span id="drv-ride-pin">----</span>
+                        </span>
+                    </div>
+
+                    <div>
+                        <div style="font-size: 0.94rem; font-weight: 900;" id="drv-p-name">Pasajero</div>
+                        <div style="font-size: 0.72rem; color: var(--text-muted);" id="drv-p-pay">Efectivo</div>
+                        <div id="drv-p-pkg" style="display: none; margin-top: 5px; font-size: 0.74rem; color: #a7f3d0; background: rgba(16,185,129,0.12); padding: 6px 8px; border-radius: 7px;"></div>
+                    </div>
+
+                    <div class="ride-route-line">
+                        <div>🟢 <strong>Subida:</strong> <span id="drv-p-origin">—</span></div>
+                        <div id="drv-p-stop-row" style="display: none; margin-top: 3px;">🟡 <strong>Parada:</strong> <span id="drv-p-stop">—</span></div>
+                        <div style="margin-top: 3px;">🔴 <strong>Destino:</strong> <span id="drv-p-dest">—</span></div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="font-size: 1.18rem; font-weight: 900; color: var(--green);">
+                            A cobrar: <span id="drv-p-fare">$0</span>
+                        </div>
+                        <span id="gps-broadcast-pill" style="font-size: 0.66rem; color: #93c5fd; font-weight: 800;">
+                            🛰️ GPS en vivo activo
+                        </span>
+                    </div>
+
+                    <div class="btn-grid-2">
+                        <a id="btn-nav-gmaps" href="#" target="_blank" class="btn btn-blue" style="font-size: 0.75rem;">
+                            🗺️ Abrir Ruta GPS
+                        </a>
+                        <a id="btn-wa-passenger" href="#" target="_blank" class="btn btn-secondary" style="font-size: 0.75rem;">
+                            💬 WhatsApp
+                        </a>
+                    </div>
+
+                    <button type="button" id="btn-next-step" class="btn btn-accent">
+                        📍 LLEGUÉ AL PUNTO DE SUBIDA
+                    </button>
                 </div>
-                <div id="rides-feed" style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">
-                        Conectate para recibir solicitudes de viaje y envíos.
+
+                <!-- PEDIDOS ENTRANTES -->
+                <div id="available-rides-section" class="panel-card">
+                    <div class="panel-title">
+                        <span>📡 Pedidos en San Vicente</span>
+                        <span id="rain-banner-drv" class="tag-badge rain" style="display: none;">🌧️ Lluvia activa</span>
+                    </div>
+                    <div id="rides-feed" style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">
+                            Conectate para recibir solicitudes de viaje y envíos.
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- HISTORIAL DEL CHOFER -->
-            <div class="panel-card">
-                <div class="panel-title">🧾 Mis Últimos Viajes Completados</div>
-                <div id="driver-history-feed" style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Sin viajes completados todavía.</div>
+            <!-- ========================
+                 PESTAÑA 2: MI CAJA
+            ======================== -->
+            <div id="tab-caja" class="drv-tab-panel">
+                <section class="finance-top-card">
+                    <div class="finance-header">
+                        <span style="font-size: 0.78rem; font-weight: 900; color: var(--accent-bright);">💰 TU CAJA Y COMISIÓN</span>
+                        <div class="finance-period-tabs" id="fin-period-tabs">
+                            <button type="button" class="fin-tab active" data-period="today">Hoy</button>
+                            <button type="button" class="fin-tab" data-period="week">7 días</button>
+                            <button type="button" class="fin-tab" data-period="all">Total</button>
+                        </div>
+                    </div>
+
+                    <div class="split-grid-2">
+                        <div class="split-box driver-keep">
+                            <span class="split-lbl">🏍️ Te quedás (<span class="dyn-driver-pct">85</span>%)</span>
+                            <span class="split-amount" style="color: var(--green);" id="fin-driver-keeps">$0</span>
+                            <span class="split-sub">Tu ganancia neta</span>
+                        </div>
+                        <div class="split-box admin-pay">
+                            <span class="split-lbl">🏦 Para Admin (<span class="dyn-admin-pct">15</span>%)</span>
+                            <span class="split-amount" style="color: var(--accent-bright);" id="fin-admin-cut">$0</span>
+                            <span class="split-sub">Comisión del período</span>
+                        </div>
+                    </div>
+
+                    <div class="finance-breakdown-bar">
+                        <span>Bruto: <strong style="color: #fff;" id="fin-gross-total">$0</strong></span>
+                        <span>💵 Efvo: <strong style="color: #a7f3d0;" id="fin-cash-total">$0</strong></span>
+                        <span>📱 Transf: <strong style="color: #93c5fd;" id="fin-transfer-total">$0</strong></span>
+                    </div>
+
+                    <!-- SALDO PENDIENTE REAL + ALIAS + WHATSAPP COMPROBANTE -->
+                    <div class="rendition-box">
+                        <div class="rendition-top-row">
+                            <div>
+                                <div style="font-size: 0.63rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">
+                                    SALDO PENDIENTE A RENDIR
+                                </div>
+                                <div style="font-size: 1.08rem; font-weight: 900; color: #fca5a5;" id="fin-real-pending">$0</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.63rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">
+                                    YA PAGADO
+                                </div>
+                                <div style="font-size: 0.92rem; font-weight: 900; color: var(--green);" id="fin-real-paid">$0</div>
+                            </div>
+                        </div>
+
+                        <div class="alias-copy-row">
+                            <div class="alias-text-wrap">
+                                <span style="font-size: 0.6rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">
+                                    ALIAS ADMINISTRACIÓN
+                                </span>
+                                <span style="font-size: 0.82rem; font-weight: 900; color: #fff; word-break: break-all;" id="drv-admin-alias-txt">
+                                    Sin configurar aún
+                                </span>
+                                <span style="font-size: 0.65rem; color: #cbd5e1;" id="drv-admin-holder-txt"></span>
+                            </div>
+                            <button type="button" id="btn-copy-alias" class="btn-copy-alias" style="display: none;">
+                                📋 Copiar
+                            </button>
+                        </div>
+
+                        <a id="btn-send-receipt-wa" href="#" target="_blank" class="btn btn-green" style="font-size: 0.76rem; padding: 10px;">
+                            💬 Enviar Comprobante por WhatsApp
+                        </a>
+                    </div>
+                </section>
+
+                <!-- PAGOS DE COMISIÓN CONFIRMADOS POR ADMIN -->
+                <div class="panel-card">
+                    <div class="panel-title">✅ Mis Pagos de Comisión Registrados</div>
+                    <div id="driver-payments-feed" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Todavía no hay pagos confirmados por administración.</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- PAGOS DE COMISIÓN CONFIRMADOS POR ADMIN -->
-            <div class="panel-card">
-                <div class="panel-title">✅ Mis Pagos de Comisión Registrados</div>
-                <div id="driver-payments-feed" style="display: flex; flex-direction: column; gap: 8px;">
-                    <div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Todavía no hay pagos confirmados por administración.</div>
+            <!-- ========================
+                 PESTAÑA 3: HISTORIAL
+            ======================== -->
+            <div id="tab-historial" class="drv-tab-panel">
+                <!-- ESTADÍSTICAS Y REPUTACIÓN -->
+                <div class="stats-grid-3">
+                    <div class="stat-box">
+                        <div class="stat-num" id="stat-trips">0</div>
+                        <div class="stat-lbl" id="stat-trips-lbl">VIAJES HOY</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num" id="stat-all-trips" style="color: #93c5fd;">0</div>
+                        <div class="stat-lbl">TOTAL VIAJES</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-num" style="color: var(--accent-bright);" id="stat-rating">⭐ 5.0</div>
+                        <div class="stat-lbl" id="stat-rating-cnt">0 OPINIONES</div>
+                    </div>
+                </div>
+
+                <!-- ESTADO DE IDENTIDAD -->
+                <div class="panel-card" style="flex-direction: row; justify-content: space-between; align-items: center; padding: 11px 13px;">
+                    <span style="font-size: 0.76rem; font-weight: 800;">🪪 Estado de tu DNI</span>
+                    <span id="drv-dni-status-badge" class="tag-badge stop">EN REVISIÓN</span>
+                </div>
+
+                <!-- HISTORIAL DE VIAJES -->
+                <div class="panel-card">
+                    <div class="panel-title">🧾 Mis Últimos Viajes Completados</div>
+                    <div id="driver-history-feed" style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Sin viajes completados todavía.</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -491,15 +683,18 @@
         let adminAlias = "";
         let adminHolder = "";
         let adminPhone = "";
-        let selectedFinancePeriod = "today"; // 'today' | 'week' | 'all'
+        let selectedFinancePeriod = "today";
 
         let driverProfile = JSON.parse(localStorage.getItem("motoya_driver_profile") || "null");
-        let driverServerState = { status: "active", ratingSum: 0, ratingCount: 0, completedTrips: 0 };
+        let driverServerState = { status: "pending", ratingSum: 0, ratingCount: 0, completedTrips: 0, dniUploaded: false, dniVerified: false };
         let isOnline = false;
         let currentRideId = localStorage.getItem("motoya_driver_active_ride") || null;
         let currentRideData = null;
         let lastSnapshotRides = [];
         let lastSnapshotPayments = [];
+
+        let dniFrontDataUrl = null;
+        let dniBackDataUrl = null;
 
         let unsubscribeRides = null;
         let unsubscribePayments = null;
@@ -515,7 +710,7 @@
             toast.className = `toast ${type}`;
             toast.textContent = msg;
             container.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
+            setTimeout(() => toast.remove(), 3100);
         }
 
         function playAlertBeep() {
@@ -536,14 +731,93 @@
             } catch {}
         }
 
+        // Comprime la foto del DNI para que cargue rápido y ocupe poco espacio
+        function compressImageFile(file, maxWidth = 900, quality = 0.72) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error("Error leyendo archivo"));
+                reader.onload = (ev) => {
+                    const img = new Image();
+                    img.onerror = () => reject(new Error("Imagen inválida"));
+                    img.onload = () => {
+                        const scale = Math.min(1, maxWidth / img.width);
+                        const w = Math.round(img.width * scale);
+                        const h = Math.round(img.height * scale);
+                        const canvas = document.createElement("canvas");
+                        canvas.width = w;
+                        canvas.height = h;
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL("image/jpeg", quality));
+                    };
+                    img.src = ev.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleDniFileChange(inputEl, side) {
+            const file = inputEl.files && inputEl.files[0];
+            if (!file) return;
+            const statusEl = document.getElementById(side === "front" ? "dni-front-status" : "dni-back-status");
+            const boxEl = document.getElementById(side === "front" ? "box-dni-front" : "box-dni-back");
+            const imgEl = document.getElementById(side === "front" ? "dni-front-preview" : "dni-back-preview");
+
+            statusEl.textContent = "Procesando...";
+            try {
+                const dataUrl = await compressImageFile(file);
+                if (side === "front") dniFrontDataUrl = dataUrl;
+                else dniBackDataUrl = dataUrl;
+
+                imgEl.src = dataUrl;
+                boxEl.classList.add("loaded");
+                statusEl.textContent = "✅ Cargada (tocar para cambiar)";
+                statusEl.style.color = "var(--green)";
+            } catch {
+                statusEl.textContent = "❌ Error, probá otra foto";
+                statusEl.style.color = "#fca5a5";
+                showToast("❌ No se pudo procesar esa imagen.", "error");
+            }
+        }
+
+        document.getElementById("dni-front-input").addEventListener("change", (e) => handleDniFileChange(e.target, "front"));
+        document.getElementById("dni-back-input").addEventListener("change", (e) => handleDniFileChange(e.target, "back"));
+
+        // Checkbox visual claro de reglas
+        function syncRulesCheckboxUI() {
+            const checked = document.getElementById("drv-accept-rules").checked;
+            const box = document.getElementById("rules-accept-box");
+            const icon = document.getElementById("rules-check-icon");
+            const hint = document.getElementById("rules-check-hint");
+            box.classList.toggle("checked", checked);
+            box.classList.remove("error-flash");
+            icon.textContent = checked ? "✓" : "";
+            hint.textContent = checked ? "✅ Reglas aceptadas" : "👆 Tocá acá para marcar que aceptás:";
+            hint.style.color = checked ? "var(--green)" : "var(--accent-bright)";
+        }
+
+        document.getElementById("drv-accept-rules").addEventListener("change", syncRulesCheckboxUI);
+
+        // Cambio de pestañas del dashboard
+        function switchDriverTab(tabName) {
+            document.querySelectorAll("#driver-tabs-bar .drv-tab-btn").forEach((btn) => {
+                btn.classList.toggle("active", btn.dataset.tab === tabName);
+            });
+            document.querySelectorAll(".drv-tab-panel").forEach((panel) => {
+                panel.classList.toggle("active", panel.id === `tab-${tabName}`);
+            });
+        }
+
+        document.getElementById("driver-tabs-bar").addEventListener("click", (e) => {
+            const btn = e.target.closest(".drv-tab-btn[data-tab]");
+            if (!btn) return;
+            switchDriverTab(btn.dataset.tab);
+        });
+
         function updatePctLabels() {
             const drvPct = Math.max(0, 100 - adminPct);
-            document.querySelectorAll(".dyn-admin-pct").forEach((el) => {
-                el.textContent = adminPct;
-            });
-            document.querySelectorAll(".dyn-driver-pct").forEach((el) => {
-                el.textContent = drvPct;
-            });
+            document.querySelectorAll(".dyn-admin-pct").forEach((el) => { el.textContent = adminPct; });
+            document.querySelectorAll(".dyn-driver-pct").forEach((el) => { el.textContent = drvPct; });
         }
 
         function updateAdminPaymentInfoUI() {
@@ -612,7 +886,6 @@
             return Math.round((Number(driverServerState.ratingSum || 0) / cnt) * 10) / 10;
         }
 
-        // Copiar alias al portapapeles
         document.getElementById("btn-copy-alias").addEventListener("click", async () => {
             if (!adminAlias) return;
             try {
@@ -629,7 +902,6 @@
             }
         });
 
-        // Escucha configuración (lluvia, %, alias, titular, WhatsApp admin)
         onValue(ref(db, "config"), (snap) => {
             const cfg = snap.val() || {};
             document.getElementById("rain-banner-drv").style.display = cfg.rainMode ? "inline-flex" : "none";
@@ -640,19 +912,31 @@
             adminPhone = String(cfg.adminPhone || "").trim();
             updatePctLabels();
             updateAdminPaymentInfoUI();
-            if (driverProfile) {
-                renderDriverHistoryAndStats(lastSnapshotRides);
-            }
+            if (driverProfile) renderDriverHistoryAndStats(lastSnapshotRides);
         });
 
-        async function syncDriverToFirebase(profile) {
+        async function syncDriverToFirebase(profile, uploadedNewDni = false) {
             const safeId = profile.id || buildDriverId(profile.dni, profile.phone, profile.plate);
             profile.id = safeId;
+
+            // Si subió fotos nuevas del DNI, las guarda en el nodo privado dni_docs
+            if (uploadedNewDni && dniFrontDataUrl && dniBackDataUrl) {
+                await set(ref(db, `dni_docs/${safeId}`), {
+                    front: dniFrontDataUrl,
+                    back: dniBackDataUrl,
+                    driverName: profile.name,
+                    driverDni: profile.dni,
+                    uploadedAt: Date.now()
+                });
+                profile.dniUploaded = true;
+            }
+
             localStorage.setItem("motoya_driver_profile", JSON.stringify(profile));
 
             const drvRef = ref(db, `drivers/${safeId}`);
             const snap = await get(drvRef);
             if (!snap.exists()) {
+                // Chofer nuevo arranca en estado pendiente hasta aprobación del administrador
                 await set(drvRef, {
                     id: safeId,
                     name: profile.name,
@@ -660,7 +944,9 @@
                     moto: profile.moto,
                     plate: profile.plate,
                     phone: profile.phone,
-                    status: "active",
+                    status: "pending",
+                    dniUploaded: Boolean(profile.dniUploaded),
+                    dniVerified: false,
                     termsAccepted: true,
                     termsAcceptedAt: profile.termsAcceptedAt || Date.now(),
                     ratingSum: 0,
@@ -669,6 +955,7 @@
                     createdAt: Date.now()
                 });
             } else {
+                const prev = snap.val();
                 await update(drvRef, {
                     id: safeId,
                     name: profile.name,
@@ -676,6 +963,7 @@
                     moto: profile.moto,
                     plate: profile.plate,
                     phone: profile.phone,
+                    dniUploaded: Boolean(profile.dniUploaded || prev.dniUploaded),
                     termsAccepted: true,
                     termsAcceptedAt: profile.termsAcceptedAt || Date.now()
                 });
@@ -688,16 +976,56 @@
                 if (snap.exists()) {
                     driverServerState = snap.val();
                 }
+
+                // Si el admin pidió nuevas fotos de DNI, volvemos a mostrar el formulario
+                if (driverServerState.dniUploaded === false && !currentRideId) {
+                    if (driverProfile) {
+                        driverProfile.dniUploaded = false;
+                        localStorage.setItem("motoya_driver_profile", JSON.stringify(driverProfile));
+                    }
+                    setOnlineState(false);
+                    openSetupForm(true);
+                    showToast("📷 La administración solicitó que cargues las fotos de tu DNI.", "error");
+                    return;
+                }
+
                 const cnt = Number(driverServerState.ratingCount || 0);
                 document.getElementById("stat-rating").textContent = `⭐ ${getDriverAvgRating().toFixed(1)}`;
                 document.getElementById("stat-rating-cnt").textContent = `${cnt} OPINI${cnt === 1 ? "ÓN" : "ONES"}`;
 
                 const isSuspended = driverServerState.status === "suspended";
+                const isPending = driverServerState.status === "pending";
+
                 document.getElementById("suspended-alert").classList.toggle("visible", isSuspended);
-                if (isSuspended && isOnline) {
+                document.getElementById("pending-alert").classList.toggle("visible", isPending);
+
+                const badgeEl = document.getElementById("drv-dni-status-badge");
+                if (driverServerState.dniVerified) {
+                    badgeEl.textContent = "✅ IDENTIDAD VERIFICADA";
+                    badgeEl.className = "tag-badge pkg";
+                } else if (driverServerState.dniUploaded) {
+                    badgeEl.textContent = "⏳ EN REVISIÓN";
+                    badgeEl.className = "tag-badge stop";
+                } else {
+                    badgeEl.textContent = "⚠️ SIN CARGAR";
+                    badgeEl.className = "tag-badge danger";
+                }
+
+                if ((isSuspended || isPending) && isOnline) {
                     setOnlineState(false);
                 }
             });
+        }
+
+        function openSetupForm(forceDniUpload = false) {
+            fillProfileForm(driverProfile);
+            const hasDni = Boolean(driverProfile?.dniUploaded) && !forceDniUpload;
+            document.getElementById("dni-existing-badge").style.display = hasDni ? "inline-flex" : "none";
+            document.getElementById("drv-accept-rules").checked = Boolean(driverProfile?.termsAccepted);
+            syncRulesCheckboxUI();
+
+            document.getElementById("driver-dashboard").style.display = "none";
+            document.getElementById("driver-setup-card").style.display = "flex";
         }
 
         function loadDashboard() {
@@ -713,6 +1041,7 @@
             startListeningMyPayments();
 
             if (currentRideId) {
+                switchDriverTab("pedidos");
                 setOnlineState(true);
                 attachActiveRide(currentRideId);
             }
@@ -727,21 +1056,34 @@
             const accepted = document.getElementById("drv-accept-rules").checked;
 
             if (!name || !dni || !moto || !plate || !phone) {
-                showToast("⚠️ Completá todos los campos, incluyendo tu DNI.", "error");
+                showToast("⚠️ Completá todos tus datos personales y de la moto.", "error");
                 return;
             }
             if (dni.length < 7 || dni.length > 9) {
                 showToast("⚠️ Ingresá un DNI válido (7 u 8 números sin puntos).", "error");
                 return;
             }
+
+            const alreadyHasDni = Boolean(driverProfile?.dniUploaded) && driverServerState.dniUploaded !== false;
+            const hasNewPhotos = Boolean(dniFrontDataUrl && dniBackDataUrl);
+
+            if (!alreadyHasDni && !hasNewPhotos) {
+                showToast("📷 Subí las 2 fotos del DNI (frente y dorso) para continuar.", "error");
+                document.getElementById("box-dni-front").scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
+
             if (!accepted) {
-                showToast("⚠️ Debés leer y marcar que aceptás las reglas y condiciones.", "error");
+                const acceptBox = document.getElementById("rules-accept-box");
+                acceptBox.classList.add("error-flash");
+                acceptBox.scrollIntoView({ behavior: "smooth", block: "center" });
+                showToast("⚠️ Tocá el recuadro para marcar que aceptás las reglas.", "error");
                 return;
             }
 
             const btn = document.getElementById("btn-save-driver");
             btn.disabled = true;
-            btn.textContent = "GUARDANDO...";
+            btn.textContent = hasNewPhotos ? "SUBIENDO DNI Y GUARDANDO..." : "GUARDANDO...";
 
             const cleanId = buildDriverId(dni, phone, plate);
             driverProfile = {
@@ -751,21 +1093,23 @@
                 moto,
                 plate,
                 phone,
+                dniUploaded: alreadyHasDni || hasNewPhotos,
                 termsAccepted: true,
                 termsAcceptedAt: Date.now()
             };
-            localStorage.setItem("motoya_driver_profile", JSON.stringify(driverProfile));
 
             try {
-                await syncDriverToFirebase(driverProfile);
-                showToast("✅ Perfil guardado y reglas aceptadas.", "success");
+                await syncDriverToFirebase(driverProfile, hasNewPhotos);
+                dniFrontDataUrl = null;
+                dniBackDataUrl = null;
+                showToast("✅ Registro enviado correctamente.", "success");
                 loadDashboard();
             } catch (err) {
                 console.error(err);
-                showToast("❌ Error al guardar perfil en Firebase.", "error");
+                showToast("❌ Error al guardar. Verificá las reglas de Firebase.", "error");
             } finally {
                 btn.disabled = false;
-                btn.textContent = "ACEPTAR REGLAS Y ENTRAR";
+                btn.textContent = "GUARDAR Y ENVIAR REGISTRO";
             }
         });
 
@@ -775,10 +1119,7 @@
                 return;
             }
             setOnlineState(false);
-            fillProfileForm(driverProfile);
-            document.getElementById("drv-accept-rules").checked = Boolean(driverProfile?.termsAccepted);
-            document.getElementById("driver-dashboard").style.display = "none";
-            document.getElementById("driver-setup-card").style.display = "flex";
+            openSetupForm(false);
         });
 
         function fillProfileForm(p) {
@@ -804,7 +1145,6 @@
             if (e.target.id === "rules-modal") document.getElementById("rules-modal").classList.add("hidden");
         });
 
-        // Selector de período
         document.getElementById("fin-period-tabs").addEventListener("click", (e) => {
             const btn = e.target.closest(".fin-tab[data-period]");
             if (!btn) return;
@@ -817,7 +1157,11 @@
 
         function setOnlineState(state) {
             if (state && driverServerState.status === "suspended") {
-                showToast("⛔ Tu cuenta está suspendida o bloqueada por la administración.", "error");
+                showToast("⛔ Tu cuenta está suspendida o bloqueada por administración.", "error");
+                return;
+            }
+            if (state && driverServerState.status === "pending") {
+                showToast("⏳ Esperá a que administración apruebe tu DNI para conectarte.", "error");
                 return;
             }
             isOnline = state;
@@ -871,12 +1215,18 @@
 
         function renderAvailableRides(allRides) {
             const feed = document.getElementById("rides-feed");
+            const badge = document.getElementById("tab-badge-rides");
+
             if (!isOnline) {
+                badge.classList.remove("visible");
                 feed.innerHTML = `<div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">Conectate para recibir solicitudes de viaje y envíos.</div>`;
                 return;
             }
 
             const searching = allRides.filter((r) => r.status === "searching").reverse();
+            badge.textContent = searching.length;
+            badge.classList.toggle("visible", searching.length > 0);
+
             if (!searching.length) {
                 knownRideIds.clear();
                 feed.innerHTML = `<div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">⏳ Esperando pedidos en San Vicente...</div>`;
@@ -948,7 +1298,6 @@
             const adminCut = Math.round(grossTotal * (adminPct / 100));
             const driverKeeps = grossTotal - adminCut;
 
-            // Cuenta corriente histórica real (coincide exacto con admin.html)
             const totalAllEarned = mineAll.reduce((acc, r) => acc + Number(r.fare || 0), 0);
             const totalAllAdminCut = Math.round(totalAllEarned * (adminPct / 100));
             const myPayments = lastSnapshotPayments.filter((p) => paymentBelongsToDriver(p, driverProfile));
@@ -966,7 +1315,6 @@
             pendingEl.style.color = realPending > 0 ? "#fca5a5" : "var(--green)";
             document.getElementById("fin-real-paid").textContent = `$${totalPaidByMe.toLocaleString("es-AR")}`;
 
-            // Armar botón WhatsApp para mandar el comprobante al administrador
             const amountToReport = realPending > 0 ? realPending : adminCut;
             const waAdminNum = limpiarTelefonoWhatsApp(adminPhone);
             const receiptMsg = [
@@ -984,16 +1332,11 @@
                 ? `https://wa.me/${waAdminNum}?text=${encodeURIComponent(receiptMsg)}`
                 : `https://wa.me/?text=${encodeURIComponent(receiptMsg)}`;
 
-            const periodLabels = {
-                today: "VIAJES HOY",
-                week: "VIAJES 7 DÍAS",
-                all: "VIAJES TOTAL"
-            };
+            const periodLabels = { today: "VIAJES HOY", week: "VIAJES 7 DÍAS", all: "VIAJES TOTAL" };
             document.getElementById("stat-trips").textContent = minePeriod.length;
             document.getElementById("stat-trips-lbl").textContent = periodLabels[selectedFinancePeriod];
             document.getElementById("stat-all-trips").textContent = mineAll.length;
 
-            // Lista de viajes completados
             const histFeed = document.getElementById("driver-history-feed");
             if (!mineAll.length) {
                 histFeed.innerHTML = `<div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Sin viajes completados todavía.</div>`;
@@ -1019,7 +1362,6 @@
                 }).join("");
             }
 
-            // Lista de pagos de comisión registrados por el administrador
             const payFeed = document.getElementById("driver-payments-feed");
             if (!myPayments.length) {
                 payFeed.innerHTML = `<div style="font-size: 0.74rem; color: var(--text-muted); text-align: center;">Todavía no hay pagos confirmados por administración.</div>`;
@@ -1040,7 +1382,6 @@
             }
         }
 
-        // Aceptar pedido con transacción atómica
         document.getElementById("rides-feed").addEventListener("click", async (e) => {
             const btn = e.target.closest("button[data-accept-id]");
             if (!btn || currentRideId) return;
@@ -1067,6 +1408,7 @@
 
                 currentRideId = rideId;
                 localStorage.setItem("motoya_driver_active_ride", rideId);
+                switchDriverTab("pedidos");
                 attachActiveRide(rideId);
                 showToast("🏍️ ¡Pedido aceptado! Transmitiendo tu ubicación GPS.");
             } catch (err) {
@@ -1220,14 +1562,15 @@
             document.getElementById("available-rides-section").style.display = "flex";
         }
 
-        if (driverProfile && driverProfile.name && driverProfile.dni && driverProfile.moto && driverProfile.plate && driverProfile.phone && driverProfile.termsAccepted) {
+        // Inicio: si falta algún dato, las fotos del DNI o aceptar las reglas, abre el registro
+        if (driverProfile && driverProfile.name && driverProfile.dni && driverProfile.moto && driverProfile.plate && driverProfile.phone && driverProfile.termsAccepted && driverProfile.dniUploaded) {
             if (!driverProfile.id) {
                 driverProfile.id = buildDriverId(driverProfile.dni, driverProfile.phone, driverProfile.plate);
             }
-            syncDriverToFirebase(driverProfile).finally(loadDashboard);
+            syncDriverToFirebase(driverProfile, false).finally(loadDashboard);
         } else if (driverProfile) {
-            fillProfileForm(driverProfile);
-            showToast("📜 Leé y aceptá las reglas y condiciones para continuar.", "error");
+            openSetupForm(!driverProfile.dniUploaded);
+            showToast("📷 Subí frente y dorso de tu DNI para completar tu verificación.", "error");
         }
     </script>
 </body>
