@@ -1,9 +1,10 @@
 {
+  "id": "/moto-sanvicente/admin.html",
   "name": "MotoYa Admin - San Vicente",
   "short_name": "MotoYa Admin",
   "description": "Panel de administración de MotoYa San Vicente",
   "start_url": "./admin.html",
-  "scope": "./",
+  "scope": "./admin.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#090d10",
