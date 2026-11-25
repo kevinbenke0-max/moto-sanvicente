@@ -1,9 +1,10 @@
 {
+  "id": "/moto-sanvicente/conductor.html",
   "name": "MotoYa Chofer - San Vicente",
   "short_name": "MotoYa Chofer",
   "description": "Panel de conductores de MotoYa San Vicente",
   "start_url": "./conductor.html",
-  "scope": "./",
+  "scope": "./conductor.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#090d10",
