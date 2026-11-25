@@ -6,6 +6,10 @@
     <title>Modo Conductor - MotoYa San Vicente</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="manifest" href="./manifest-chofer.json">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
+    <meta name="theme-color" content="#090d10">
+    <script defer src="./pwa.js"></script>
     <style>
         /* NAVEGACIÓN POR PESTAÑAS */
         .driver-tabs-bar {
@@ -109,9 +113,7 @@
             border-color: var(--green);
             padding: 4px;
         }
-        .dni-upload-box input[type="file"] {
-            display: none;
-        }
+        .dni-upload-box input[type="file"] { display: none; }
         .dni-preview-img {
             width: 100%;
             height: 92px;
@@ -121,11 +123,7 @@
         }
         .dni-upload-box.loaded .dni-preview-img { display: block; }
         .dni-upload-box.loaded .dni-placeholder { display: none; }
-        .dni-upload-label {
-            font-size: 0.67rem;
-            font-weight: 800;
-            color: #cbd5e1;
-        }
+        .dni-upload-label { font-size: 0.67rem; font-weight: 800; color: #cbd5e1; }
 
         /* CAJA Y COMISIÓN */
         .finance-top-card {
@@ -314,9 +312,7 @@
             background: var(--green);
             border-color: var(--green);
         }
-        .rules-accept-label input[type="checkbox"] {
-            display: none;
-        }
+        .rules-accept-label input[type="checkbox"] { display: none; }
     </style>
 </head>
 <body class="driver-body">
@@ -464,11 +460,8 @@
                 </button>
             </nav>
 
-            <!-- ========================
-                 PESTAÑA 1: PEDIDOS
-            ======================== -->
+            <!-- PESTAÑA 1: PEDIDOS -->
             <div id="tab-pedidos" class="drv-tab-panel active">
-                <!-- VIAJE ACTIVO DEL CONDUCTOR -->
                 <div id="driver-active-ride" class="panel-card highlight" style="display: none;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div class="badges-wrap" id="drv-active-badges"></div>
@@ -512,7 +505,6 @@
                     </button>
                 </div>
 
-                <!-- PEDIDOS ENTRANTES -->
                 <div id="available-rides-section" class="panel-card">
                     <div class="panel-title">
                         <span>📡 Pedidos en San Vicente</span>
@@ -526,9 +518,7 @@
                 </div>
             </div>
 
-            <!-- ========================
-                 PESTAÑA 2: MI CAJA
-            ======================== -->
+            <!-- PESTAÑA 2: MI CAJA -->
             <div id="tab-caja" class="drv-tab-panel">
                 <section class="finance-top-card">
                     <div class="finance-header">
@@ -559,7 +549,6 @@
                         <span>📱 Transf: <strong style="color: #93c5fd;" id="fin-transfer-total">$0</strong></span>
                     </div>
 
-                    <!-- SALDO PENDIENTE REAL + ALIAS + WHATSAPP COMPROBANTE -->
                     <div class="rendition-box">
                         <div class="rendition-top-row">
                             <div>
@@ -597,7 +586,6 @@
                     </div>
                 </section>
 
-                <!-- PAGOS DE COMISIÓN CONFIRMADOS POR ADMIN -->
                 <div class="panel-card">
                     <div class="panel-title">✅ Mis Pagos de Comisión Registrados</div>
                     <div id="driver-payments-feed" style="display: flex; flex-direction: column; gap: 8px;">
@@ -606,11 +594,8 @@
                 </div>
             </div>
 
-            <!-- ========================
-                 PESTAÑA 3: HISTORIAL
-            ======================== -->
+            <!-- PESTAÑA 3: HISTORIAL -->
             <div id="tab-historial" class="drv-tab-panel">
-                <!-- ESTADÍSTICAS Y REPUTACIÓN -->
                 <div class="stats-grid-3">
                     <div class="stat-box">
                         <div class="stat-num" id="stat-trips">0</div>
@@ -626,13 +611,11 @@
                     </div>
                 </div>
 
-                <!-- ESTADO DE IDENTIDAD -->
                 <div class="panel-card" style="flex-direction: row; justify-content: space-between; align-items: center; padding: 11px 13px;">
                     <span style="font-size: 0.76rem; font-weight: 800;">🪪 Estado de tu DNI</span>
                     <span id="drv-dni-status-badge" class="tag-badge stop">EN REVISIÓN</span>
                 </div>
 
-                <!-- HISTORIAL DE VIAJES -->
                 <div class="panel-card">
                     <div class="panel-title">🧾 Mis Últimos Viajes Completados</div>
                     <div id="driver-history-feed" style="display: flex; flex-direction: column; gap: 8px;">
@@ -731,7 +714,6 @@
             } catch {}
         }
 
-        // Comprime la foto del DNI para que cargue rápido y ocupe poco espacio
         function compressImageFile(file, maxWidth = 900, quality = 0.72) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -783,7 +765,6 @@
         document.getElementById("dni-front-input").addEventListener("change", (e) => handleDniFileChange(e.target, "front"));
         document.getElementById("dni-back-input").addEventListener("change", (e) => handleDniFileChange(e.target, "back"));
 
-        // Checkbox visual claro de reglas
         function syncRulesCheckboxUI() {
             const checked = document.getElementById("drv-accept-rules").checked;
             const box = document.getElementById("rules-accept-box");
@@ -798,7 +779,6 @@
 
         document.getElementById("drv-accept-rules").addEventListener("change", syncRulesCheckboxUI);
 
-        // Cambio de pestañas del dashboard
         function switchDriverTab(tabName) {
             document.querySelectorAll("#driver-tabs-bar .drv-tab-btn").forEach((btn) => {
                 btn.classList.toggle("active", btn.dataset.tab === tabName);
@@ -919,7 +899,6 @@
             const safeId = profile.id || buildDriverId(profile.dni, profile.phone, profile.plate);
             profile.id = safeId;
 
-            // Si subió fotos nuevas del DNI, las guarda en el nodo privado dni_docs
             if (uploadedNewDni && dniFrontDataUrl && dniBackDataUrl) {
                 await set(ref(db, `dni_docs/${safeId}`), {
                     front: dniFrontDataUrl,
@@ -936,7 +915,6 @@
             const drvRef = ref(db, `drivers/${safeId}`);
             const snap = await get(drvRef);
             if (!snap.exists()) {
-                // Chofer nuevo arranca en estado pendiente hasta aprobación del administrador
                 await set(drvRef, {
                     id: safeId,
                     name: profile.name,
@@ -977,7 +955,6 @@
                     driverServerState = snap.val();
                 }
 
-                // Si el admin pidió nuevas fotos de DNI, volvemos a mostrar el formulario
                 if (driverServerState.dniUploaded === false && !currentRideId) {
                     if (driverProfile) {
                         driverProfile.dniUploaded = false;
@@ -1131,7 +1108,6 @@
             document.getElementById("drv-input-phone").value = p.phone || "";
         }
 
-        // Modal de consulta de reglas
         document.getElementById("btn-open-rules-modal").addEventListener("click", () => {
             document.getElementById("rules-modal").classList.remove("hidden");
         });
@@ -1562,7 +1538,6 @@
             document.getElementById("available-rides-section").style.display = "flex";
         }
 
-        // Inicio: si falta algún dato, las fotos del DNI o aceptar las reglas, abre el registro
         if (driverProfile && driverProfile.name && driverProfile.dni && driverProfile.moto && driverProfile.plate && driverProfile.phone && driverProfile.termsAccepted && driverProfile.dniUploaded) {
             if (!driverProfile.id) {
                 driverProfile.id = buildDriverId(driverProfile.dni, driverProfile.phone, driverProfile.plate);
