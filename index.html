@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
+    <meta name="theme-color" content="#090d10">
+    <script defer src="./pwa.js"></script>
     <style>
         .search-bar-row {
             display: flex;
@@ -338,7 +342,6 @@
             setTimeout(() => toast.remove(), 2900);
         }
 
-        // Renderiza botones rápidos Y estrellas ⭐ tocables sobre el mapa
         const quickContainer = document.getElementById("quick-places");
         function renderQuickPlacesAndStars(placesList) {
             currentPlaces = placesList;
@@ -352,7 +355,6 @@
                 const lng = Number(lugar.lng);
                 if (isNaN(lat) || isNaN(lng)) return;
 
-                // Botón rápido abajo
                 const chip = document.createElement("button");
                 chip.type = "button";
                 chip.className = "chip-place";
@@ -362,7 +364,6 @@
                 });
                 quickContainer.appendChild(chip);
 
-                // Estrella ⭐ directa en el mapa
                 const m = L.marker([lat, lng], { icon: starIcon, zIndexOffset: 100 })
                     .bindTooltip(lugar.nombre, {
                         direction: "top",
@@ -500,7 +501,7 @@
                 searchResultsBox.classList.remove("visible");
                 return;
             }
-            runStreetSearch(false); // Coincidencias locales instantáneas
+            runStreetSearch(false);
             if (q.length >= 3) {
                 searchDebounceTimer = setTimeout(() => runStreetSearch(true), 650);
             }
