@@ -1,0 +1,19 @@
+{
+  "name": "MotoYa San Vicente",
+  "short_name": "MotoYa",
+  "description": "Pedí tu moto o envío en San Vicente, Misiones",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#090d10",
+  "theme_color": "#090d10",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "192x192 512x512 any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
