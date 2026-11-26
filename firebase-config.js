@@ -30,23 +30,42 @@ const firebaseConfig = {
 };
 
 export const DEFAULT_CONFIG = {
-    base: 1200,         // Bajada de bandera ($)
-    perKm: 600,         // Valor por km ($)
-    minimum: 1500,      // Tarifa mínima ($)
-    stopFee: 400,       // Adicional por parada intermedia ($)
-    nightPct: 25,       // Recargo nocturno 00:00 a 06:00 (%)
-    rainMode: false,    // Modo lluvia activable desde admin.html
-    rainPct: 20         // Recargo por lluvia (%)
+    // Tarifas Moto / Envío
+    base: 1200,
+    perKm: 600,
+    minimum: 1500,
+    stopFee: 400,
+    // Tarifas Auto (doble por defecto, editables en admin.html)
+    autoBase: 2400,
+    autoPerKm: 1200,
+    autoMinimum: 3000,
+    autoStopFee: 800,
+    // Recargos y administración
+    nightPct: 25,
+    rainMode: false,
+    rainPct: 20,
+    adminPct: 15,
+    adminAlias: "",
+    adminHolder: "",
+    adminPhone: ""
 };
+
+export const DEFAULT_CITIES = [
+    { id: "san-vicente", nombre: "San Vicente", provincia: "Misiones", lat: -26.9968, lng: -54.4818 },
+    { id: "dos-de-mayo", nombre: "Dos de Mayo", provincia: "Misiones", lat: -27.0333, lng: -54.6667 },
+    { id: "aristobulo-del-valle", nombre: "Aristóbulo del Valle", provincia: "Misiones", lat: -27.0950, lng: -54.8969 },
+    { id: "el-soberbio", nombre: "El Soberbio", provincia: "Misiones", lat: -27.2983, lng: -54.1986 },
+    { id: "san-pedro", nombre: "San Pedro", provincia: "Misiones", lat: -26.6219, lng: -54.1086 },
+    { id: "obera", nombre: "Oberá", provincia: "Misiones", lat: -27.4871, lng: -55.1199 },
+    { id: "posadas", nombre: "Posadas", provincia: "Misiones", lat: -27.3671, lng: -55.8961 }
+];
 
 export const SAN_VICENTE_CENTER = [-26.9968, -54.4818];
 
 export const PUNTOS_LOCALES = [
-    { nombre: "Plaza San Martín", lat: -26.9968, lng: -54.4818 },
-    { nombre: "Terminal de Ómnibus", lat: -26.9922, lng: -54.4862 },
-    { nombre: "Hospital SAMIC", lat: -27.0018, lng: -54.4775 },
-    { nombre: "Cruce Ruta 14 y Libertador", lat: -26.9945, lng: -54.4840 },
-    { nombre: "Zona Industrial / Ruta 13", lat: -26.9890, lng: -54.4745 }
+    { nombre: "Plaza San Martín", lat: -26.9968, lng: -54.4818, cityId: "san-vicente" },
+    { nombre: "Terminal de Ómnibus", lat: -26.9922, lng: -54.4862, cityId: "san-vicente" },
+    { nombre: "Hospital SAMIC", lat: -27.0018, lng: -54.4775, cityId: "san-vicente" }
 ];
 
 const app = initializeApp(firebaseConfig);
@@ -60,6 +79,16 @@ export {
     signInWithEmailAndPassword, signOut, onAuthStateChanged
 };
 
+export function normalizarIdCiudad(nombre) {
+    return String(nombre || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "") || "san-vicente";
+}
+
 export function esHorarioNocturno(dateObj = new Date()) {
     const h = dateObj.getHours();
     return h >= 0 && h < 6;
@@ -67,13 +96,19 @@ export function esHorarioNocturno(dateObj = new Date()) {
 
 export function calcularTarifaDinamica(distanciaKm, config = DEFAULT_CONFIG, opts = {}) {
     const cfg = { ...DEFAULT_CONFIG, ...config };
+    const isAuto = opts.vehicleType === "auto";
     const hasStop = Boolean(opts.hasStop);
     const refDate = opts.scheduledDate ? new Date(opts.scheduledDate) : new Date();
     const isNight = !isNaN(refDate.getTime()) && esHorarioNocturno(refDate);
     const isRain = Boolean(cfg.rainMode);
 
-    let subtotal = Number(cfg.base) + Number(distanciaKm) * Number(cfg.perKm);
-    if (hasStop) subtotal += Number(cfg.stopFee);
+    const baseVal = Number(isAuto ? (cfg.autoBase ?? cfg.base * 2) : cfg.base);
+    const perKmVal = Number(isAuto ? (cfg.autoPerKm ?? cfg.perKm * 2) : cfg.perKm);
+    const minVal = Number(isAuto ? (cfg.autoMinimum ?? cfg.minimum * 2) : cfg.minimum);
+    const stopVal = Number(isAuto ? (cfg.autoStopFee ?? cfg.stopFee * 2) : cfg.stopFee);
+
+    let subtotal = baseVal + Number(distanciaKm) * perKmVal;
+    if (hasStop) subtotal += stopVal;
 
     let recargoPct = 0;
     if (isNight) recargoPct += Number(cfg.nightPct || 0);
@@ -81,10 +116,12 @@ export function calcularTarifaDinamica(distanciaKm, config = DEFAULT_CONFIG, opt
 
     const totalBruto = subtotal * (1 + recargoPct / 100);
     const redondeado = Math.ceil(totalBruto / 100) * 100;
-    const finalPrice = Math.max(Number(cfg.minimum), redondeado);
+    const finalPrice = Math.max(minVal, redondeado);
 
     return {
         total: finalPrice,
+        vehicleType: isAuto ? "auto" : "moto",
+        stopFeeApplied: stopVal,
         isNight,
         isRain,
         hasStop,
