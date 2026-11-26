@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Modo Conductor - MotoYa San Vicente</title>
+    <title>Modo Conductor - MotoYa</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
     <link rel="manifest" href="./manifest-chofer.json">
@@ -11,6 +11,79 @@
     <meta name="theme-color" content="#090d10">
     <script defer src="./pwa.js"></script>
     <style>
+        .city-tag-btn {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            max-width: 130px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .city-tag-btn:active { transform: scale(0.96); }
+
+        /* SELECTOR DE LOCALIDAD EN REGISTRO Y MODAL */
+        .city-select-field {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-input);
+            border: 1.5px solid var(--accent);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: #fff;
+            font-size: 0.78rem;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+        }
+        .city-list-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .city-option-btn {
+            background: var(--bg-input);
+            border: 1.5px solid var(--border);
+            color: #f8fafc;
+            border-radius: 10px;
+            padding: 9px 8px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .city-option-btn.selected {
+            border-color: var(--accent-bright);
+            background: rgba(245, 158, 11, 0.16);
+        }
+        .city-opt-name { font-size: 0.74rem; font-weight: 800; }
+        .city-opt-prov { font-size: 0.62rem; color: var(--text-muted); font-weight: 700; }
+        .search-bar-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .search-bar-row .field-input { flex: 1; }
+        .btn-search-go {
+            background: var(--bg-card);
+            border: 1px solid var(--accent);
+            color: var(--accent-bright);
+            border-radius: 8px;
+            padding: 8px 11px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
         /* NAVEGACIÓN POR PESTAÑAS */
         .driver-tabs-bar {
             display: grid;
@@ -322,8 +395,10 @@
     <!-- BARRA SUPERIOR -->
     <header class="app-topbar">
         <div class="brand-group">
-            <span class="brand-logo">🏍️ CHOFER MOTOYA</span>
-            <span class="city-tag">SAN VICENTE</span>
+            <span class="brand-logo" id="drv-brand-logo">🏍️ CHOFER MOTOYA</span>
+            <button type="button" id="btn-open-city" class="city-tag city-tag-btn" title="Cambiar localidad">
+                📍 SAN VICENTE ▾
+            </button>
         </div>
         <div class="topbar-actions">
             <button type="button" id="btn-open-rules-modal" class="mode-switch-link" title="Ver reglas">📜 Reglas</button>
@@ -344,8 +419,26 @@
         <section id="driver-setup-card" class="panel-card">
             <div class="panel-title">🏍️ Registro de Conductor</div>
             <p style="font-size: 0.73rem; color: var(--text-muted); line-height: 1.45;">
-                Completá tus datos reales y adjuntá frente y dorso de tu DNI. Las fotos son privadas y solo las revisa la administración para verificar tu identidad.
+                Elegí tu localidad, tu vehículo (Moto o Auto), completá tus datos reales y adjuntá frente y dorso de tu DNI.
             </p>
+
+            <!-- LOCALIDAD DEL CHOFER -->
+            <div>
+                <label class="input-label">Tu localidad de trabajo</label>
+                <button type="button" id="btn-reg-choose-city" class="city-select-field">
+                    <span id="reg-city-label">📍 San Vicente (Misiones)</span>
+                    <span style="color: var(--accent-bright); font-size: 0.7rem;">Cambiar ▾</span>
+                </button>
+            </div>
+
+            <!-- TIPO DE VEHÍCULO: MOTO vs AUTO -->
+            <div>
+                <label class="input-label">¿Con qué vehículo trabajás?</label>
+                <div class="segmented-row" id="drv-vehicle-row">
+                    <button type="button" class="seg-btn active" data-vtype="moto">🏍️ Moto</button>
+                    <button type="button" class="seg-btn" data-vtype="auto">🚗 Auto</button>
+                </div>
+            </div>
 
             <input type="text" id="drv-input-name" class="field-input" placeholder="Tu nombre y apellido">
             <input type="text" inputmode="numeric" id="drv-input-dni" class="field-input" placeholder="N° de Documento / DNI (sin puntos)">
@@ -402,7 +495,7 @@
                     </li>
                     <li>
                         <strong>🛡️ Seguridad y Honestidad:</strong>
-                        Llevá casco reglamentario y casco adicional para el pasajero, respetá la tarifa exacta de la app y cumplí con los pedidos aceptados.
+                        Circulá con documentación y elementos de seguridad reglamentarios (cascos en moto / cinturones en auto), respetá la tarifa exacta de la app y cumplí con los pedidos aceptados.
                     </li>
                     <li class="rule-danger">
                         <strong>⛔ Consecuencias (Suspensión o Bloqueo):</strong>
@@ -507,7 +600,7 @@
 
                 <div id="available-rides-section" class="panel-card">
                     <div class="panel-title">
-                        <span>📡 Pedidos en San Vicente</span>
+                        <span id="feed-city-title">📡 Pedidos en San Vicente</span>
                         <span id="rain-banner-drv" class="tag-badge rain" style="display: none;">🌧️ Lluvia activa</span>
                     </div>
                     <div id="rides-feed" style="display: flex; flex-direction: column; gap: 10px;">
@@ -532,7 +625,7 @@
 
                     <div class="split-grid-2">
                         <div class="split-box driver-keep">
-                            <span class="split-lbl">🏍️ Te quedás (<span class="dyn-driver-pct">85</span>%)</span>
+                            <span class="split-lbl" id="fin-keep-lbl">🏍️ Te quedás (<span class="dyn-driver-pct">85</span>%)</span>
                             <span class="split-amount" style="color: var(--green);" id="fin-driver-keeps">$0</span>
                             <span class="split-sub">Tu ganancia neta</span>
                         </div>
@@ -626,6 +719,29 @@
         </section>
     </main>
 
+    <!-- MODAL SELECTOR DE LOCALIDAD -->
+    <div id="city-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="panel-title">
+                <span>📍 Elegí tu Localidad</span>
+                <button type="button" id="btn-close-city" class="mode-switch-link">✕</button>
+            </div>
+            <p style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
+                Recibirás pedidos de viajes y envíos de la localidad que tengas seleccionada.
+            </p>
+
+            <div id="city-list-grid" class="city-list-grid"></div>
+
+            <div style="border-top: 1px solid var(--border); padding-top: 9px; display: flex; flex-direction: column; gap: 7px;">
+                <label class="input-label" for="custom-city-input">¿Trabajás en otra localidad? Buscala acá:</label>
+                <div class="search-bar-row">
+                    <input type="text" id="custom-city-input" class="field-input" placeholder="Ej: Eldorado, Leandro N. Alem...">
+                    <button type="button" id="btn-find-custom-city" class="btn-search-go">Ubicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE CONSULTA DE REGLAS -->
     <div id="rules-modal" class="modal-overlay hidden">
         <div class="modal-box">
@@ -644,7 +760,7 @@
                 </li>
                 <li>
                     <strong>🛡️ Seguridad y Honestidad:</strong>
-                    Casco reglamentario para vos y el pasajero, conducción segura y respeto por la tarifa calculada por la app.
+                    Elementos de seguridad reglamentarios (cascos en moto / cinturones en auto), conducción segura y respeto por la tarifa calculada por la app.
                 </li>
                 <li class="rule-danger">
                     <strong>⛔ Consecuencias:</strong>
@@ -658,6 +774,7 @@
     <script type="module">
         import {
             db, ref, get, set, update, onValue, runTransaction,
+            DEFAULT_CITIES, normalizarIdCiudad,
             limpiarTelefonoWhatsApp, escHtml, formatHoraFecha
         } from "./firebase-config.js";
 
@@ -668,7 +785,23 @@
         let adminPhone = "";
         let selectedFinancePeriod = "today";
 
+        let availableCities = [...DEFAULT_CITIES];
+
         let driverProfile = JSON.parse(localStorage.getItem("motoya_driver_profile") || "null");
+        if (driverProfile) {
+            if (!driverProfile.vehicleType) driverProfile.vehicleType = "moto";
+            if (!driverProfile.cityId) driverProfile.cityId = "san-vicente";
+            if (!driverProfile.cityName) driverProfile.cityName = "San Vicente";
+            if (!driverProfile.cityProvincia) driverProfile.cityProvincia = "Misiones";
+        }
+
+        let selectedVehicleType = driverProfile?.vehicleType || "moto";
+        let selectedCity = {
+            id: driverProfile?.cityId || "san-vicente",
+            nombre: driverProfile?.cityName || "San Vicente",
+            provincia: driverProfile?.cityProvincia || "Misiones"
+        };
+
         let driverServerState = { status: "pending", ratingSum: 0, ratingCount: 0, completedTrips: 0, dniUploaded: false, dniVerified: false };
         let isOnline = false;
         let currentRideId = localStorage.getItem("motoya_driver_active_ride") || null;
@@ -713,6 +846,160 @@
                 });
             } catch {}
         }
+
+        function getMergedCities(customCitiesRaw) {
+            const mapById = new Map();
+            DEFAULT_CITIES.forEach((c) => mapById.set(c.id, { ...c }));
+            if (customCitiesRaw) {
+                const arr = Array.isArray(customCitiesRaw) ? customCitiesRaw : Object.values(customCitiesRaw);
+                arr.forEach((c) => {
+                    if (c && c.nombre) {
+                        const cid = c.id || normalizarIdCiudad(c.nombre);
+                        mapById.set(cid, {
+                            id: cid,
+                            nombre: c.nombre,
+                            provincia: c.provincia || "Misiones",
+                            lat: Number(c.lat || 0),
+                            lng: Number(c.lng || 0)
+                        });
+                    }
+                });
+            }
+            return Array.from(mapById.values());
+        }
+
+        function updateCityDisplays() {
+            document.getElementById("btn-open-city").textContent = `📍 ${selectedCity.nombre.toUpperCase()} ▾`;
+            document.getElementById("reg-city-label").textContent = `📍 ${selectedCity.nombre} (${selectedCity.provincia || "Misiones"})`;
+            const vTag = selectedVehicleType === "auto" ? "🚗 Auto" : "🏍️ Moto";
+            document.getElementById("feed-city-title").textContent = `📡 Pedidos en ${selectedCity.nombre} (${vTag})`;
+            document.getElementById("drv-brand-logo").textContent = selectedVehicleType === "auto" ? "🚗 CHOFER MOTOYA" : "🏍️ CHOFER MOTOYA";
+        }
+
+        function updateVehicleFormUI(vType) {
+            selectedVehicleType = vType === "auto" ? "auto" : "moto";
+            document.querySelectorAll("#drv-vehicle-row .seg-btn").forEach((btn) => {
+                btn.classList.toggle("active", btn.dataset.vtype === selectedVehicleType);
+            });
+            const modelInput = document.getElementById("drv-input-moto");
+            modelInput.placeholder = selectedVehicleType === "auto"
+                ? "Modelo y color de auto (ej: Chevrolet Corsa gris)"
+                : "Modelo y color de moto (ej: Yamaha FZ25 negra)";
+            updateCityDisplays();
+        }
+
+        document.getElementById("drv-vehicle-row").addEventListener("click", (e) => {
+            const btn = e.target.closest(".seg-btn[data-vtype]");
+            if (!btn) return;
+            updateVehicleFormUI(btn.dataset.vtype);
+        });
+
+        function renderCityModalList() {
+            const grid = document.getElementById("city-list-grid");
+            grid.innerHTML = availableCities.map((c) => `
+                <button type="button" class="city-option-btn ${c.id === selectedCity.id ? "selected" : ""}" data-city-id="${escHtml(c.id)}">
+                    <span class="city-opt-name">📍 ${escHtml(c.nombre)}</span>
+                    <span class="city-opt-prov">${escHtml(c.provincia || "Misiones")}</span>
+                </button>
+            `).join("");
+        }
+
+        async function applySelectedCity(cityObj) {
+            selectedCity = {
+                id: cityObj.id || normalizarIdCiudad(cityObj.nombre),
+                nombre: cityObj.nombre,
+                provincia: cityObj.provincia || "Misiones"
+            };
+            updateCityDisplays();
+            renderCityModalList();
+
+            if (driverProfile && driverProfile.id) {
+                driverProfile.cityId = selectedCity.id;
+                driverProfile.cityName = selectedCity.nombre;
+                driverProfile.cityProvincia = selectedCity.provincia;
+                localStorage.setItem("motoya_driver_profile", JSON.stringify(driverProfile));
+                updateDriverSummaryText();
+                try {
+                    await update(ref(db, `drivers/${driverProfile.id}`), {
+                        cityId: selectedCity.id,
+                        cityName: selectedCity.nombre,
+                        cityProvincia: selectedCity.provincia
+                    });
+                } catch {}
+                renderAvailableRides(lastSnapshotRides);
+            }
+        }
+
+        function openCityModal() {
+            if (currentRideId) {
+                showToast("Terminá el viaje actual antes de cambiar de localidad.", "error");
+                return;
+            }
+            renderCityModalList();
+            document.getElementById("city-modal").classList.remove("hidden");
+        }
+
+        document.getElementById("btn-open-city").addEventListener("click", openCityModal);
+        document.getElementById("btn-reg-choose-city").addEventListener("click", openCityModal);
+        document.getElementById("btn-close-city").addEventListener("click", () => {
+            document.getElementById("city-modal").classList.add("hidden");
+        });
+        document.getElementById("city-modal").addEventListener("click", (e) => {
+            if (e.target.id === "city-modal") document.getElementById("city-modal").classList.add("hidden");
+        });
+
+        document.getElementById("city-list-grid").addEventListener("click", async (e) => {
+            const btn = e.target.closest("button[data-city-id]");
+            if (!btn) return;
+            const found = availableCities.find((c) => c.id === btn.dataset.cityId);
+            if (!found) return;
+            await applySelectedCity(found);
+            document.getElementById("city-modal").classList.add("hidden");
+            showToast(`📍 Localidad actualizada a ${found.nombre}`);
+        });
+
+        document.getElementById("btn-find-custom-city").addEventListener("click", async () => {
+            const q = document.getElementById("custom-city-input").value.trim();
+            if (!q) {
+                showToast("Escribí el nombre de tu localidad.", "error");
+                return;
+            }
+            const btn = document.getElementById("btn-find-custom-city");
+            btn.disabled = true;
+            btn.textContent = "...";
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&countrycodes=ar&q=${encodeURIComponent(q + ", Argentina")}`;
+                const res = await fetch(url, { headers: { "Accept-Language": "es" } });
+                const data = await res.json();
+                if (!Array.isArray(data) || !data.length) {
+                    showToast("No encontramos esa localidad. Probá agregando la provincia.", "error");
+                    return;
+                }
+                const item = data[0];
+                const addr = item.address || {};
+                const cityName = addr.city || addr.town || addr.village || addr.municipality || q;
+                const provName = addr.state || "Argentina";
+                const customObj = {
+                    id: normalizarIdCiudad(cityName),
+                    nombre: cityName,
+                    provincia: provName,
+                    lat: Number(item.lat),
+                    lng: Number(item.lon)
+                };
+                if (!availableCities.some((c) => c.id === customObj.id)) {
+                    availableCities.push(customObj);
+                }
+                await applySelectedCity(customObj);
+                document.getElementById("custom-city-input").value = "";
+                document.getElementById("city-modal").classList.add("hidden");
+                showToast(`📍 Localidad configurada: ${cityName}`);
+            } catch {
+                showToast("Error al buscar la localidad.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Ubicar";
+            }
+        });
 
         function compressImageFile(file, maxWidth = 900, quality = 0.72) {
             return new Promise((resolve, reject) => {
@@ -848,15 +1135,12 @@
             const date = new Date(ts || 0);
             if (isNaN(date.getTime())) return false;
             const now = new Date();
-
             if (period === "today") {
                 return date.getFullYear() === now.getFullYear() &&
                        date.getMonth() === now.getMonth() &&
                        date.getDate() === now.getDate();
             }
-            if (period === "week") {
-                return (now.getTime() - date.getTime()) <= 7 * 24 * 60 * 60 * 1000;
-            }
+            if (period === "week") return (now.getTime() - date.getTime()) <= 7 * 24 * 60 * 60 * 1000;
             return true;
         }
 
@@ -864,6 +1148,17 @@
             const cnt = Number(driverServerState.ratingCount || 0);
             if (cnt === 0) return 5.0;
             return Math.round((Number(driverServerState.ratingSum || 0) / cnt) * 10) / 10;
+        }
+
+        function updateDriverSummaryText() {
+            if (!driverProfile) return;
+            const vIcon = driverProfile.vehicleType === "auto" ? "🚗 Auto" : "🏍️ Moto";
+            document.getElementById("driver-summary-txt").textContent =
+                `${driverProfile.name} · ${vIcon} · ${driverProfile.moto} (${driverProfile.plate}) · 📍 ${driverProfile.cityName || "San Vicente"}`;
+            const keepLbl = document.getElementById("fin-keep-lbl");
+            if (keepLbl) {
+                keepLbl.innerHTML = `${driverProfile.vehicleType === "auto" ? "🚗" : "🏍️"} Te quedás (<span class="dyn-driver-pct">${Math.max(0, 100 - adminPct)}</span>%)`;
+            }
         }
 
         document.getElementById("btn-copy-alias").addEventListener("click", async () => {
@@ -890,6 +1185,8 @@
             adminAlias = String(cfg.adminAlias || "").trim();
             adminHolder = String(cfg.adminHolder || "").trim();
             adminPhone = String(cfg.adminPhone || "").trim();
+            availableCities = getMergedCities(cfg.customCities);
+            renderCityModalList();
             updatePctLabels();
             updateAdminPaymentInfoUI();
             if (driverProfile) renderDriverHistoryAndStats(lastSnapshotRides);
@@ -919,9 +1216,13 @@
                     id: safeId,
                     name: profile.name,
                     dni: profile.dni,
+                    vehicleType: profile.vehicleType || "moto",
                     moto: profile.moto,
                     plate: profile.plate,
                     phone: profile.phone,
+                    cityId: profile.cityId || "san-vicente",
+                    cityName: profile.cityName || "San Vicente",
+                    cityProvincia: profile.cityProvincia || "Misiones",
                     status: "pending",
                     dniUploaded: Boolean(profile.dniUploaded),
                     dniVerified: false,
@@ -938,9 +1239,13 @@
                     id: safeId,
                     name: profile.name,
                     dni: profile.dni,
+                    vehicleType: profile.vehicleType || prev.vehicleType || "moto",
                     moto: profile.moto,
                     plate: profile.plate,
                     phone: profile.phone,
+                    cityId: profile.cityId || prev.cityId || "san-vicente",
+                    cityName: profile.cityName || prev.cityName || "San Vicente",
+                    cityProvincia: profile.cityProvincia || prev.cityProvincia || "Misiones",
                     dniUploaded: Boolean(profile.dniUploaded || prev.dniUploaded),
                     termsAccepted: true,
                     termsAcceptedAt: profile.termsAcceptedAt || Date.now()
@@ -996,6 +1301,8 @@
 
         function openSetupForm(forceDniUpload = false) {
             fillProfileForm(driverProfile);
+            updateVehicleFormUI(driverProfile?.vehicleType || selectedVehicleType);
+            updateCityDisplays();
             const hasDni = Boolean(driverProfile?.dniUploaded) && !forceDniUpload;
             document.getElementById("dni-existing-badge").style.display = hasDni ? "inline-flex" : "none";
             document.getElementById("drv-accept-rules").checked = Boolean(driverProfile?.termsAccepted);
@@ -1006,11 +1313,17 @@
         }
 
         function loadDashboard() {
+            selectedVehicleType = driverProfile.vehicleType || "moto";
+            selectedCity = {
+                id: driverProfile.cityId || "san-vicente",
+                nombre: driverProfile.cityName || "San Vicente",
+                provincia: driverProfile.cityProvincia || "Misiones"
+            };
             document.getElementById("driver-setup-card").style.display = "none";
             document.getElementById("driver-dashboard").style.display = "flex";
-            document.getElementById("driver-summary-txt").textContent =
-                `${driverProfile.name} · DNI ${driverProfile.dni} · ${driverProfile.moto} (${driverProfile.plate})`;
 
+            updateCityDisplays();
+            updateDriverSummaryText();
             updatePctLabels();
             updateAdminPaymentInfoUI();
             listenDriverProfileNode(driverProfile.id);
@@ -1033,7 +1346,7 @@
             const accepted = document.getElementById("drv-accept-rules").checked;
 
             if (!name || !dni || !moto || !plate || !phone) {
-                showToast("⚠️ Completá todos tus datos personales y de la moto.", "error");
+                showToast("⚠️ Completá todos tus datos personales y del vehículo.", "error");
                 return;
             }
             if (dni.length < 7 || dni.length > 9) {
@@ -1067,9 +1380,13 @@
                 id: cleanId,
                 name,
                 dni,
+                vehicleType: selectedVehicleType,
                 moto,
                 plate,
                 phone,
+                cityId: selectedCity.id,
+                cityName: selectedCity.nombre,
+                cityProvincia: selectedCity.provincia || "Misiones",
                 dniUploaded: alreadyHasDni || hasNewPhotos,
                 termsAccepted: true,
                 termsAcceptedAt: Date.now()
@@ -1189,23 +1506,39 @@
             });
         }
 
+        function rideMatchesDriverScope(r) {
+            if (!r || r.status !== "searching") return false;
+            const rideCityId = r.cityId || "san-vicente";
+            const drvCityId = driverProfile?.cityId || selectedCity.id || "san-vicente";
+            if (rideCityId !== drvCityId) return false;
+
+            const drvVehicle = driverProfile?.vehicleType || selectedVehicleType || "moto";
+            const rideVehicle = r.vehicleType || "moto";
+
+            if (drvVehicle === "auto") {
+                return rideVehicle === "auto" || r.serviceType === "delivery";
+            }
+            return rideVehicle !== "auto";
+        }
+
         function renderAvailableRides(allRides) {
             const feed = document.getElementById("rides-feed");
             const badge = document.getElementById("tab-badge-rides");
 
             if (!isOnline) {
                 badge.classList.remove("visible");
-                feed.innerHTML = `<div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">Conectate para recibir solicitudes de viaje y envíos.</div>`;
+                feed.innerHTML = `<div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">Conectate para recibir solicitudes en ${escHtml(selectedCity.nombre)}.</div>`;
                 return;
             }
 
-            const searching = allRides.filter((r) => r.status === "searching").reverse();
+            const searching = allRides.filter(rideMatchesDriverScope).reverse();
             badge.textContent = searching.length;
             badge.classList.toggle("visible", searching.length > 0);
 
             if (!searching.length) {
                 knownRideIds.clear();
-                feed.innerHTML = `<div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">⏳ Esperando pedidos en San Vicente...</div>`;
+                const vTxt = (driverProfile?.vehicleType || "moto") === "auto" ? "Auto / Envíos" : "Moto / Envíos";
+                feed.innerHTML = `<div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">⏳ Esperando pedidos (${vTxt}) en ${escHtml(selectedCity.nombre)}...</div>`;
                 return;
             }
 
@@ -1216,9 +1549,10 @@
 
             feed.innerHTML = searching.map((r) => {
                 const badges = [];
-                badges.push(r.serviceType === "delivery"
-                    ? `<span class="tag-badge pkg">📦 ENVÍO</span>`
-                    : `<span class="tag-badge stop">🏍️ VIAJE</span>`);
+                if (r.serviceType === "delivery") badges.push(`<span class="tag-badge pkg">📦 ENVÍO</span>`);
+                else if (r.vehicleType === "auto") badges.push(`<span class="tag-badge stop">🚗 VIAJE AUTO</span>`);
+                else badges.push(`<span class="tag-badge stop">🏍️ VIAJE MOTO</span>`);
+
                 if (r.scheduledFor) badges.push(`<span class="tag-badge sched">📅 ${escHtml(r.scheduledFor.replace("T", " "))}</span>`);
                 if (r.stop) badges.push(`<span class="tag-badge stop">🟡 +1 PARADA</span>`);
                 if (r.isRainTariff) badges.push(`<span class="tag-badge rain">🌧️ LLUVIA</span>`);
@@ -1293,9 +1627,10 @@
 
             const amountToReport = realPending > 0 ? realPending : adminCut;
             const waAdminNum = limpiarTelefonoWhatsApp(adminPhone);
+            const vLabel = driverProfile.vehicleType === "auto" ? "🚗 Auto" : "🏍️ Moto";
             const receiptMsg = [
-                `💸 *Comprobante de Comisión - MotoYa San Vicente*`,
-                `🏍️ Chofer: ${driverProfile.name}`,
+                `💸 *Comprobante de Comisión - MotoYa (${driverProfile.cityName || "San Vicente"})*`,
+                `${vLabel} Chofer: ${driverProfile.name}`,
                 `🪪 DNI: ${driverProfile.dni}`,
                 `🔖 Patente: ${driverProfile.plate}`,
                 `💰 Monto transferido (${adminPct}%): *$${amountToReport.toLocaleString("es-AR")}*`,
@@ -1319,10 +1654,11 @@
             } else {
                 histFeed.innerHTML = mineAll.slice(0, 15).map((r) => {
                     const isTr = isTransferPayment(r.paymentMethod);
+                    const ico = r.serviceType === "delivery" ? "📦" : r.vehicleType === "auto" ? "🚗" : "🏍️";
                     return `
                     <div class="history-card">
                         <div style="display:flex; justify-content:space-between;">
-                            <strong>${r.serviceType === "delivery" ? "📦" : "🏍️"} ${escHtml(r.passengerName)} · $${Number(r.fare).toLocaleString("es-AR")}</strong>
+                            <strong>${ico} ${escHtml(r.passengerName)} · $${Number(r.fare).toLocaleString("es-AR")}</strong>
                             <span style="font-size:0.66rem; color:var(--text-muted);">${formatHoraFecha(r.completedAt || r.createdAt)}</span>
                         </div>
                         <div style="color:#cbd5e1;">🟢 ${escHtml(r.origin?.label)} → 🔴 ${escHtml(r.destination?.label)}</div>
@@ -1386,7 +1722,7 @@
                 localStorage.setItem("motoya_driver_active_ride", rideId);
                 switchDriverTab("pedidos");
                 attachActiveRide(rideId);
-                showToast("🏍️ ¡Pedido aceptado! Transmitiendo tu ubicación GPS.");
+                showToast("✅ ¡Pedido aceptado! Transmitiendo tu ubicación GPS.");
             } catch (err) {
                 console.error(err);
                 showToast("❌ Error al aceptar pedido.", "error");
@@ -1446,11 +1782,11 @@
                     return;
                 }
 
-                const badges = [
-                    ride.serviceType === "delivery"
-                        ? `<span class="tag-badge pkg">📦 ENVÍO</span>`
-                        : `<span class="tag-badge stop">🏍️ VIAJE</span>`
-                ];
+                const badges = [];
+                if (ride.serviceType === "delivery") badges.push(`<span class="tag-badge pkg">📦 ENVÍO</span>`);
+                else if (ride.vehicleType === "auto") badges.push(`<span class="tag-badge stop">🚗 AUTO</span>`);
+                else badges.push(`<span class="tag-badge stop">🏍️ MOTO</span>`);
+
                 if (ride.scheduledFor) badges.push(`<span class="tag-badge sched">📅 ${escHtml(ride.scheduledFor.replace("T", " "))}</span>`);
                 document.getElementById("drv-active-badges").innerHTML = badges.join("");
 
@@ -1480,12 +1816,13 @@
                 const msg = encodeURIComponent(`Hola ${ride.passengerName}, soy ${driverProfile.name} de MotoYa (${driverProfile.moto}, patente ${driverProfile.plate}).`);
                 document.getElementById("btn-wa-passenger").href = waNum ? `https://wa.me/${waNum}?text=${msg}` : "#";
 
+                const travelMode = (driverProfile.vehicleType === "auto") ? "driving" : "motorcycle";
                 let navUrl = "#";
                 if (ride.status === "in_progress" && ride.destination) {
                     const wp = ride.stop ? `&waypoints=${ride.stop.lat},${ride.stop.lng}` : "";
-                    navUrl = `https://www.google.com/maps/dir/?api=1&destination=${ride.destination.lat},${ride.destination.lng}${wp}&travelmode=motorcycle`;
+                    navUrl = `https://www.google.com/maps/dir/?api=1&destination=${ride.destination.lat},${ride.destination.lng}${wp}&travelmode=${travelMode}`;
                 } else if (ride.origin) {
-                    navUrl = `https://www.google.com/maps/dir/?api=1&destination=${ride.origin.lat},${ride.origin.lng}&travelmode=motorcycle`;
+                    navUrl = `https://www.google.com/maps/dir/?api=1&destination=${ride.origin.lat},${ride.origin.lng}&travelmode=${travelMode}`;
                 }
                 document.getElementById("btn-nav-gmaps").href = navUrl;
 
@@ -1537,6 +1874,9 @@
             document.getElementById("driver-active-ride").style.display = "none";
             document.getElementById("available-rides-section").style.display = "flex";
         }
+
+        updateCityDisplays();
+        updateVehicleFormUI(selectedVehicleType);
 
         if (driverProfile && driverProfile.name && driverProfile.dni && driverProfile.moto && driverProfile.plate && driverProfile.phone && driverProfile.termsAccepted && driverProfile.dniUploaded) {
             if (!driverProfile.id) {
