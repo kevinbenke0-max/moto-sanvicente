@@ -24,7 +24,6 @@
         }
         .city-tag-btn:active { transform: scale(0.96); }
 
-        /* SELECTOR DE LOCALIDAD EN REGISTRO Y MODAL */
         .city-select-field {
             display: flex;
             justify-content: space-between;
@@ -1506,6 +1505,7 @@
             });
         }
 
+        // Filtra por localidad y exactamente por tipo de vehículo (Moto o Auto, tanto viajes como envíos)
         function rideMatchesDriverScope(r) {
             if (!r || r.status !== "searching") return false;
             const rideCityId = r.cityId || "san-vicente";
@@ -1514,11 +1514,7 @@
 
             const drvVehicle = driverProfile?.vehicleType || selectedVehicleType || "moto";
             const rideVehicle = r.vehicleType || "moto";
-
-            if (drvVehicle === "auto") {
-                return rideVehicle === "auto" || r.serviceType === "delivery";
-            }
-            return rideVehicle !== "auto";
+            return rideVehicle === drvVehicle;
         }
 
         function renderAvailableRides(allRides) {
@@ -1537,8 +1533,8 @@
 
             if (!searching.length) {
                 knownRideIds.clear();
-                const vTxt = (driverProfile?.vehicleType || "moto") === "auto" ? "Auto / Envíos" : "Moto / Envíos";
-                feed.innerHTML = `<div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">⏳ Esperando pedidos (${vTxt}) en ${escHtml(selectedCity.nombre)}...</div>`;
+                const vTxt = (driverProfile?.vehicleType || "moto") === "auto" ? "Auto" : "Moto";
+                feed.innerHTML = `<div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">⏳ Esperando viajes y envíos en ${vTxt} (${escHtml(selectedCity.nombre)})...</div>`;
                 return;
             }
 
@@ -1548,15 +1544,22 @@
             if (hasNew && !currentRideId) playAlertBeep();
 
             feed.innerHTML = searching.map((r) => {
+                const isAuto = r.vehicleType === "auto";
                 const badges = [];
-                if (r.serviceType === "delivery") badges.push(`<span class="tag-badge pkg">📦 ENVÍO</span>`);
-                else if (r.vehicleType === "auto") badges.push(`<span class="tag-badge stop">🚗 VIAJE AUTO</span>`);
-                else badges.push(`<span class="tag-badge stop">🏍️ VIAJE MOTO</span>`);
+                if (r.serviceType === "delivery") {
+                    badges.push(`<span class="tag-badge pkg">📦 ENVÍO ${isAuto ? "AUTO" : "MOTO"}</span>`);
+                } else if (isAuto) {
+                    badges.push(`<span class="tag-badge stop">🚗 VIAJE AUTO</span>`);
+                } else {
+                    badges.push(`<span class="tag-badge stop">🏍️ VIAJE MOTO</span>`);
+                }
 
                 if (r.scheduledFor) badges.push(`<span class="tag-badge sched">📅 ${escHtml(r.scheduledFor.replace("T", " "))}</span>`);
                 if (r.stop) badges.push(`<span class="tag-badge stop">🟡 +1 PARADA</span>`);
                 if (r.isRainTariff) badges.push(`<span class="tag-badge rain">🌧️ LLUVIA</span>`);
                 if (r.isNightTariff) badges.push(`<span class="tag-badge night">🌙 NOCTURNA</span>`);
+
+                const weightTag = r.packageWeightKg ? ` · <strong>⚖️ ~${escHtml(r.packageWeightKg)} kg</strong>` : "";
 
                 return `
                 <div class="ride-request-card">
@@ -1567,7 +1570,7 @@
                         </span>
                     </div>
                     <div style="font-size:0.84rem; font-weight:800;">🧍 ${escHtml(r.passengerName)}</div>
-                    ${r.packageNotes ? `<div style="font-size:0.74rem; color:#a7f3d0;">📦 Detalle: ${escHtml(r.packageNotes)}</div>` : ""}
+                    ${r.packageNotes ? `<div style="font-size:0.74rem; color:#a7f3d0; background:rgba(16,185,129,0.1); padding:6px 8px; border-radius:7px;">📦 <strong>Paquete:</strong> ${escHtml(r.packageNotes)}${weightTag}</div>` : ""}
                     <div class="ride-route-line">
                         <div>🟢 <strong>Subida:</strong> ${escHtml(r.origin?.label)}</div>
                         ${r.stop ? `<div>🟡 <strong>Parada:</strong> ${escHtml(r.stop.label)}</div>` : ""}
@@ -1662,6 +1665,7 @@
                             <span style="font-size:0.66rem; color:var(--text-muted);">${formatHoraFecha(r.completedAt || r.createdAt)}</span>
                         </div>
                         <div style="color:#cbd5e1;">🟢 ${escHtml(r.origin?.label)} → 🔴 ${escHtml(r.destination?.label)}</div>
+                        ${r.packageNotes ? `<div style="font-size:0.67rem; color:#a7f3d0;">📦 ${escHtml(r.packageNotes)}${r.packageWeightKg ? ` (~${escHtml(r.packageWeightKg)} kg)` : ""}</div>` : ""}
                         <div style="display:flex; justify-content:space-between; font-size:0.67rem;">
                             <span style="color:${isTr ? "#93c5fd" : "#a7f3d0"}; font-weight:700;">
                                 ${isTr ? "📱 Transferencia / MP" : "💵 Efectivo"}
@@ -1782,10 +1786,15 @@
                     return;
                 }
 
+                const isAuto = ride.vehicleType === "auto";
                 const badges = [];
-                if (ride.serviceType === "delivery") badges.push(`<span class="tag-badge pkg">📦 ENVÍO</span>`);
-                else if (ride.vehicleType === "auto") badges.push(`<span class="tag-badge stop">🚗 AUTO</span>`);
-                else badges.push(`<span class="tag-badge stop">🏍️ MOTO</span>`);
+                if (ride.serviceType === "delivery") {
+                    badges.push(`<span class="tag-badge pkg">📦 ENVÍO ${isAuto ? "AUTO" : "MOTO"}</span>`);
+                } else if (isAuto) {
+                    badges.push(`<span class="tag-badge stop">🚗 AUTO</span>`);
+                } else {
+                    badges.push(`<span class="tag-badge stop">🏍️ MOTO</span>`);
+                }
 
                 if (ride.scheduledFor) badges.push(`<span class="tag-badge sched">📅 ${escHtml(ride.scheduledFor.replace("T", " "))}</span>`);
                 document.getElementById("drv-active-badges").innerHTML = badges.join("");
@@ -1796,8 +1805,9 @@
 
                 const pkgEl = document.getElementById("drv-p-pkg");
                 if (ride.packageNotes) {
+                    const weightTxt = ride.packageWeightKg ? ` · ⚖️ ~${ride.packageWeightKg} kg` : "";
                     pkgEl.style.display = "block";
-                    pkgEl.textContent = `📦 Paquete: ${ride.packageNotes}`;
+                    pkgEl.textContent = `📦 Paquete: ${ride.packageNotes}${weightTxt}`;
                 } else {
                     pkgEl.style.display = "none";
                 }
