@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>MotoYa San Vicente - Pedí tu Moto</title>
+    <title>MotoYa - Pedí tu Moto o Auto</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -12,6 +12,30 @@
     <meta name="theme-color" content="#090d10">
     <script defer src="./pwa.js"></script>
     <style>
+        .city-tag-btn {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            max-width: 135px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: border-color 0.15s, background 0.15s;
+        }
+        .city-tag-btn:active {
+            transform: scale(0.96);
+        }
+        #service-type-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        #service-type-row .seg-btn {
+            padding: 8px 4px;
+            font-size: 0.72rem;
+            white-space: nowrap;
+        }
         .search-bar-row {
             display: flex;
             gap: 6px;
@@ -77,6 +101,40 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
         }
         .star-map-tooltip::before { display: none; }
+
+        /* MODAL SELECTOR DE LOCALIDAD */
+        .city-list-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+        .city-option-btn {
+            background: var(--bg-input);
+            border: 1.5px solid var(--border);
+            color: #f8fafc;
+            border-radius: 10px;
+            padding: 9px 8px;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .city-option-btn.selected {
+            border-color: var(--accent-bright);
+            background: rgba(245, 158, 11, 0.16);
+        }
+        .city-opt-name {
+            font-size: 0.74rem;
+            font-weight: 800;
+        }
+        .city-opt-prov {
+            font-size: 0.62rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
     </style>
 </head>
 <body class="passenger-body">
@@ -86,8 +144,10 @@
     <!-- BARRA SUPERIOR -->
     <header class="app-topbar">
         <div class="brand-group">
-            <span class="brand-logo">🏍️ MOTOYA</span>
-            <span class="city-tag">SAN VICENTE</span>
+            <span class="brand-logo" id="brand-logo-txt">🏍️ MOTOYA</span>
+            <button type="button" id="btn-open-city" class="city-tag city-tag-btn" title="Cambiar localidad">
+                📍 SAN VICENTE ▾
+            </button>
         </div>
         <div class="topbar-actions">
             <button type="button" id="btn-open-history" class="mode-switch-link">🧾 Historial</button>
@@ -109,10 +169,11 @@
         <!-- MODO 1: COTIZAR Y PEDIR -->
         <div id="request-view" style="display: flex; flex-direction: column; gap: 9px;">
 
-            <!-- MODALIDAD: VIAJE vs ENVÍO -->
+            <!-- MODALIDAD: MOTO / AUTO / ENVÍO -->
             <div class="segmented-row" id="service-type-row">
-                <button type="button" class="seg-btn active" data-type="ride">🏍️ Viaje Pasajero</button>
-                <button type="button" class="seg-btn" data-type="delivery">📦 Envío / Cadetería</button>
+                <button type="button" class="seg-btn active" data-mode="moto">🏍️ Moto</button>
+                <button type="button" class="seg-btn" data-mode="auto">🚗 Auto</button>
+                <button type="button" class="seg-btn" data-mode="delivery">📦 Envío</button>
             </div>
 
             <!-- DETALLE DE ENVÍO -->
@@ -123,7 +184,7 @@
             <div class="point-selector-row">
                 <div class="point-box" id="box-origin">
                     <div class="point-label"><span>🟢 Origen</span></div>
-                    <div class="point-value" id="origin-text">Plaza San Martín</div>
+                    <div class="point-value" id="origin-text">Centro de San Vicente</div>
                 </div>
                 <div class="point-box active-target" id="box-dest">
                     <div class="point-label"><span>🔴 Destino</span></div>
@@ -158,7 +219,7 @@
                 <input type="datetime-local" id="schedule-datetime" class="field-input">
             </div>
 
-            <!-- PUNTOS RÁPIDOS DE SAN VICENTE (EN VIVO DESDE FIREBASE) -->
+            <!-- PUNTOS RÁPIDOS DE LA LOCALIDAD -->
             <div class="quick-places-scroll" id="quick-places"></div>
 
             <!-- TARJETA DE TARIFA INTELIGENTE -->
@@ -166,7 +227,7 @@
                 <div class="fare-info-left">
                     <div class="moto-badge-icon" id="fare-icon">🏍️</div>
                     <div>
-                        <div class="fare-title" id="fare-title-txt">MotoYa Express</div>
+                        <div class="fare-title" id="fare-title-txt">MotoYa Moto (1 pasajero)</div>
                         <div class="fare-sub" id="trip-metrics">Elegí destino para calcular</div>
                         <div class="badges-wrap" id="fare-badges" style="margin-top: 4px;"></div>
                     </div>
@@ -186,7 +247,7 @@
             </div>
 
             <button type="button" id="btn-request-ride" class="btn btn-accent" disabled>
-                PEDIR MOTO AHORA
+                🏍️ PEDIR MOTO AHORA
             </button>
         </div>
 
@@ -197,7 +258,7 @@
                     <div style="font-size: 0.62rem; color: var(--text-muted); font-weight: 800;" id="active-type-label">
                         ESTADO DEL VIAJE
                     </div>
-                    <div style="font-size: 0.88rem; font-weight: 900;" id="ride-status-title">Buscando moto cercana...</div>
+                    <div style="font-size: 0.88rem; font-weight: 900;" id="ride-status-title">Buscando vehículo cercano...</div>
                 </div>
                 <div class="pin-pill">PIN: <span id="ride-pin-txt">----</span></div>
             </div>
@@ -219,7 +280,7 @@
             </div>
 
             <div id="live-gps-status" style="display: none; font-size: 0.7rem; color: #93c5fd; text-align: center; font-weight: 700;">
-                🛰️ Viendo la ubicación de la moto en vivo en el mapa
+                🛰️ Viendo la ubicación del vehículo en vivo en el mapa
             </div>
 
             <!-- SEGURIDAD: COMPARTIR VIAJE + EMERGENCIA -->
@@ -246,6 +307,29 @@
             </button>
         </div>
     </section>
+
+    <!-- MODAL SELECTOR DE LOCALIDAD / DOMICILIO -->
+    <div id="city-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="panel-title">
+                <span>📍 Elegí tu Localidad</span>
+                <button type="button" id="btn-close-city" class="mode-switch-link">✕</button>
+            </div>
+            <p style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
+                Tu elección queda guardada en el celular para centrar el mapa y mostrarte choferes de tu zona.
+            </p>
+
+            <div id="city-list-grid" class="city-list-grid"></div>
+
+            <div style="border-top: 1px solid var(--border); padding-top: 9px; display: flex; flex-direction: column; gap: 7px;">
+                <label class="input-label" for="custom-city-input">¿No está tu localidad? Buscala acá:</label>
+                <div class="search-bar-row">
+                    <input type="text" id="custom-city-input" class="field-input" placeholder="Ej: Eldorado, Leandro N. Alem...">
+                    <button type="button" id="btn-find-custom-city" class="btn-search-go">Ubicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL CALIFICACIÓN CON ESTRELLAS -->
     <div id="rating-modal" class="modal-overlay hidden">
@@ -285,22 +369,43 @@
     <script type="module">
         import {
             db, ref, get, push, set, update, onValue, runTransaction, query, limitToLast,
-            DEFAULT_CONFIG, SAN_VICENTE_CENTER, PUNTOS_LOCALES,
-            calcularTarifaDinamica, generarPin, limpiarTelefonoWhatsApp,
+            DEFAULT_CONFIG, DEFAULT_CITIES, PUNTOS_LOCALES,
+            normalizarIdCiudad, calcularTarifaDinamica, generarPin, limpiarTelefonoWhatsApp,
             haversineKm, escHtml, formatHoraFecha
         } from "./firebase-config.js";
 
         document.getElementById("passenger-name").value = localStorage.getItem("motoya_p_name") || "";
         document.getElementById("passenger-phone").value = localStorage.getItem("motoya_p_phone") || "";
 
+        // Localidad guardada en el celular (por defecto San Vicente)
+        function loadSavedCity() {
+            try {
+                const raw = JSON.parse(localStorage.getItem("motoya_selected_city") || "null");
+                if (raw && raw.nombre && typeof raw.lat === "number" && typeof raw.lng === "number") {
+                    return { ...raw, id: raw.id || normalizarIdCiudad(raw.nombre) };
+                }
+            } catch {}
+            return { ...DEFAULT_CITIES[0] };
+        }
+
+        let currentCity = loadSavedCity();
+        let availableCities = [...DEFAULT_CITIES];
+
         let liveConfig = { ...DEFAULT_CONFIG };
-        let currentPlaces = [...PUNTOS_LOCALES];
-        let serviceType = "ride";
+        let allFirebasePlaces = null;
+        let currentPlaces = [];
+
+        let serviceType = "ride";      // 'ride' | 'delivery'
+        let vehicleType = "moto";      // 'moto' | 'auto'
         let stopEnabled = false;
         let scheduleEnabled = false;
         let activeTarget = "dest";
 
-        let originPoint = { lat: SAN_VICENTE_CENTER[0], lng: SAN_VICENTE_CENTER[1], label: "Plaza San Martín" };
+        let originPoint = {
+            lat: currentCity.lat,
+            lng: currentCity.lng,
+            label: currentCity.id === "san-vicente" ? "Plaza San Martín" : `Centro de ${currentCity.nombre}`
+        };
         let stopPoint = null;
         let destPoint = null;
 
@@ -313,7 +418,8 @@
         let pendingRatingInfo = null;
         let selectedStars = 5;
 
-        const map = L.map("map", { zoomControl: false }).setView(SAN_VICENTE_CENTER, 15);
+        // Mapa centrado en la localidad elegida
+        const map = L.map("map", { zoomControl: false }).setView([currentCity.lat, currentCity.lng], 15);
         L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: "&copy; OpenStreetMap",
             maxZoom: 19
@@ -342,11 +448,173 @@
             setTimeout(() => toast.remove(), 2900);
         }
 
+        function updateCityHeaderUI() {
+            document.getElementById("btn-open-city").textContent = `📍 ${currentCity.nombre.toUpperCase()} ▾`;
+            document.getElementById("origin-text").textContent = originPoint.label;
+        }
+        updateCityHeaderUI();
+
+        function getMergedCities(customCitiesRaw) {
+            const mapById = new Map();
+            DEFAULT_CITIES.forEach((c) => mapById.set(c.id, { ...c }));
+            if (customCitiesRaw) {
+                const arr = Array.isArray(customCitiesRaw) ? customCitiesRaw : Object.values(customCitiesRaw);
+                arr.forEach((c) => {
+                    if (c && c.nombre && typeof Number(c.lat) === "number" && !isNaN(Number(c.lat))) {
+                        const cid = c.id || normalizarIdCiudad(c.nombre);
+                        mapById.set(cid, {
+                            id: cid,
+                            nombre: c.nombre,
+                            provincia: c.provincia || "Misiones",
+                            lat: Number(c.lat),
+                            lng: Number(c.lng)
+                        });
+                    }
+                });
+            }
+            return Array.from(mapById.values());
+        }
+
+        function renderCityModalList() {
+            const grid = document.getElementById("city-list-grid");
+            grid.innerHTML = availableCities.map((c) => `
+                <button type="button" class="city-option-btn ${c.id === currentCity.id ? "selected" : ""}" data-city-id="${escHtml(c.id)}">
+                    <span class="city-opt-name">📍 ${escHtml(c.nombre)}</span>
+                    <span class="city-opt-prov">${escHtml(c.provincia || "Misiones")}</span>
+                </button>
+            `).join("");
+        }
+
+        function selectCity(cityObj, resetRoute = true) {
+            currentCity = {
+                id: cityObj.id || normalizarIdCiudad(cityObj.nombre),
+                nombre: cityObj.nombre,
+                provincia: cityObj.provincia || "Misiones",
+                lat: Number(cityObj.lat),
+                lng: Number(cityObj.lng)
+            };
+            localStorage.setItem("motoya_selected_city", JSON.stringify(currentCity));
+            document.getElementById("btn-open-city").textContent = `📍 ${currentCity.nombre.toUpperCase()} ▾`;
+
+            if (resetRoute && !activeRideId) {
+                originPoint = {
+                    lat: currentCity.lat,
+                    lng: currentCity.lng,
+                    label: currentCity.id === "san-vicente" ? "Plaza San Martín" : `Centro de ${currentCity.nombre}`
+                };
+                originMarker.setLatLng([originPoint.lat, originPoint.lng]);
+                document.getElementById("origin-text").textContent = originPoint.label;
+
+                destPoint = null;
+                stopPoint = null;
+                if (destMarker) { map.removeLayer(destMarker); destMarker = null; }
+                if (stopMarker) { map.removeLayer(stopMarker); stopMarker = null; }
+                if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+
+                document.getElementById("dest-text").textContent = "Tocá el mapa o buscá abajo";
+                document.getElementById("stop-text").textContent = "Tocá el mapa o buscá la parada";
+                document.getElementById("trip-metrics").textContent = "Elegí destino para calcular";
+                document.getElementById("fare-display").textContent = "$0";
+                document.getElementById("btn-request-ride").disabled = true;
+                currentFareInfo = null;
+                map.setView([currentCity.lat, currentCity.lng], 15);
+            }
+
+            refreshPlacesForCurrentCity();
+            renderCityModalList();
+        }
+
+        document.getElementById("btn-open-city").addEventListener("click", () => {
+            if (activeRideId) {
+                showToast("Terminá o cancelá tu pedido actual antes de cambiar de localidad.");
+                return;
+            }
+            renderCityModalList();
+            document.getElementById("city-modal").classList.remove("hidden");
+        });
+
+        document.getElementById("btn-close-city").addEventListener("click", () => {
+            document.getElementById("city-modal").classList.add("hidden");
+        });
+        document.getElementById("city-modal").addEventListener("click", (e) => {
+            if (e.target.id === "city-modal") document.getElementById("city-modal").classList.add("hidden");
+        });
+
+        document.getElementById("city-list-grid").addEventListener("click", (e) => {
+            const btn = e.target.closest("button[data-city-id]");
+            if (!btn) return;
+            const found = availableCities.find((c) => c.id === btn.dataset.cityId);
+            if (!found) return;
+            selectCity(found, true);
+            document.getElementById("city-modal").classList.add("hidden");
+            showToast(`📍 Localidad cambiada a ${found.nombre}`, "success");
+        });
+
+        // Buscar y elegir cualquier otra localidad
+        document.getElementById("btn-find-custom-city").addEventListener("click", async () => {
+            const q = document.getElementById("custom-city-input").value.trim();
+            if (!q) {
+                showToast("Escribí el nombre de tu localidad.");
+                return;
+            }
+            const btn = document.getElementById("btn-find-custom-city");
+            btn.disabled = true;
+            btn.textContent = "...";
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&countrycodes=ar&q=${encodeURIComponent(q + ", Argentina")}`;
+                const res = await fetch(url, { headers: { "Accept-Language": "es" } });
+                const data = await res.json();
+                if (!Array.isArray(data) || !data.length) {
+                    showToast("No encontramos esa localidad. Probá agregando la provincia.");
+                    return;
+                }
+                const item = data[0];
+                const addr = item.address || {};
+                const cityName = addr.city || addr.town || addr.village || addr.municipality || q;
+                const provName = addr.state || "Argentina";
+                const customObj = {
+                    id: normalizarIdCiudad(cityName),
+                    nombre: cityName,
+                    provincia: provName,
+                    lat: Number(item.lat),
+                    lng: Number(item.lon)
+                };
+                if (!availableCities.some((c) => c.id === customObj.id)) {
+                    availableCities.push(customObj);
+                }
+                selectCity(customObj, true);
+                document.getElementById("custom-city-input").value = "";
+                document.getElementById("city-modal").classList.add("hidden");
+                showToast(`📍 Ubicado en ${cityName}`, "success");
+            } catch {
+                showToast("Error al buscar la localidad.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Ubicar";
+            }
+        });
+
+        // Lugares rápidos y estrellas ⭐ filtrados por localidad actual
         const quickContainer = document.getElementById("quick-places");
+        function refreshPlacesForCurrentCity() {
+            const source = allFirebasePlaces !== null ? allFirebasePlaces : PUNTOS_LOCALES;
+            const filtered = source.filter((p) => {
+                const pCity = p.cityId || "san-vicente";
+                return pCity === currentCity.id;
+            });
+            renderQuickPlacesAndStars(filtered);
+        }
+
         function renderQuickPlacesAndStars(placesList) {
             currentPlaces = placesList;
             quickContainer.innerHTML = "";
             savedPlacesLayer.clearLayers();
+
+            if (!placesList.length) {
+                quickContainer.style.display = "none";
+                return;
+            }
+            quickContainer.style.display = "flex";
 
             const starIcon = makeIcon("⭐", 22, 11);
 
@@ -381,10 +649,11 @@
             });
         }
 
-        renderQuickPlacesAndStars(PUNTOS_LOCALES);
+        refreshPlacesForCurrentCity();
         onValue(ref(db, "places"), (snap) => {
             if (!snap.exists()) {
-                renderQuickPlacesAndStars(PUNTOS_LOCALES);
+                allFirebasePlaces = null;
+                refreshPlacesForCurrentCity();
                 return;
             }
             const saved = [];
@@ -394,7 +663,8 @@
                     saved.push(p);
                 }
             });
-            renderQuickPlacesAndStars(saved.length ? saved : PUNTOS_LOCALES);
+            allFirebasePlaces = saved.length ? saved : null;
+            refreshPlacesForCurrentCity();
         });
 
         // ================================
@@ -409,10 +679,10 @@
             const addr = item.address || {};
             const road = addr.road || addr.pedestrian || addr.residential || addr.amenity || addr.shop || "";
             const num = addr.house_number ? ` ${addr.house_number}` : "";
-            const barrio = addr.suburb || addr.neighbourhood || addr.quarter || addr.town || addr.city || "San Vicente";
+            const barrio = addr.suburb || addr.neighbourhood || addr.quarter || addr.town || addr.city || currentCity.nombre;
 
             const title = road ? `${road}${num}` : (item.display_name || "Ubicación").split(",")[0];
-            const sub = road ? `${barrio}, Misiones` : (item.display_name || "").split(",").slice(1, 3).join(",").trim();
+            const sub = road ? `${barrio}, ${currentCity.provincia || "Misiones"}` : (item.display_name || "").split(",").slice(1, 3).join(",").trim();
             return { title, sub };
         }
 
@@ -452,7 +722,7 @@
                 .filter((p) => p.nombre.toLowerCase().includes(qNorm))
                 .map((p) => ({
                     title: p.nombre,
-                    sub: "Lugar destacado de San Vicente",
+                    sub: `Lugar destacado de ${currentCity.nombre}`,
                     lat: Number(p.lat),
                     lng: Number(p.lng),
                     isSaved: true
@@ -466,11 +736,11 @@
 
             const seq = ++lastSearchSeq;
             if (localMatches.length) renderSearchResults(localMatches);
-            else renderSearchResults([], "🔍 Buscando calles en San Vicente...");
+            else renderSearchResults([], `🔍 Buscando calles en ${currentCity.nombre}...`);
 
             try {
-                const viewbox = "-54.56,-26.92,-54.40,-27.08";
-                const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=ar&viewbox=${viewbox}&q=${encodeURIComponent(q + ", San Vicente, Misiones")}`;
+                const viewbox = `${(currentCity.lng - 0.12).toFixed(4)},${(currentCity.lat + 0.10).toFixed(4)},${(currentCity.lng + 0.12).toFixed(4)},${(currentCity.lat - 0.10).toFixed(4)}`;
+                const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=ar&viewbox=${viewbox}&q=${encodeURIComponent(`${q}, ${currentCity.nombre}, ${currentCity.provincia || "Misiones"}`)}`;
                 const res = await fetch(url, { headers: { "Accept-Language": "es" } });
                 const data = await res.json();
                 if (seq !== lastSearchSeq) return;
@@ -533,17 +803,27 @@
             searchResultsBox.classList.remove("visible");
         });
 
+        function updateStopFeeTag() {
+            const fee = vehicleType === "auto"
+                ? Number(liveConfig.autoStopFee ?? liveConfig.stopFee * 2)
+                : Number(liveConfig.stopFee);
+            document.getElementById("stop-fee-tag").textContent = `+$${fee}`;
+        }
+
         onValue(ref(db, "config"), (snap) => {
             if (snap.exists()) {
                 liveConfig = { ...DEFAULT_CONFIG, ...snap.val() };
             }
-            document.getElementById("stop-fee-tag").textContent = `+$${liveConfig.stopFee}`;
+            availableCities = getMergedCities(liveConfig.customCities);
+            renderCityModalList();
+            updateStopFeeTag();
             if (destPoint) refreshFareUI();
             else renderFareBadgesOnly();
         });
 
         function renderFareBadgesOnly() {
             const badges = [];
+            if (vehicleType === "auto") badges.push(`<span class="tag-badge stop">🚗 Tarifa Auto</span>`);
             if (liveConfig.rainMode) badges.push(`<span class="tag-badge rain">🌧️ Lluvia +${liveConfig.rainPct}%</span>`);
             if (stopEnabled) badges.push(`<span class="tag-badge stop">🟡 +1 Parada</span>`);
             document.getElementById("fare-badges").innerHTML = badges.join("");
@@ -573,18 +853,42 @@
         document.getElementById("box-dest").addEventListener("click", () => setTargetMode("dest"));
         document.getElementById("box-stop").addEventListener("click", () => setTargetMode("stop"));
 
+        // Selector Moto / Auto / Envío
         document.getElementById("service-type-row").addEventListener("click", (e) => {
-            const btn = e.target.closest(".seg-btn[data-type]");
+            const btn = e.target.closest(".seg-btn[data-mode]");
             if (!btn) return;
-            serviceType = btn.dataset.type;
+            const mode = btn.dataset.mode;
+
             document.querySelectorAll("#service-type-row .seg-btn").forEach((b) => b.classList.remove("active"));
             btn.classList.add("active");
 
-            const isDeliv = serviceType === "delivery";
-            document.getElementById("package-notes").style.display = isDeliv ? "block" : "none";
-            document.getElementById("fare-icon").textContent = isDeliv ? "📦" : "🏍️";
-            document.getElementById("fare-title-txt").textContent = isDeliv ? "MotoYa Envíos / Cadetería" : "MotoYa Express";
+            if (mode === "auto") {
+                serviceType = "ride";
+                vehicleType = "auto";
+                document.getElementById("package-notes").style.display = "none";
+                document.getElementById("fare-icon").textContent = "🚗";
+                document.getElementById("fare-title-txt").textContent = "MotoYa Auto (hasta 4 pasaj.)";
+                document.getElementById("brand-logo-txt").textContent = "🚗 MOTOYA";
+            } else if (mode === "delivery") {
+                serviceType = "delivery";
+                vehicleType = "moto";
+                document.getElementById("package-notes").style.display = "block";
+                document.getElementById("fare-icon").textContent = "📦";
+                document.getElementById("fare-title-txt").textContent = "MotoYa Envíos / Cadetería";
+                document.getElementById("brand-logo-txt").textContent = "🏍️ MOTOYA";
+            } else {
+                serviceType = "ride";
+                vehicleType = "moto";
+                document.getElementById("package-notes").style.display = "none";
+                document.getElementById("fare-icon").textContent = "🏍️";
+                document.getElementById("fare-title-txt").textContent = "MotoYa Moto (1 pasajero)";
+                document.getElementById("brand-logo-txt").textContent = "🏍️ MOTOYA";
+            }
+
+            updateStopFeeTag();
             updateRequestButtonText();
+            if (destPoint) refreshFareUI();
+            else renderFareBadgesOnly();
         });
 
         document.getElementById("btn-toggle-stop").addEventListener("click", () => {
@@ -637,9 +941,13 @@
         function updateRequestButtonText() {
             const btn = document.getElementById("btn-request-ride");
             if (scheduleEnabled) {
-                btn.textContent = serviceType === "delivery" ? "📅 PROGRAMAR ENVÍO" : "📅 PROGRAMAR MOTO";
+                if (serviceType === "delivery") btn.textContent = "📅 PROGRAMAR ENVÍO";
+                else if (vehicleType === "auto") btn.textContent = "📅 PROGRAMAR AUTO";
+                else btn.textContent = "📅 PROGRAMAR MOTO";
             } else {
-                btn.textContent = serviceType === "delivery" ? "📦 PEDIR ENVÍO AHORA" : "🏍️ PEDIR MOTO AHORA";
+                if (serviceType === "delivery") btn.textContent = "📦 PEDIR ENVÍO AHORA";
+                else if (vehicleType === "auto") btn.textContent = "🚗 PEDIR AUTO AHORA";
+                else btn.textContent = "🏍️ PEDIR MOTO AHORA";
             }
         }
 
@@ -730,6 +1038,7 @@
         function refreshFareUI() {
             const schedVal = scheduleEnabled ? document.getElementById("schedule-datetime").value : null;
             currentFareInfo = calcularTarifaDinamica(currentDistanceKm, liveConfig, {
+                vehicleType,
                 hasStop: stopEnabled && Boolean(stopPoint),
                 scheduledDate: schedVal
             });
@@ -737,6 +1046,7 @@
             document.getElementById("fare-display").textContent = `$${currentFareInfo.total.toLocaleString("es-AR")}`;
 
             const badges = [];
+            if (vehicleType === "auto") badges.push(`<span class="tag-badge stop">🚗 Auto</span>`);
             if (currentFareInfo.isRain) badges.push(`<span class="tag-badge rain">🌧️ Lluvia +${currentFareInfo.rainPct}%</span>`);
             if (currentFareInfo.isNight) badges.push(`<span class="tag-badge night">🌙 Nocturna +${currentFareInfo.nightPct}%</span>`);
             if (currentFareInfo.hasStop) badges.push(`<span class="tag-badge stop">🟡 +1 Parada</span>`);
@@ -785,6 +1095,9 @@
                 const newRideRef = push(ref(db, "rides"));
                 const rideData = {
                     serviceType,
+                    vehicleType,
+                    cityId: currentCity.id,
+                    cityName: currentCity.nombre,
                     packageNotes: serviceType === "delivery" ? pkgNotes : "",
                     passengerName: name,
                     passengerPhone: phone,
@@ -832,8 +1145,17 @@
                 }
 
                 const ride = snap.val();
+                const isAuto = ride.vehicleType === "auto";
+                const vEmoji = isAuto ? "🚗" : "🏍️";
+                const cityLabel = ride.cityName || currentCity.nombre;
+
                 document.getElementById("active-type-label").textContent =
-                    ride.serviceType === "delivery" ? "📦 ENVÍO / CADETERÍA" : "🏍️ VIAJE PASAJERO";
+                    ride.serviceType === "delivery"
+                        ? `📦 ENVÍO / CADETERÍA · ${cityLabel.toUpperCase()}`
+                        : isAuto
+                            ? `🚗 VIAJE EN AUTO · ${cityLabel.toUpperCase()}`
+                            : `🏍️ VIAJE EN MOTO · ${cityLabel.toUpperCase()}`;
+
                 document.getElementById("ride-pin-txt").textContent = ride.pin || "----";
                 document.getElementById("active-fare-txt").textContent = `$${Number(ride.fare || 0).toLocaleString("es-AR")}`;
                 document.getElementById("active-pay-txt").textContent = ride.paymentMethod || "Efectivo";
@@ -841,12 +1163,14 @@
                 document.getElementById("active-safety-note").textContent =
                     ride.serviceType === "delivery"
                         ? "📦 Entregale el PIN al conductor para confirmar el retiro del paquete."
-                        : "🛡️ El conductor lleva casco adicional reglamentario. Mostrale tu PIN al subir.";
+                        : isAuto
+                            ? "🛡️ Vehículo verificado. Mostrale tu PIN al conductor al subir."
+                            : "🛡️ El conductor lleva casco adicional reglamentario. Mostrale tu PIN al subir.";
 
                 if (ride.driverLocation && ride.driverLocation.lat && ride.driverLocation.lng) {
                     const { lat, lng } = ride.driverLocation;
                     if (!driverMarker) {
-                        driverMarker = L.marker([lat, lng], { icon: makeIcon("🏍️", 30, 15), zIndexOffset: 700 }).addTo(map);
+                        driverMarker = L.marker([lat, lng], { icon: makeIcon(vEmoji, 30, 15), zIndexOffset: 700 }).addTo(map);
                     } else {
                         driverMarker.setLatLng([lat, lng]);
                     }
@@ -856,12 +1180,12 @@
                 }
 
                 const shareLines = [
-                    `🏍️ *Estoy viajando con MotoYa San Vicente*`,
-                    `🟢 Origen: ${ride.origin?.label || "San Vicente"}`,
+                    `${vEmoji} *Estoy viajando con MotoYa (${cityLabel})*`,
+                    `🟢 Origen: ${ride.origin?.label || cityLabel}`,
                     ride.stop ? `🟡 Parada: ${ride.stop.label}` : null,
-                    `🔴 Destino: ${ride.destination?.label || "San Vicente"}`,
+                    `🔴 Destino: ${ride.destination?.label || cityLabel}`,
                     ride.driver
-                        ? `🏍️ Chofer: ${ride.driver.name} (DNI: ${ride.driver.dni || "N/D"}) | Moto: ${ride.driver.moto} (Patente ${ride.driver.plate})`
+                        ? `${vEmoji} Chofer: ${ride.driver.name} (DNI: ${ride.driver.dni || "N/D"}) | Vehículo: ${ride.driver.moto} (Patente ${ride.driver.plate})`
                         : `🔍 Buscando chofer asignado...`,
                     `🔐 PIN de seguridad: ${ride.pin}`
                 ].filter(Boolean).join("\n");
@@ -877,11 +1201,13 @@
                 if (ride.status === "searching") {
                     title.textContent = ride.scheduledFor
                         ? `📅 Programado (${ride.scheduledFor.replace("T", " ")}) · Buscando chofer`
-                        : "🔍 Buscando moto cercana...";
+                        : isAuto
+                            ? `🔍 Buscando auto cercano en ${cityLabel}...`
+                            : `🔍 Buscando moto cercana en ${cityLabel}...`;
                     drvCard.style.display = "none";
                     cancelBtn.style.display = "inline-flex";
                 } else if (ride.status === "accepted") {
-                    title.textContent = "🏍️ ¡Moto en camino hacia el origen!";
+                    title.textContent = isAuto ? "🚗 ¡Auto en camino hacia el origen!" : "🏍️ ¡Moto en camino hacia el origen!";
                     showDriverInfo(ride.driver, ride.pin);
                     cancelBtn.style.display = "inline-flex";
                 } else if (ride.status === "arrived") {
@@ -915,7 +1241,7 @@
             document.getElementById("assigned-driver-card").style.display = "flex";
             document.getElementById("drv-name").textContent = driver.name || "Conductor";
             document.getElementById("drv-dni").textContent = driver.dni || "No informado";
-            document.getElementById("drv-moto").textContent = driver.moto || "Moto habilitada";
+            document.getElementById("drv-moto").textContent = driver.moto || "Vehículo habilitado";
             document.getElementById("drv-plate").textContent = (driver.plate || "").toUpperCase();
 
             const avg = driver.ratingAvg ? Number(driver.ratingAvg).toFixed(1) : "5.0";
@@ -1017,10 +1343,12 @@
                     return;
                 }
 
-                list.innerHTML = items.slice(0, 15).map((r) => `
+                list.innerHTML = items.slice(0, 15).map((r) => {
+                    const icon = r.serviceType === "delivery" ? "📦 Envío" : r.vehicleType === "auto" ? "🚗 Auto" : "🏍️ Moto";
+                    return `
                     <div class="history-card">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong>${r.serviceType === "delivery" ? "📦 Envío" : "🏍️ Viaje"} · $${Number(r.fare || 0).toLocaleString("es-AR")}</strong>
+                            <strong>${icon} · $${Number(r.fare || 0).toLocaleString("es-AR")}</strong>
                             <span style="color:var(--text-muted); font-size:0.66rem;">${formatHoraFecha(r.createdAt)}</span>
                         </div>
                         <div style="color:#cbd5e1;">🟢 ${escHtml(r.origin?.label)} → 🔴 ${escHtml(r.destination?.label)}</div>
@@ -1028,8 +1356,8 @@
                             <span>Chofer: ${escHtml(r.driver?.name || "Sin asignar")}</span>
                             <span>${r.rating ? `⭐ ${r.rating}/5` : r.status.toUpperCase()}</span>
                         </div>
-                    </div>
-                `).join("");
+                    </div>`;
+                }).join("");
             } catch {
                 list.innerHTML = `<div style="font-size:0.75rem; color:#fca5a5; text-align:center;">Error al cargar historial.</div>`;
             }
