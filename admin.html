@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Admin - MotoYa San Vicente</title>
+    <title>Admin - MotoYa</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
     <meta name="theme-color" content="#090d10">
     <script defer src="./pwa.js"></script>
     <style>
-        /* NAVEGACIÓN POR PESTAÑAS (IGUAL AL PANEL CHOFER) */
+        /* NAVEGACIÓN POR PESTAÑAS */
         .admin-tabs-bar {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -68,6 +68,70 @@
             gap: 12px;
         }
         .adm-tab-panel.active { display: flex; }
+
+        .tariff-subsection-title {
+            font-size: 0.72rem;
+            font-weight: 900;
+            color: var(--accent-bright);
+            text-transform: uppercase;
+            padding: 6px 9px;
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 7px 7px 0;
+            margin-top: 4px;
+        }
+        .tariff-subsection-title.auto-sub {
+            color: #93c5fd;
+            background: rgba(59, 130, 246, 0.12);
+            border-left-color: #3b82f6;
+        }
+        .search-bar-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .search-bar-row .field-input { flex: 1; }
+        .btn-search-go {
+            background: var(--bg-card);
+            border: 1px solid var(--accent);
+            color: var(--accent-bright);
+            border-radius: 8px;
+            padding: 8px 11px;
+            font-size: 0.74rem;
+            font-weight: 800;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .cities-chips-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .city-pill-adm {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: #e2e8f0;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 5px 8px;
+            border-radius: 8px;
+        }
+        .city-pill-adm.custom {
+            border-color: var(--accent);
+            color: #fde68a;
+        }
+        .city-pill-del {
+            background: transparent;
+            border: none;
+            color: #fca5a5;
+            font-weight: 900;
+            cursor: pointer;
+            padding: 0 2px;
+            font-size: 0.74rem;
+        }
 
         .admin-map-wrap {
             position: relative;
@@ -256,7 +320,7 @@
     <header class="app-topbar">
         <div class="brand-group">
             <span class="brand-logo">⚙️ ADMIN MOTOYA</span>
-            <span class="city-tag">SAN VICENTE</span>
+            <span class="city-tag">MULTI-ZONA</span>
         </div>
         <div class="topbar-actions">
             <a href="index.html" class="mode-switch-link">🧍 Pasajero</a>
@@ -270,7 +334,7 @@
         <section id="admin-login-screen" class="panel-card" style="margin-top: 24px;">
             <div class="panel-title">🔐 Acceso Administrador MotoYa</div>
             <p style="font-size: 0.74rem; color: var(--text-muted); line-height: 1.45;">
-                Iniciá sesión con tu correo y contraseña de Firebase para ver los DNI privados, aprobar choferes, registrar pagos y editar tarifas.
+                Iniciá sesión con tu correo y contraseña de Firebase para ver los DNI privados, aprobar choferes, registrar pagos y configurar tarifas de Moto y Auto.
             </p>
             <form id="admin-login-form" style="display: flex; flex-direction: column; gap: 10px;">
                 <input type="email" id="admin-email-input" class="field-input" placeholder="Tu correo de administrador" required autocomplete="username">
@@ -329,6 +393,11 @@
                         <span>🏍️ Conductores Registrados</span>
                         <span id="adm-drivers-count" style="font-size: 0.72rem; color: var(--text-muted);">0</span>
                     </div>
+
+                    <select id="adm-drivers-city-filter" class="field-input" style="font-size: 0.75rem; padding: 8px 10px;">
+                        <option value="all">📍 Todas las localidades</option>
+                    </select>
+
                     <p style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.35;">
                         Tocá arriba de cualquier chofer para revisar las fotos de su DNI, aprobar su cuenta, ver sus viajes y registrar pagos (<span id="adm-pct-hint">15</span>%).
                     </p>
@@ -382,6 +451,11 @@
                         <span>🧾 Últimos Viajes y Envíos</span>
                         <span id="adm-rides-count" style="font-size: 0.72rem; color: var(--text-muted);">0</span>
                     </div>
+
+                    <select id="adm-rides-city-filter" class="field-input" style="font-size: 0.75rem; padding: 8px 10px;">
+                        <option value="all">📍 Todas las localidades</option>
+                    </select>
+
                     <div id="adm-rides-list" style="display: flex; flex-direction: column; gap: 8px;">
                         <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center;">Cargando...</div>
                     </div>
@@ -389,17 +463,20 @@
             </div>
 
             <!-- ========================
-                 PESTAÑA 4: AJUSTES Y MAPA
+                 PESTAÑA 4: AJUSTES, TARIFAS Y ZONAS
             ======================== -->
             <div id="adm-tab-ajustes" class="adm-tab-panel">
+
+                <!-- TARIFAS MOTO + AUTO + COBRO -->
                 <section class="panel-card">
                     <div class="panel-title">
-                        <span>💰 Tarifas, Clima y Datos de Cobro</span>
+                        <span>💰 Tarifas (Moto y Auto) y Cobro</span>
                         <button type="button" id="btn-toggle-rain" class="btn btn-secondary" style="width: auto; padding: 6px 10px; font-size: 0.72rem;">
                             ☀️ Clima Normal
                         </button>
                     </div>
 
+                    <div class="tariff-subsection-title">🏍️ Tarifas Moto y Envíos</div>
                     <div class="form-grid-2">
                         <div>
                             <label class="input-label" for="cfg-base">Bajada bandera ($)</label>
@@ -417,6 +494,30 @@
                             <label class="input-label" for="cfg-stop">Adicional parada ($)</label>
                             <input type="number" id="cfg-stop" class="field-input">
                         </div>
+                    </div>
+
+                    <div class="tariff-subsection-title auto-sub">🚗 Tarifas Auto (hasta 4 pasajeros)</div>
+                    <div class="form-grid-2">
+                        <div>
+                            <label class="input-label" for="cfg-auto-base">Bajada bandera ($)</label>
+                            <input type="number" id="cfg-auto-base" class="field-input">
+                        </div>
+                        <div>
+                            <label class="input-label" for="cfg-auto-km">Precio por km ($)</label>
+                            <input type="number" id="cfg-auto-km" class="field-input">
+                        </div>
+                        <div>
+                            <label class="input-label" for="cfg-auto-min">Viaje mínimo ($)</label>
+                            <input type="number" id="cfg-auto-min" class="field-input">
+                        </div>
+                        <div>
+                            <label class="input-label" for="cfg-auto-stop">Adicional parada ($)</label>
+                            <input type="number" id="cfg-auto-stop" class="field-input">
+                        </div>
+                    </div>
+
+                    <div class="tariff-subsection-title">🏦 Recargos y Datos de Cobro</div>
+                    <div class="form-grid-2">
                         <div>
                             <label class="input-label" for="cfg-night">Nocturna 00-06 (%)</label>
                             <input type="number" id="cfg-night" class="field-input">
@@ -446,6 +547,23 @@
                     <button type="button" id="btn-save-config" class="btn btn-accent">💾 GUARDAR TARIFAS Y DATOS EN VIVO</button>
                 </section>
 
+                <!-- GESTIÓN DE LOCALIDADES HABILITADAS -->
+                <section class="panel-card">
+                    <div class="panel-title">
+                        <span>🌎 Localidades Habilitadas</span>
+                        <span id="adm-cities-count" style="font-size: 0.72rem; color: var(--text-muted);">0</span>
+                    </div>
+                    <p style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
+                        Agregá nuevas ciudades o pueblos y aparecerán automáticamente en el selector de pasajeros y choferes.
+                    </p>
+                    <div class="search-bar-row">
+                        <input type="text" id="new-city-input" class="field-input" placeholder="Ej: Eldorado, Leandro N. Alem, Iguazú...">
+                        <button type="button" id="btn-add-custom-city" class="btn-search-go">➕ Agregar</button>
+                    </div>
+                    <div id="adm-cities-list" class="cities-chips-wrap"></div>
+                </section>
+
+                <!-- LUGARES RÁPIDOS EN EL MAPA POR LOCALIDAD -->
                 <section class="panel-card">
                     <div class="panel-title">
                         <span>📍 Lugares Rápidos en el Mapa</span>
@@ -453,6 +571,12 @@
                             📍 Mi GPS
                         </button>
                     </div>
+
+                    <div>
+                        <label class="input-label" for="place-city-select">Localidad del lugar rápido</label>
+                        <select id="place-city-select" class="field-input" style="font-size: 0.76rem; padding: 8px 10px;"></select>
+                    </div>
+
                     <p style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.4;">
                         Hacé zoom hasta la puerta exacta del lugar, tocá el mapa para clavar el pin rojo, escribí el nombre y guardalo.
                     </p>
@@ -633,25 +757,23 @@
         import {
             db, auth, ref, get, push, set, update, remove, onValue,
             signInWithEmailAndPassword, signOut, onAuthStateChanged,
-            DEFAULT_CONFIG, SAN_VICENTE_CENTER,
-            limpiarTelefonoWhatsApp, escHtml, formatHoraFecha
+            DEFAULT_CONFIG, DEFAULT_CITIES, SAN_VICENTE_CENTER,
+            normalizarIdCiudad, limpiarTelefonoWhatsApp, escHtml, formatHoraFecha
         } from "./firebase-config.js";
 
         const DEFAULT_ADMIN_PCT = 15;
+        const DEFAULT_CITY_IDS = new Set(DEFAULT_CITIES.map((c) => c.id));
 
-        let currentCfg = {
-            ...DEFAULT_CONFIG,
-            adminPct: DEFAULT_ADMIN_PCT,
-            adminAlias: "",
-            adminHolder: "",
-            adminPhone: ""
-        };
+        let currentCfg = { ...DEFAULT_CONFIG };
+        let availableCities = [...DEFAULT_CITIES];
         let allDrivers = [];
         let allRides = [];
         let allPayments = [];
         let allPlaces = [];
         let selectedDriverId = null;
         let selectedPeriod = "all";
+        let driversCityFilter = "all";
+        let ridesCityFilter = "all";
         let listenersStarted = false;
 
         let adminMap = null;
@@ -667,6 +789,139 @@
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 2900);
         }
+
+        function getMergedCities(customCitiesRaw) {
+            const mapById = new Map();
+            DEFAULT_CITIES.forEach((c) => mapById.set(c.id, { ...c, isCustom: false }));
+            if (customCitiesRaw) {
+                const arr = Array.isArray(customCitiesRaw) ? customCitiesRaw : Object.values(customCitiesRaw);
+                arr.forEach((c) => {
+                    if (c && c.nombre && !isNaN(Number(c.lat)) && !isNaN(Number(c.lng))) {
+                        const cid = c.id || normalizarIdCiudad(c.nombre);
+                        mapById.set(cid, {
+                            id: cid,
+                            nombre: c.nombre,
+                            provincia: c.provincia || "Misiones",
+                            lat: Number(c.lat),
+                            lng: Number(c.lng),
+                            isCustom: !DEFAULT_CITY_IDS.has(cid)
+                        });
+                    }
+                });
+            }
+            return Array.from(mapById.values());
+        }
+
+        function syncCitySelectsUI() {
+            // Incluye además cualquier localidad que hayan usado choferes o viajes
+            const extraCities = new Map();
+            availableCities.forEach((c) => extraCities.set(c.id, c.nombre));
+            allDrivers.forEach((d) => {
+                if (d.cityId && d.cityName && !extraCities.has(d.cityId)) {
+                    extraCities.set(d.cityId, d.cityName);
+                }
+            });
+            allRides.forEach((r) => {
+                if (r.cityId && r.cityName && !extraCities.has(r.cityId)) {
+                    extraCities.set(r.cityId, r.cityName);
+                }
+            });
+
+            const filterOptions = [`<option value="all">📍 Todas las localidades</option>`];
+            extraCities.forEach((name, id) => {
+                filterOptions.push(`<option value="${escHtml(id)}">📍 ${escHtml(name)}</option>`);
+            });
+
+            const drvSel = document.getElementById("adm-drivers-city-filter");
+            drvSel.innerHTML = filterOptions.join("");
+            drvSel.value = extraCities.has(driversCityFilter) ? driversCityFilter : "all";
+
+            const rideSel = document.getElementById("adm-rides-city-filter");
+            rideSel.innerHTML = filterOptions.join("");
+            rideSel.value = extraCities.has(ridesCityFilter) ? ridesCityFilter : "all";
+
+            const placeSel = document.getElementById("place-city-select");
+            const prevPlaceCity = placeSel.value || "san-vicente";
+            placeSel.innerHTML = availableCities.map((c) =>
+                `<option value="${escHtml(c.id)}">📍 ${escHtml(c.nombre)} (${escHtml(c.provincia || "Misiones")})</option>`
+            ).join("");
+            placeSel.value = availableCities.some((c) => c.id === prevPlaceCity) ? prevPlaceCity : "san-vicente";
+
+            // Chips en Ajustes
+            document.getElementById("adm-cities-count").textContent = `${availableCities.length} zonas`;
+            document.getElementById("adm-cities-list").innerHTML = availableCities.map((c) => `
+                <span class="city-pill-adm ${c.isCustom ? "custom" : ""}">
+                    📍 ${escHtml(c.nombre)}
+                    ${c.isCustom ? `<button type="button" class="city-pill-del" data-del-city="${escHtml(c.id)}" title="Quitar localidad">✕</button>` : ""}
+                </span>
+            `).join("");
+        }
+
+        document.getElementById("adm-drivers-city-filter").addEventListener("change", (e) => {
+            driversCityFilter = e.target.value;
+            renderDriversList();
+        });
+
+        document.getElementById("adm-rides-city-filter").addEventListener("change", (e) => {
+            ridesCityFilter = e.target.value;
+            renderGlobalMetricsAndRides();
+        });
+
+        document.getElementById("place-city-select").addEventListener("change", (e) => {
+            const city = availableCities.find((c) => c.id === e.target.value);
+            if (city && adminMap) {
+                adminMap.setView([city.lat, city.lng], 15);
+            }
+        });
+
+        // Agregar nueva localidad habilitada
+        document.getElementById("btn-add-custom-city").addEventListener("click", async () => {
+            const q = document.getElementById("new-city-input").value.trim();
+            if (!q) {
+                showToast("⚠️ Escribí el nombre de la localidad.", "error");
+                return;
+            }
+            const btn = document.getElementById("btn-add-custom-city");
+            btn.disabled = true;
+            btn.textContent = "Buscando...";
+            try {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&countrycodes=ar&q=${encodeURIComponent(q + ", Argentina")}`;
+                const res = await fetch(url, { headers: { "Accept-Language": "es" } });
+                const data = await res.json();
+                if (!Array.isArray(data) || !data.length) {
+                    showToast("❌ No se encontró esa localidad. Probá agregando la provincia.", "error");
+                    return;
+                }
+                const item = data[0];
+                const addr = item.address || {};
+                const cityName = addr.city || addr.town || addr.village || addr.municipality || q;
+                const provName = addr.state || "Misiones";
+                const cid = normalizarIdCiudad(cityName);
+
+                await set(ref(db, `config/customCities/${cid}`), {
+                    id: cid,
+                    nombre: cityName,
+                    provincia: provName,
+                    lat: Number(item.lat),
+                    lng: Number(item.lon)
+                });
+                document.getElementById("new-city-input").value = "";
+                showToast(`✅ Localidad "${cityName}" habilitada en toda la app.`);
+            } catch {
+                showToast("❌ Error al agregar localidad.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "➕ Agregar";
+            }
+        });
+
+        document.getElementById("adm-cities-list").addEventListener("click", async (e) => {
+            const btn = e.target.closest("button[data-del-city]");
+            if (!btn) return;
+            if (!confirm("¿Quitar esta localidad de la lista rápida?")) return;
+            await remove(ref(db, `config/customCities/${btn.dataset.delCity}`));
+            showToast("🗑️ Localidad quitada.");
+        });
 
         // Navegación por pestañas del panel administrador
         function switchAdminTab(tabName) {
@@ -757,7 +1012,7 @@
             allPlaces.forEach((p) => {
                 if (typeof p.lat === "number" && typeof p.lng === "number") {
                     L.marker([p.lat, p.lng], { icon: savedIcon })
-                        .bindTooltip(p.nombre, { direction: "top" })
+                        .bindTooltip(`${p.nombre}${p.cityName ? ` (${p.cityName})` : ""}`, { direction: "top" })
                         .addTo(savedPlacesLayer);
                 }
             });
@@ -835,14 +1090,20 @@
                 showToast("⚠️ Escribí el nombre del lugar.", "error");
                 return;
             }
+            const cityId = document.getElementById("place-city-select").value || "san-vicente";
+            const cityObj = availableCities.find((c) => c.id === cityId);
+            const cityName = cityObj ? cityObj.nombre : "San Vicente";
+
             try {
                 await push(ref(db, "places"), {
                     nombre,
                     lat: selectedPlaceCoords.lat,
                     lng: selectedPlaceCoords.lng,
+                    cityId,
+                    cityName,
                     createdAt: Date.now()
                 });
-                showToast(`✅ "${nombre}" guardado y visible en la app.`);
+                showToast(`✅ "${nombre}" guardado en ${cityName}.`);
                 document.getElementById("place-name-input").value = "";
                 selectedPlaceCoords = null;
                 document.getElementById("admin-coords-txt").textContent = "Tocá un punto en el mapa para seleccionar coordenadas";
@@ -872,20 +1133,25 @@
         function renderDriversList() {
             const container = document.getElementById("adm-drivers-list");
             const adminPct = getAdminPct();
+
+            const filteredDrivers = driversCityFilter === "all"
+                ? allDrivers
+                : allDrivers.filter((d) => (d.cityId || "san-vicente") === driversCityFilter);
+
             document.getElementById("adm-drivers-count").textContent =
-                `${allDrivers.length} chofer${allDrivers.length === 1 ? "" : "es"}`;
+                `${filteredDrivers.length} chofer${filteredDrivers.length === 1 ? "" : "es"}`;
 
             const pendingDriversCount = allDrivers.filter((d) => d.status === "pending").length;
             const pendingBadge = document.getElementById("adm-badge-pending");
             pendingBadge.textContent = pendingDriversCount;
             pendingBadge.classList.toggle("visible", pendingDriversCount > 0);
 
-            if (!allDrivers.length) {
-                container.innerHTML = `<div style="font-size:0.74rem; color:var(--text-muted); text-align:center;">Ningún chofer registrado aún.</div>`;
+            if (!filteredDrivers.length) {
+                container.innerHTML = `<div style="font-size:0.74rem; color:var(--text-muted); text-align:center;">Ningún chofer registrado en esta zona.</div>`;
                 return;
             }
 
-            const sorted = [...allDrivers].sort((a, b) => {
+            const sorted = [...filteredDrivers].sort((a, b) => {
                 const rank = (s) => (s === "pending" ? 0 : s === "active" ? 1 : 2);
                 return rank(a.status) - rank(b.status);
             });
@@ -898,6 +1164,9 @@
 
                 const statusClass = isPending ? "stop" : suspended ? "danger" : "pkg";
                 const statusLabel = isPending ? "PENDIENTE" : suspended ? "SUSPENDIDO" : "HABILITADO";
+                const isAuto = d.vehicleType === "auto";
+                const vBadge = isAuto ? "🚗 AUTO" : "🏍️ MOTO";
+                const cityLabel = d.cityName || "San Vicente";
 
                 const dniBadge = d.dniVerified
                     ? `<span style="color:var(--green); font-size:0.65rem; font-weight:800;">✅ DNI Verificado</span>`
@@ -912,15 +1181,19 @@
 
                 return `
                 <div class="history-card driver-card-clickable" data-open-driver="${escHtml(d.id)}">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
                         <strong>${escHtml(d.name || "Sin nombre")} <span class="rating-pill">⭐ ${avg}</span></strong>
                         <span class="tag-badge ${statusClass}">${statusLabel}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:0.69rem;">
+                        <span class="tag-badge ${isAuto ? "rain" : "stop"}">${vBadge}</span>
+                        <span style="color:#fde68a; font-weight:800;">📍 ${escHtml(cityLabel)}</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="color:#93c5fd; font-weight:700;">🪪 DNI: ${escHtml(d.dni || "Sin cargar")}</span>
                         ${dniBadge}
                     </div>
-                    <div style="color:#cbd5e1;">🏍️ ${escHtml(d.moto || "—")} · Patente: <strong>${escHtml(d.plate || "—")}</strong></div>
+                    <div style="color:#cbd5e1;">${isAuto ? "🚗" : "🏍️"} ${escHtml(d.moto || "—")} · Patente: <strong>${escHtml(d.plate || "—")}</strong></div>
                     <div style="font-size:0.68rem; color:var(--text-muted);">
                         📱 ${escHtml(d.phone || "—")} · Viajes: <strong style="color:#fff;">${acc.completedCount}</strong> · Recaudado: <strong style="color:var(--green);">$${acc.totalEarned.toLocaleString("es-AR")}</strong>
                     </div>
@@ -995,7 +1268,6 @@
             document.getElementById("adm-active-rides").textContent = activeCount;
             document.getElementById("adm-completed-rides").textContent = completedCount;
             document.getElementById("adm-total-revenue").textContent = `$${revenue.toLocaleString("es-AR")}`;
-            document.getElementById("adm-rides-count").textContent = `${allRides.length} total`;
             document.getElementById("adm-pct-banner").textContent = adminPct;
             document.getElementById("adm-pct-hint").textContent = adminPct;
             document.getElementById("adm-total-commission").textContent = `$${totalCommission.toLocaleString("es-AR")}`;
@@ -1006,27 +1278,40 @@
             activeBadge.textContent = activeCount;
             activeBadge.classList.toggle("visible", activeCount > 0);
 
-            if (!allRides.length) {
-                container.innerHTML = `<div style="font-size:0.74rem; color:var(--text-muted); text-align:center;">Sin viajes registrados todavía.</div>`;
+            const filteredRides = ridesCityFilter === "all"
+                ? allRides
+                : allRides.filter((r) => (r.cityId || "san-vicente") === ridesCityFilter);
+
+            document.getElementById("adm-rides-count").textContent = `${filteredRides.length} total`;
+
+            if (!filteredRides.length) {
+                container.innerHTML = `<div style="font-size:0.74rem; color:var(--text-muted); text-align:center;">Sin viajes registrados en esta zona.</div>`;
                 return;
             }
 
-            container.innerHTML = allRides.slice(0, 40).map((r) => {
+            container.innerHTML = filteredRides.slice(0, 40).map((r) => {
                 const isOpen = ["searching", "accepted", "arrived", "in_progress"].includes(r.status);
                 const drvLabel = r.driver?.name
                     ? `${escHtml(r.driver.name)}${r.driver.dni ? ` (DNI ${escHtml(r.driver.dni)})` : ""}`
                     : "Sin asignar";
                 const payIcon = isTransferPayment(r.paymentMethod) ? "📱" : "💵";
+                const modeLabel = r.serviceType === "delivery"
+                    ? "📦 Envío"
+                    : r.vehicleType === "auto"
+                        ? "🚗 Auto"
+                        : "🏍️ Moto";
+                const cityLabel = r.cityName || "San Vicente";
                 return `
                 <div class="history-card">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <strong>${r.serviceType === "delivery" ? "📦 Envío" : "🏍️ Viaje"} · $${Number(r.fare || 0).toLocaleString("es-AR")}</strong>
+                        <strong>${modeLabel} · $${Number(r.fare || 0).toLocaleString("es-AR")}</strong>
                         <span class="tag-badge ${r.status === "completed" ? "pkg" : r.status === "cancelled" ? "danger" : "stop"}">
                             ${escHtml(String(r.status || "").toUpperCase())}
                         </span>
                     </div>
+                    <div style="font-size:0.68rem; color:#fde68a; font-weight:700;">📍 ${escHtml(cityLabel)}</div>
                     <div style="color:#cbd5e1;">
-                        🧍 ${escHtml(r.passengerName)} → 🏍️ ${drvLabel}
+                        🧍 ${escHtml(r.passengerName)} → ${r.vehicleType === "auto" ? "🚗" : "🏍️"} ${drvLabel}
                     </div>
                     <div style="font-size:0.7rem; color:var(--text-muted);">
                         🟢 ${escHtml(r.origin?.label)} ${r.stop ? `→ 🟡 ${escHtml(r.stop.label)}` : ""} → 🔴 ${escHtml(r.destination?.label)}
@@ -1124,11 +1409,14 @@
             const adminPct = getAdminPct();
             const driverPct = Math.max(0, 100 - adminPct);
             const avg = drv.ratingCount ? (drv.ratingSum / drv.ratingCount).toFixed(1) : "5.0";
+            const isAuto = drv.vehicleType === "auto";
+            const vIcon = isAuto ? "🚗 Auto" : "🏍️ Moto";
 
-            document.getElementById("det-driver-name").textContent = `🏍️ ${drv.name || "Chofer"}`;
+            document.getElementById("det-driver-name").textContent = `${isAuto ? "🚗" : "🏍️"} ${drv.name || "Chofer"}`;
             document.getElementById("det-driver-info").innerHTML = `
+                <div><strong>📍 Localidad:</strong> ${escHtml(drv.cityName || "San Vicente")} · <strong>Tipo:</strong> ${vIcon}</div>
                 <div><strong>🪪 DNI:</strong> ${escHtml(drv.dni || "Sin cargar")} · <strong>⭐ ${avg}</strong> (${Number(drv.ratingCount || 0)} opiniones)</div>
-                <div><strong>🏍️ Moto:</strong> ${escHtml(drv.moto || "—")} · <strong>Patente:</strong> ${escHtml(drv.plate || "—")}</div>
+                <div><strong>Vehículo:</strong> ${escHtml(drv.moto || "—")} · <strong>Patente:</strong> ${escHtml(drv.plate || "—")}</div>
                 <div><strong>📱 WhatsApp:</strong> ${escHtml(drv.phone || "—")}</div>
             `;
 
@@ -1193,10 +1481,11 @@
             } else {
                 ridesListEl.innerHTML = drvRides.map((r) => {
                     const isTr = isTransferPayment(r.paymentMethod);
+                    const ico = r.serviceType === "delivery" ? "📦" : r.vehicleType === "auto" ? "🚗" : "🏍️";
                     return `
                     <div class="history-card">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong>${r.serviceType === "delivery" ? "📦" : "🏍️"} ${escHtml(r.passengerName)} · $${Number(r.fare || 0).toLocaleString("es-AR")}</strong>
+                            <strong>${ico} ${escHtml(r.passengerName)} · $${Number(r.fare || 0).toLocaleString("es-AR")}</strong>
                             <span style="font-size:0.65rem; color:var(--text-muted);">${formatHoraFecha(r.completedAt || r.createdAt)}</span>
                         </div>
                         <div style="color:#cbd5e1; font-size:0.7rem;">
@@ -1237,14 +1526,14 @@
             const periodNames = { all: "Histórico total", today: "Hoy", week: "Últimos 7 días", month: "Este mes" };
             const waNum = limpiarTelefonoWhatsApp(drv.phone);
             const waText = [
-                `🏍️ *Resumen MotoYa San Vicente (${periodNames[selectedPeriod]})*`,
+                `${isAuto ? "🚗" : "🏍️"} *Resumen MotoYa - ${drv.cityName || "San Vicente"} (${periodNames[selectedPeriod]})*`,
                 `Chofer: ${drv.name} (DNI ${drv.dni || "N/D"})`,
                 `✅ Viajes del período: ${drvRides.length}`,
                 `💵 Efectivo: $${cashTotal.toLocaleString("es-AR")} (${cashCount})`,
                 `📱 Transferencia/MP: $${transferTotal.toLocaleString("es-AR")} (${transferCount})`,
                 `💰 Recaudado período: $${totalEarned.toLocaleString("es-AR")}`,
                 `-----------------------`,
-                `🏍️ Tu parte (${driverPct}%): *$${periodDriverKeeps.toLocaleString("es-AR")}*`,
+                `Tu parte (${driverPct}%): *$${periodDriverKeeps.toLocaleString("es-AR")}*`,
                 `🏦 Comisión acumulada (${adminPct}%): $${acc.totalCommission.toLocaleString("es-AR")}`,
                 `✅ Ya pagado: $${acc.totalPaid.toLocaleString("es-AR")}`,
                 `⏳ *Saldo pendiente a rendir: $${acc.pending.toLocaleString("es-AR")}*`,
@@ -1330,7 +1619,7 @@
                     <div class="history-card" style="flex-direction: row; justify-content: space-between; align-items: center; gap: 8px;">
                         <div style="min-width: 0;">
                             <div style="font-weight: 800; color: #fff;">⭐ ${escHtml(p.nombre)}</div>
-                            <div style="font-size: 0.65rem; color: var(--text-muted);">${p.lat}, ${p.lng}</div>
+                            <div style="font-size: 0.65rem; color: #fde68a;">📍 ${escHtml(p.cityName || "San Vicente")} · <span style="color: var(--text-muted);">${p.lat}, ${p.lng}</span></div>
                         </div>
                         <div style="display: flex; gap: 5px; flex-shrink: 0;">
                             <button type="button" class="mini-pill-btn" data-view-lat="${p.lat}" data-view-lng="${p.lng}">🗺️ Ver</button>
@@ -1341,25 +1630,28 @@
             });
 
             onValue(ref(db, "config"), (snap) => {
-                currentCfg = {
-                    ...DEFAULT_CONFIG,
-                    adminPct: DEFAULT_ADMIN_PCT,
-                    adminAlias: "",
-                    adminHolder: "",
-                    adminPhone: "",
-                    ...(snap.val() || {})
-                };
+                currentCfg = { ...DEFAULT_CONFIG, ...(snap.val() || {}) };
+                availableCities = getMergedCities(currentCfg.customCities);
+
                 document.getElementById("cfg-base").value = currentCfg.base;
                 document.getElementById("cfg-km").value = currentCfg.perKm;
                 document.getElementById("cfg-min").value = currentCfg.minimum;
                 document.getElementById("cfg-stop").value = currentCfg.stopFee;
+
+                document.getElementById("cfg-auto-base").value = currentCfg.autoBase ?? (currentCfg.base * 2);
+                document.getElementById("cfg-auto-km").value = currentCfg.autoPerKm ?? (currentCfg.perKm * 2);
+                document.getElementById("cfg-auto-min").value = currentCfg.autoMinimum ?? (currentCfg.minimum * 2);
+                document.getElementById("cfg-auto-stop").value = currentCfg.autoStopFee ?? (currentCfg.stopFee * 2);
+
                 document.getElementById("cfg-night").value = currentCfg.nightPct;
                 document.getElementById("cfg-rain-pct").value = currentCfg.rainPct;
                 document.getElementById("cfg-admin-pct").value = getAdminPct();
                 document.getElementById("cfg-admin-alias").value = currentCfg.adminAlias || "";
                 document.getElementById("cfg-admin-holder").value = currentCfg.adminHolder || "";
                 document.getElementById("cfg-admin-phone").value = currentCfg.adminPhone || "";
+
                 updateRainBtnUI();
+                syncCitySelectsUI();
                 renderGlobalMetricsAndRides();
                 renderDriversList();
                 if (selectedDriverId) renderDriverDetailModal(false, false);
@@ -1369,6 +1661,7 @@
                 const list = [];
                 snap.forEach((c) => { list.push({ id: c.key, ...c.val() }); });
                 allDrivers = list;
+                syncCitySelectsUI();
                 renderDriversList();
                 if (selectedDriverId) renderDriverDetailModal(false, false);
             });
@@ -1378,6 +1671,7 @@
                 snap.forEach((c) => { list.push({ id: c.key, ...c.val() }); });
                 list.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
                 allRides = list;
+                syncCitySelectsUI();
                 renderGlobalMetricsAndRides();
                 renderDriversList();
                 if (selectedDriverId) renderDriverDetailModal(false, false);
@@ -1471,11 +1765,15 @@
         });
 
         document.getElementById("btn-save-config").addEventListener("click", async () => {
-            const newCfg = {
+            const patchCfg = {
                 base: Math.max(0, Number(document.getElementById("cfg-base").value) || 0),
                 perKm: Math.max(0, Number(document.getElementById("cfg-km").value) || 0),
                 minimum: Math.max(0, Number(document.getElementById("cfg-min").value) || 0),
                 stopFee: Math.max(0, Number(document.getElementById("cfg-stop").value) || 0),
+                autoBase: Math.max(0, Number(document.getElementById("cfg-auto-base").value) || 0),
+                autoPerKm: Math.max(0, Number(document.getElementById("cfg-auto-km").value) || 0),
+                autoMinimum: Math.max(0, Number(document.getElementById("cfg-auto-min").value) || 0),
+                autoStopFee: Math.max(0, Number(document.getElementById("cfg-auto-stop").value) || 0),
                 nightPct: Math.max(0, Number(document.getElementById("cfg-night").value) || 0),
                 rainPct: Math.max(0, Number(document.getElementById("cfg-rain-pct").value) || 0),
                 adminPct: Math.min(100, Math.max(0, Number(document.getElementById("cfg-admin-pct").value) || 0)),
@@ -1484,8 +1782,8 @@
                 adminPhone: document.getElementById("cfg-admin-phone").value.trim(),
                 rainMode: Boolean(currentCfg.rainMode)
             };
-            await set(ref(db, "config"), newCfg);
-            showToast("✅ Tarifas, alias y WhatsApp actualizados en vivo.");
+            await update(ref(db, "config"), patchCfg);
+            showToast("✅ Tarifas de Moto, Auto y datos de cobro guardados.");
         });
 
         document.getElementById("adm-rides-list").addEventListener("click", async (e) => {
