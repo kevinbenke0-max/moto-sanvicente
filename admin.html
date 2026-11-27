@@ -176,6 +176,16 @@
             font-size: 0.72rem;
             font-weight: 700;
         }
+        .comm-policy-pill {
+            font-size: 0.67rem;
+            color: #fde68a;
+            background: rgba(11, 16, 22, 0.55);
+            border: 1px solid rgba(245, 158, 11, 0.35);
+            border-radius: 8px;
+            padding: 6px 9px;
+            font-weight: 700;
+            text-align: center;
+        }
         .driver-card-clickable {
             cursor: pointer;
             transition: border-color 0.18s, background 0.18s;
@@ -195,6 +205,18 @@
             max-height: 90dvh;
             padding: 16px;
         }
+        .det-debt-alert {
+            display: none;
+            background: rgba(239, 68, 68, 0.14);
+            border: 1.5px solid var(--red);
+            color: #fecaca;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+        .det-debt-alert.visible { display: block; }
         .dni-review-box {
             background: rgba(59, 130, 246, 0.08);
             border: 1.5px solid rgba(59, 130, 246, 0.45);
@@ -429,6 +451,9 @@
                         <div>✅ Cobrado: <strong style="color: var(--green);" id="adm-paid-commission">$0</strong></div>
                         <div style="text-align: right;">⏳ Por cobrar: <strong style="color: #fca5a5;" id="adm-pending-commission">$0</strong></div>
                     </div>
+                    <div class="comm-policy-pill" id="adm-policy-banner">
+                        📅 Rendición: Todos los lunes · 🔒 Tope automático: $10.000
+                    </div>
                 </div>
 
                 <section class="panel-card">
@@ -467,7 +492,7 @@
             ======================== -->
             <div id="adm-tab-ajustes" class="adm-tab-panel">
 
-                <!-- TARIFAS MOTO + AUTO + COBRO -->
+                <!-- TARIFAS MOTO + AUTO + COBRO + REGLA DE COMISIÓN -->
                 <section class="panel-card">
                     <div class="panel-title">
                         <span>💰 Tarifas (Moto y Auto) y Cobro</span>
@@ -516,7 +541,7 @@
                         </div>
                     </div>
 
-                    <div class="tariff-subsection-title">🏦 Recargos y Datos de Cobro</div>
+                    <div class="tariff-subsection-title">🏦 Recargos, Plazo y Tope de Comisión</div>
                     <div class="form-grid-2">
                         <div>
                             <label class="input-label" for="cfg-night">Nocturna 00-06 (%)</label>
@@ -531,18 +556,30 @@
                             <input type="number" id="cfg-admin-pct" class="field-input" min="0" max="100">
                         </div>
                         <div>
+                            <label class="input-label" for="cfg-max-debt">Tope automático ($)</label>
+                            <input type="number" id="cfg-max-debt" class="field-input" min="0" placeholder="10000 (0 = sin tope)">
+                        </div>
+                        <div style="grid-column: 1 / -1;">
+                            <label class="input-label" for="cfg-pay-day">Plazo / día de rendición (visible en reglas y caja)</label>
+                            <input type="text" id="cfg-pay-day" class="field-input" placeholder="Ej: Todos los lunes">
+                        </div>
+                        <div>
                             <label class="input-label" for="cfg-admin-phone">WhatsApp Admin</label>
                             <input type="tel" id="cfg-admin-phone" class="field-input" placeholder="Ej: 3755449964">
+                        </div>
+                        <div>
+                            <label class="input-label" for="cfg-admin-holder">Titular de cuenta</label>
+                            <input type="text" id="cfg-admin-holder" class="field-input" placeholder="Ej: Kevin Benke">
                         </div>
                         <div style="grid-column: 1 / -1;">
                             <label class="input-label" for="cfg-admin-alias">Alias para recibir comisiones (MP / Naranja X)</label>
                             <input type="text" id="cfg-admin-alias" class="field-input" placeholder="Ej: kevin.motoya.mp">
                         </div>
-                        <div style="grid-column: 1 / -1;">
-                            <label class="input-label" for="cfg-admin-holder">Titular de la cuenta (opcional)</label>
-                            <input type="text" id="cfg-admin-holder" class="field-input" placeholder="Ej: Kevin Benke">
-                        </div>
                     </div>
+
+                    <p style="font-size: 0.67rem; color: var(--text-muted); line-height: 1.35;">
+                        💡 Con el <strong>Tope automático</strong> (estilo Uber/DiDi), si un chofer acumula ese monto pendiente antes del día de cierre, su app se pausa sola hasta que registres su pago. Poné <strong>0</strong> para desactivar el bloqueo automático.
+                    </p>
 
                     <button type="button" id="btn-save-config" class="btn btn-accent">💾 GUARDAR TARIFAS Y DATOS EN VIVO</button>
                 </section>
@@ -615,6 +652,8 @@
             </div>
 
             <div id="det-driver-info" style="font-size: 0.72rem; color: #cbd5e1; line-height: 1.5; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; padding: 9px 10px;"></div>
+
+            <div id="det-debt-alert" class="det-debt-alert"></div>
 
             <!-- VISOR PRIVADO DE DNI (FRENTE Y DORSO) -->
             <div class="dni-review-box">
@@ -762,9 +801,15 @@
         } from "./firebase-config.js";
 
         const DEFAULT_ADMIN_PCT = 15;
+        const DEFAULT_PAY_DAY = "Todos los lunes";
+        const DEFAULT_MAX_DEBT = 10000;
         const DEFAULT_CITY_IDS = new Set(DEFAULT_CITIES.map((c) => c.id));
 
-        let currentCfg = { ...DEFAULT_CONFIG };
+        let currentCfg = {
+            ...DEFAULT_CONFIG,
+            commissionPayDay: DEFAULT_PAY_DAY,
+            maxDebtLimit: DEFAULT_MAX_DEBT
+        };
         let availableCities = [...DEFAULT_CITIES];
         let allDrivers = [];
         let allRides = [];
@@ -790,6 +835,24 @@
             setTimeout(() => toast.remove(), 2900);
         }
 
+        function getAdminPct() {
+            const val = Number(currentCfg.adminPct);
+            if (isNaN(val) || val < 0 || val > 100) return DEFAULT_ADMIN_PCT;
+            return val;
+        }
+
+        function getCommissionPayDay() {
+            return String(currentCfg.commissionPayDay || "").trim() || DEFAULT_PAY_DAY;
+        }
+
+        function getMaxDebtLimit() {
+            if (currentCfg.maxDebtLimit === undefined || currentCfg.maxDebtLimit === null || currentCfg.maxDebtLimit === "") {
+                return DEFAULT_MAX_DEBT;
+            }
+            const val = Number(currentCfg.maxDebtLimit);
+            return (!isNaN(val) && val >= 0) ? val : DEFAULT_MAX_DEBT;
+        }
+
         function getMergedCities(customCitiesRaw) {
             const mapById = new Map();
             DEFAULT_CITIES.forEach((c) => mapById.set(c.id, { ...c, isCustom: false }));
@@ -813,7 +876,6 @@
         }
 
         function syncCitySelectsUI() {
-            // Incluye además cualquier localidad que hayan usado choferes o viajes
             const extraCities = new Map();
             availableCities.forEach((c) => extraCities.set(c.id, c.nombre));
             allDrivers.forEach((d) => {
@@ -847,7 +909,6 @@
             ).join("");
             placeSel.value = availableCities.some((c) => c.id === prevPlaceCity) ? prevPlaceCity : "san-vicente";
 
-            // Chips en Ajustes
             document.getElementById("adm-cities-count").textContent = `${availableCities.length} zonas`;
             document.getElementById("adm-cities-list").innerHTML = availableCities.map((c) => `
                 <span class="city-pill-adm ${c.isCustom ? "custom" : ""}">
@@ -874,7 +935,6 @@
             }
         });
 
-        // Agregar nueva localidad habilitada
         document.getElementById("btn-add-custom-city").addEventListener("click", async () => {
             const q = document.getElementById("new-city-input").value.trim();
             if (!q) {
@@ -923,7 +983,6 @@
             showToast("🗑️ Localidad quitada.");
         });
 
-        // Navegación por pestañas del panel administrador
         function switchAdminTab(tabName) {
             document.querySelectorAll("#admin-tabs-bar .adm-tab-btn").forEach((btn) => {
                 btn.classList.toggle("active", btn.dataset.tab === tabName);
@@ -945,12 +1004,6 @@
             if (!btn) return;
             switchAdminTab(btn.dataset.tab);
         });
-
-        function getAdminPct() {
-            const val = Number(currentCfg.adminPct);
-            if (isNaN(val) || val < 0 || val > 100) return DEFAULT_ADMIN_PCT;
-            return val;
-        }
 
         function rideBelongsToDriver(r, d) {
             if (!r || !r.driver || !d) return false;
@@ -1133,6 +1186,7 @@
         function renderDriversList() {
             const container = document.getElementById("adm-drivers-list");
             const adminPct = getAdminPct();
+            const maxDebt = getMaxDebtLimit();
 
             const filteredDrivers = driversCityFilter === "all"
                 ? allDrivers
@@ -1175,6 +1229,7 @@
                         : `<span style="color:#fca5a5; font-size:0.65rem; font-weight:800;">⚠️ Sin fotos DNI</span>`;
 
                 const acc = getDriverAccountSummary(d);
+                const hitDebtCap = maxDebt > 0 && acc.pending >= maxDebt;
                 const pendingText = acc.pending > 0
                     ? `<span style="color:#fca5a5;">Debe: <strong>$${acc.pending.toLocaleString("es-AR")}</strong></span>`
                     : `<span style="color:var(--green);">✅ <strong>Al día</strong></span>`;
@@ -1185,8 +1240,11 @@
                         <strong>${escHtml(d.name || "Sin nombre")} <span class="rating-pill">⭐ ${avg}</span></strong>
                         <span class="tag-badge ${statusClass}">${statusLabel}</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:0.69rem;">
-                        <span class="tag-badge ${isAuto ? "rain" : "stop"}">${vBadge}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:0.69rem; flex-wrap:wrap;">
+                        <div style="display:flex; gap:5px; align-items:center;">
+                            <span class="tag-badge ${isAuto ? "rain" : "stop"}">${vBadge}</span>
+                            ${hitDebtCap ? `<span class="tag-badge danger">🔒 TOPE ALCANZADO</span>` : ""}
+                        </div>
                         <span style="color:#fde68a; font-weight:800;">📍 ${escHtml(cityLabel)}</span>
                     </div>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1248,6 +1306,8 @@
         function renderGlobalMetricsAndRides() {
             const container = document.getElementById("adm-rides-list");
             const adminPct = getAdminPct();
+            const payDay = getCommissionPayDay();
+            const maxDebt = getMaxDebtLimit();
 
             let activeCount = 0;
             let completedCount = 0;
@@ -1273,6 +1333,8 @@
             document.getElementById("adm-total-commission").textContent = `$${totalCommission.toLocaleString("es-AR")}`;
             document.getElementById("adm-paid-commission").textContent = `$${totalPaidGlobal.toLocaleString("es-AR")}`;
             document.getElementById("adm-pending-commission").textContent = `$${totalPendingGlobal.toLocaleString("es-AR")}`;
+            document.getElementById("adm-policy-banner").textContent =
+                `📅 Rendición: ${payDay} · ${maxDebt > 0 ? `🔒 Tope automático: $${maxDebt.toLocaleString("es-AR")}` : "🔓 Sin tope automático"}`;
 
             const activeBadge = document.getElementById("adm-badge-active");
             activeBadge.textContent = activeCount;
@@ -1296,11 +1358,14 @@
                     : "Sin asignar";
                 const payIcon = isTransferPayment(r.paymentMethod) ? "📱" : "💵";
                 const modeLabel = r.serviceType === "delivery"
-                    ? "📦 Envío"
+                    ? (r.vehicleType === "auto" ? "📦🚗 Envío Auto" : "📦🏍️ Envío Moto")
                     : r.vehicleType === "auto"
                         ? "🚗 Auto"
                         : "🏍️ Moto";
                 const cityLabel = r.cityName || "San Vicente";
+                const pkgLine = r.packageNotes
+                    ? `<div style="font-size:0.68rem; color:#a7f3d0;">📦 ${escHtml(r.packageNotes)}${r.packageWeightKg ? ` (~${escHtml(r.packageWeightKg)} kg)` : ""}</div>`
+                    : "";
                 return `
                 <div class="history-card">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1313,6 +1378,7 @@
                     <div style="color:#cbd5e1;">
                         🧍 ${escHtml(r.passengerName)} → ${r.vehicleType === "auto" ? "🚗" : "🏍️"} ${drvLabel}
                     </div>
+                    ${pkgLine}
                     <div style="font-size:0.7rem; color:var(--text-muted);">
                         🟢 ${escHtml(r.origin?.label)} ${r.stop ? `→ 🟡 ${escHtml(r.stop.label)}` : ""} → 🔴 ${escHtml(r.destination?.label)}
                     </div>
@@ -1408,6 +1474,8 @@
 
             const adminPct = getAdminPct();
             const driverPct = Math.max(0, 100 - adminPct);
+            const payDay = getCommissionPayDay();
+            const maxDebt = getMaxDebtLimit();
             const avg = drv.ratingCount ? (drv.ratingSum / drv.ratingCount).toFixed(1) : "5.0";
             const isAuto = drv.vehicleType === "auto";
             const vIcon = isAuto ? "🚗 Auto" : "🏍️ Moto";
@@ -1452,6 +1520,13 @@
             const periodDriverKeeps = totalEarned - periodAdminCut;
             const acc = getDriverAccountSummary(drv);
 
+            const debtAlertEl = document.getElementById("det-debt-alert");
+            const hitCap = maxDebt > 0 && acc.pending >= maxDebt;
+            debtAlertEl.classList.toggle("visible", hitCap);
+            if (hitCap) {
+                debtAlertEl.textContent = `🔒 Cuenta pausada por tope automático: debe $${acc.pending.toLocaleString("es-AR")} (tope configurado: $${maxDebt.toLocaleString("es-AR")}). Apenas registres el pago abajo, su app se destraba automáticamente.`;
+            }
+
             document.getElementById("det-trips-count").textContent = drvRides.length;
             document.getElementById("det-total-earned").textContent = `$${totalEarned.toLocaleString("es-AR")}`;
             document.getElementById("det-cash-total").textContent = `$${cashTotal.toLocaleString("es-AR")}`;
@@ -1491,6 +1566,7 @@
                         <div style="color:#cbd5e1; font-size:0.7rem;">
                             🟢 ${escHtml(r.origin?.label)} → 🔴 ${escHtml(r.destination?.label)}
                         </div>
+                        ${r.packageNotes ? `<div style="font-size:0.66rem; color:#a7f3d0;">📦 ${escHtml(r.packageNotes)}${r.packageWeightKg ? ` (~${escHtml(r.packageWeightKg)} kg)` : ""}</div>` : ""}
                         <div style="display:flex; justify-content:space-between; font-size:0.66rem; color:var(--text-muted);">
                             <span style="color:${isTr ? "#93c5fd" : "#a7f3d0"}; font-weight:700;">
                                 ${isTr ? "📱 Transferencia / MP" : "💵 Efectivo"}
@@ -1537,6 +1613,7 @@
                 `🏦 Comisión acumulada (${adminPct}%): $${acc.totalCommission.toLocaleString("es-AR")}`,
                 `✅ Ya pagado: $${acc.totalPaid.toLocaleString("es-AR")}`,
                 `⏳ *Saldo pendiente a rendir: $${acc.pending.toLocaleString("es-AR")}*`,
+                `📅 Rendición: ${payDay}${maxDebt > 0 ? ` (o al llegar a $${maxDebt.toLocaleString("es-AR")})` : ""}`,
                 currentCfg.adminAlias ? `💳 Alias: *${currentCfg.adminAlias}*${currentCfg.adminHolder ? ` (${currentCfg.adminHolder})` : ""}` : null
             ].filter(Boolean).join("\n");
 
@@ -1630,7 +1707,12 @@
             });
 
             onValue(ref(db, "config"), (snap) => {
-                currentCfg = { ...DEFAULT_CONFIG, ...(snap.val() || {}) };
+                currentCfg = {
+                    ...DEFAULT_CONFIG,
+                    commissionPayDay: DEFAULT_PAY_DAY,
+                    maxDebtLimit: DEFAULT_MAX_DEBT,
+                    ...(snap.val() || {})
+                };
                 availableCities = getMergedCities(currentCfg.customCities);
 
                 document.getElementById("cfg-base").value = currentCfg.base;
@@ -1646,6 +1728,8 @@
                 document.getElementById("cfg-night").value = currentCfg.nightPct;
                 document.getElementById("cfg-rain-pct").value = currentCfg.rainPct;
                 document.getElementById("cfg-admin-pct").value = getAdminPct();
+                document.getElementById("cfg-max-debt").value = getMaxDebtLimit();
+                document.getElementById("cfg-pay-day").value = getCommissionPayDay();
                 document.getElementById("cfg-admin-alias").value = currentCfg.adminAlias || "";
                 document.getElementById("cfg-admin-holder").value = currentCfg.adminHolder || "";
                 document.getElementById("cfg-admin-phone").value = currentCfg.adminPhone || "";
@@ -1765,6 +1849,10 @@
         });
 
         document.getElementById("btn-save-config").addEventListener("click", async () => {
+            const rawDebt = document.getElementById("cfg-max-debt").value.trim();
+            const parsedDebt = rawDebt === "" ? 0 : Math.max(0, Number(rawDebt) || 0);
+            const payDayVal = document.getElementById("cfg-pay-day").value.trim() || DEFAULT_PAY_DAY;
+
             const patchCfg = {
                 base: Math.max(0, Number(document.getElementById("cfg-base").value) || 0),
                 perKm: Math.max(0, Number(document.getElementById("cfg-km").value) || 0),
@@ -1777,13 +1865,15 @@
                 nightPct: Math.max(0, Number(document.getElementById("cfg-night").value) || 0),
                 rainPct: Math.max(0, Number(document.getElementById("cfg-rain-pct").value) || 0),
                 adminPct: Math.min(100, Math.max(0, Number(document.getElementById("cfg-admin-pct").value) || 0)),
+                maxDebtLimit: parsedDebt,
+                commissionPayDay: payDayVal,
                 adminAlias: document.getElementById("cfg-admin-alias").value.trim(),
                 adminHolder: document.getElementById("cfg-admin-holder").value.trim(),
                 adminPhone: document.getElementById("cfg-admin-phone").value.trim(),
                 rainMode: Boolean(currentCfg.rainMode)
             };
             await update(ref(db, "config"), patchCfg);
-            showToast("✅ Tarifas de Moto, Auto y datos de cobro guardados.");
+            showToast("✅ Tarifas, plazo y tope de comisión guardados en vivo.");
         });
 
         document.getElementById("adm-rides-list").addEventListener("click", async (e) => {
