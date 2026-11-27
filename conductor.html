@@ -149,6 +149,59 @@
         }
         .pending-alert.visible { display: block; }
 
+        .debt-limit-alert {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1.5px solid var(--red);
+            color: #fecaca;
+            font-size: 0.74rem;
+            font-weight: 700;
+            padding: 11px 12px;
+            border-radius: 10px;
+            text-align: center;
+            line-height: 1.45;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .debt-limit-alert.visible { display: flex; }
+
+        /* MEDIDOR DE TOPE DE COMISIÓN (MODO UBER / DIDI) */
+        .debt-meter-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .debt-meter-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.67rem;
+            font-weight: 800;
+            color: #cbd5e1;
+        }
+        .debt-bar-track {
+            width: 100%;
+            height: 8px;
+            background: #0b1117;
+            border-radius: 999px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        .debt-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--green);
+            border-radius: 999px;
+            transition: width 0.25s ease, background 0.25s ease;
+        }
+        .debt-bar-fill.warn { background: var(--accent-bright); }
+        .debt-bar-fill.full { background: var(--red); }
+
         /* CARGA DE FOTOS DNI */
         .dni-upload-section {
             background: #0d131a;
@@ -414,6 +467,15 @@
             ⏳ <strong>Verificación pendiente:</strong> Recibimos tus datos y las fotos de tu DNI. Apenas la administración apruebe tu identidad vas a poder conectarte y tomar viajes.
         </div>
 
+        <div id="debt-limit-alert" class="debt-limit-alert">
+            <div id="debt-limit-alert-txt">
+                🔒 <strong>Tope de comisión alcanzado:</strong> Tu cuenta quedó pausada automáticamente hasta rendir el saldo pendiente.
+            </div>
+            <button type="button" id="btn-go-pay-caja" class="btn btn-accent" style="padding: 8px; font-size: 0.74rem;">
+                💰 Ir a Mi Caja para Pagar
+            </button>
+        </div>
+
         <!-- REGISTRO / PERFIL DEL CONDUCTOR -->
         <section id="driver-setup-card" class="panel-card">
             <div class="panel-title">🏍️ Registro de Conductor</div>
@@ -486,7 +548,11 @@
                 <ul class="rules-list">
                     <li>
                         <strong>💰 Comisión de Administración (<span class="dyn-admin-pct">15</span>%):</strong>
-                        De cada viaje o envío completado, vos te quedás con el <strong><span class="dyn-driver-pct">85</span>%</strong> y el <strong><span class="dyn-admin-pct">15</span>%</strong> corresponde a la administración de MotoYa. Debés rendir ese monto en tiempo y forma.
+                        De cada viaje o envío completado, vos te quedás con el <strong><span class="dyn-driver-pct">85</span>%</strong> y el <strong><span class="dyn-admin-pct">15</span>%</strong> corresponde a la administración de MotoYa.
+                    </li>
+                    <li>
+                        <strong>📅 Plazo de Pago y Tope Automático:</strong>
+                        La comisión acumulada se rinde <strong class="dyn-pay-day">Todos los lunes</strong><span class="dyn-debt-rule-clause"> o al alcanzar el tope de <strong class="dyn-max-debt">$10.000</strong> pendientes (si llegás al tope antes del cierre, la app se pausa automáticamente hasta que transfieras y se confirme el pago)</span>.
                     </li>
                     <li>
                         <strong>🤝 Respeto Obligatorio al Cliente:</strong>
@@ -498,7 +564,7 @@
                     </li>
                     <li class="rule-danger">
                         <strong>⛔ Consecuencias (Suspensión o Bloqueo):</strong>
-                        Si <strong>no pagás la comisión</strong>, si <strong>faltás el respeto a un cliente</strong>, cobrás de más o incumplís estas normas, la administración puede <strong>suspender o bloquear tu cuenta de forma inmediata y definitiva</strong>.
+                        Si <strong>no pagás la comisión en término</strong>, si <strong>faltás el respeto a un cliente</strong>, cobrás de más o incumplís estas normas, la administración puede <strong>suspender o bloquear tu cuenta de forma inmediata y definitiva</strong>.
                     </li>
                 </ul>
             </div>
@@ -510,7 +576,7 @@
                     <strong id="rules-check-hint" style="color: var(--accent-bright); display: block; margin-bottom: 2px;">
                         👆 Tocá acá para marcar que aceptás:
                     </strong>
-                    Leí y acepto las reglas, la comisión del <span class="dyn-admin-pct">15</span>% para administración, el trato respetuoso a los clientes y entiendo que mi cuenta puede ser bloqueada por incumplimiento.
+                    Leí y acepto las reglas, la comisión del <span class="dyn-admin-pct">15</span>%, el plazo de rendición (<span class="dyn-pay-day">Todos los lunes</span>), el trato respetuoso a los clientes y entiendo que mi cuenta puede pausarse o bloquearse por incumplimiento.
                 </span>
             </label>
 
@@ -657,6 +723,20 @@
                             </div>
                         </div>
 
+                        <!-- REGLA DE RENDICIÓN Y MEDIDOR DE TOPE -->
+                        <div class="debt-meter-box">
+                            <div class="debt-meter-top">
+                                <span>📅 Rendición: <strong style="color: #fde68a;" class="dyn-pay-day">Todos los lunes</strong></span>
+                                <span id="debt-meter-numbers">$0 / $10.000</span>
+                            </div>
+                            <div class="debt-bar-track" id="debt-bar-track">
+                                <div class="debt-bar-fill" id="debt-bar-fill"></div>
+                            </div>
+                            <div style="font-size: 0.63rem; color: var(--text-muted);" id="debt-meter-hint">
+                                Si llegás al tope antes del cierre, la app se pausa hasta confirmar el pago.
+                            </div>
+                        </div>
+
                         <div class="alias-copy-row">
                             <div class="alias-text-wrap">
                                 <span style="font-size: 0.6rem; color: var(--text-muted); font-weight: 800; text-transform: uppercase;">
@@ -751,7 +831,11 @@
             <ul class="rules-list">
                 <li>
                     <strong>💰 Comisión de Administración (<span class="dyn-admin-pct">15</span>%):</strong>
-                    De cada viaje o envío completado, vos te quedás con el <strong><span class="dyn-driver-pct">85</span>%</strong> y debés rendir el <strong><span class="dyn-admin-pct">15</span>%</strong> a la administración.
+                    De cada viaje o envío completado, vos te quedás con el <strong><span class="dyn-driver-pct">85</span>%</strong> y el <strong><span class="dyn-admin-pct">15</span>%</strong> corresponde a la administración.
+                </li>
+                <li>
+                    <strong>📅 Plazo de Pago y Tope Automático:</strong>
+                    La comisión se rinde <strong class="dyn-pay-day">Todos los lunes</strong><span class="dyn-debt-rule-clause"> o al alcanzar el tope de <strong class="dyn-max-debt">$10.000</strong> pendientes (la app se pausa automáticamente hasta que se confirme el pago)</span>.
                 </li>
                 <li>
                     <strong>🤝 Respeto Obligatorio al Cliente:</strong>
@@ -763,7 +847,7 @@
                 </li>
                 <li class="rule-danger">
                     <strong>⛔ Consecuencias:</strong>
-                    La falta de pago de la comisión, faltar el respeto a un cliente o incumplir estas reglas faculta a la administración a <strong>suspender o bloquear tu cuenta de manera inmediata y definitiva</strong>.
+                    La falta de pago de la comisión en término, faltar el respeto a un cliente o incumplir estas reglas faculta a la administración a <strong>suspender o bloquear tu cuenta de manera inmediata y definitiva</strong>.
                 </li>
             </ul>
             <button type="button" id="btn-ok-rules-modal" class="btn btn-accent">ENTENDIDO</button>
@@ -778,7 +862,14 @@
         } from "./firebase-config.js";
 
         const DEFAULT_ADMIN_PCT = 15;
+        const DEFAULT_PAY_DAY = "Todos los lunes";
+        const DEFAULT_MAX_DEBT = 10000;
+
         let adminPct = DEFAULT_ADMIN_PCT;
+        let commissionPayDay = DEFAULT_PAY_DAY;
+        let maxDebtLimit = DEFAULT_MAX_DEBT;
+        let currentPendingCommission = 0;
+
         let adminAlias = "";
         let adminHolder = "";
         let adminPhone = "";
@@ -845,6 +936,71 @@
                 });
             } catch {}
         }
+
+        function isDebtBlocked() {
+            return maxDebtLimit > 0 && currentPendingCommission >= maxDebtLimit;
+        }
+
+        function updateRulePolicyLabels() {
+            const drvPct = Math.max(0, 100 - adminPct);
+            document.querySelectorAll(".dyn-admin-pct").forEach((el) => { el.textContent = adminPct; });
+            document.querySelectorAll(".dyn-driver-pct").forEach((el) => { el.textContent = drvPct; });
+            document.querySelectorAll(".dyn-pay-day").forEach((el) => { el.textContent = commissionPayDay; });
+            document.querySelectorAll(".dyn-max-debt").forEach((el) => {
+                el.textContent = `$${maxDebtLimit.toLocaleString("es-AR")}`;
+            });
+            document.querySelectorAll(".dyn-debt-rule-clause").forEach((el) => {
+                el.style.display = maxDebtLimit > 0 ? "inline" : "none";
+            });
+        }
+
+        function updateDebtLimitUI() {
+            const blocked = isDebtBlocked();
+            const alertBox = document.getElementById("debt-limit-alert");
+            const alertTxt = document.getElementById("debt-limit-alert-txt");
+            alertBox.classList.toggle("visible", blocked && Boolean(driverProfile));
+
+            if (blocked) {
+                alertTxt.innerHTML = `🔒 <strong>Tope de comisión alcanzado ($${currentPendingCommission.toLocaleString("es-AR")} / $${maxDebtLimit.toLocaleString("es-AR")}):</strong> Tu cuenta quedó pausada automáticamente hasta rendir el saldo pendiente. Transferí y enviá el comprobante desde Mi Caja.`;
+            }
+
+            const numEl = document.getElementById("debt-meter-numbers");
+            const trackEl = document.getElementById("debt-bar-track");
+            const fillEl = document.getElementById("debt-bar-fill");
+            const hintEl = document.getElementById("debt-meter-hint");
+
+            if (maxDebtLimit > 0) {
+                trackEl.style.display = "block";
+                const pct = Math.min(100, Math.round((currentPendingCommission / maxDebtLimit) * 100));
+                numEl.textContent = `$${currentPendingCommission.toLocaleString("es-AR")} / $${maxDebtLimit.toLocaleString("es-AR")}`;
+                numEl.style.color = blocked ? "#fca5a5" : pct >= 75 ? "var(--accent-bright)" : "var(--green)";
+                fillEl.style.width = `${pct}%`;
+                fillEl.classList.remove("warn", "full");
+                if (blocked) fillEl.classList.add("full");
+                else if (pct >= 75) fillEl.classList.add("warn");
+
+                hintEl.textContent = blocked
+                    ? "🔒 Tope alcanzado: rendí el saldo para volver a conectarte."
+                    : pct >= 75
+                        ? "⚠️ Estás cerca del tope automático. Rendí tu saldo para no pausarte."
+                        : "Si llegás al tope antes del cierre, la app se pausa hasta confirmar el pago.";
+            } else {
+                trackEl.style.display = "none";
+                numEl.textContent = "Sin tope automático";
+                numEl.style.color = "var(--text-muted)";
+                hintEl.textContent = `Recordá rendir tu saldo pendiente: ${commissionPayDay}.`;
+            }
+
+            // Si alcanzó el tope y NO está en medio de un viaje, lo desconecta automáticamente
+            if (blocked && isOnline && !currentRideId) {
+                setOnlineState(false);
+                showToast("🔒 Llegaste al tope de comisión. Rendí tu saldo en Mi Caja para seguir.", "error");
+            }
+        }
+
+        document.getElementById("btn-go-pay-caja").addEventListener("click", () => {
+            switchDriverTab("caja");
+        });
 
         function getMergedCities(customCitiesRaw) {
             const mapById = new Map();
@@ -1080,12 +1236,6 @@
             switchDriverTab(btn.dataset.tab);
         });
 
-        function updatePctLabels() {
-            const drvPct = Math.max(0, 100 - adminPct);
-            document.querySelectorAll(".dyn-admin-pct").forEach((el) => { el.textContent = adminPct; });
-            document.querySelectorAll(".dyn-driver-pct").forEach((el) => { el.textContent = drvPct; });
-        }
-
         function updateAdminPaymentInfoUI() {
             const aliasEl = document.getElementById("drv-admin-alias-txt");
             const holderEl = document.getElementById("drv-admin-holder-txt");
@@ -1181,12 +1331,16 @@
             document.getElementById("rain-banner-drv").style.display = cfg.rainMode ? "inline-flex" : "none";
             const pct = Number(cfg.adminPct);
             adminPct = (!isNaN(pct) && pct >= 0 && pct <= 100 && cfg.adminPct !== undefined) ? pct : DEFAULT_ADMIN_PCT;
+            commissionPayDay = String(cfg.commissionPayDay || "").trim() || DEFAULT_PAY_DAY;
+            const parsedDebt = Number(cfg.maxDebtLimit);
+            maxDebtLimit = (cfg.maxDebtLimit !== undefined && !isNaN(parsedDebt) && parsedDebt >= 0) ? parsedDebt : DEFAULT_MAX_DEBT;
+
             adminAlias = String(cfg.adminAlias || "").trim();
             adminHolder = String(cfg.adminHolder || "").trim();
             adminPhone = String(cfg.adminPhone || "").trim();
             availableCities = getMergedCities(cfg.customCities);
             renderCityModalList();
-            updatePctLabels();
+            updateRulePolicyLabels();
             updateAdminPaymentInfoUI();
             if (driverProfile) renderDriverHistoryAndStats(lastSnapshotRides);
         });
@@ -1323,7 +1477,7 @@
 
             updateCityDisplays();
             updateDriverSummaryText();
-            updatePctLabels();
+            updateRulePolicyLabels();
             updateAdminPaymentInfoUI();
             listenDriverProfileNode(driverProfile.id);
             startListeningAllRides();
@@ -1456,6 +1610,11 @@
                 showToast("⏳ Esperá a que administración apruebe tu DNI para conectarte.", "error");
                 return;
             }
+            if (state && isDebtBlocked() && !currentRideId) {
+                showToast(`🔒 Alcanzaste el tope de $${maxDebtLimit.toLocaleString("es-AR")}. Rendí tu comisión en Mi Caja para conectarte.`, "error");
+                switchDriverTab("caja");
+                return;
+            }
             isOnline = state;
             document.getElementById("online-dot").classList.toggle("online", isOnline);
             document.getElementById("online-label").textContent = isOnline ? "EN LÍNEA (RECIBIENDO)" : "DESCONECTADO";
@@ -1523,7 +1682,10 @@
 
             if (!isOnline) {
                 badge.classList.remove("visible");
-                feed.innerHTML = `<div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">Conectate para recibir solicitudes en ${escHtml(selectedCity.nombre)}.</div>`;
+                const offlineMsg = isDebtBlocked()
+                    ? `🔒 Cuenta pausada por tope de comisión ($${maxDebtLimit.toLocaleString("es-AR")}). Rendí el saldo en Mi Caja.`
+                    : `Conectate para recibir solicitudes en ${escHtml(selectedCity.nombre)}.`;
+                feed.innerHTML = `<div style="font-size: 0.76rem; color: var(--text-muted); text-align: center; padding: 14px 0;">${offlineMsg}</div>`;
                 return;
             }
 
@@ -1616,6 +1778,7 @@
             const myPayments = lastSnapshotPayments.filter((p) => paymentBelongsToDriver(p, driverProfile));
             const totalPaidByMe = myPayments.reduce((acc, p) => acc + Number(p.amount || 0), 0);
             const realPending = Math.max(0, totalAllAdminCut - totalPaidByMe);
+            currentPendingCommission = realPending;
 
             document.getElementById("fin-driver-keeps").textContent = `$${driverKeeps.toLocaleString("es-AR")}`;
             document.getElementById("fin-admin-cut").textContent = `$${adminCut.toLocaleString("es-AR")}`;
@@ -1627,6 +1790,8 @@
             pendingEl.textContent = realPending > 0 ? `$${realPending.toLocaleString("es-AR")}` : "$0 (Al día ✅)";
             pendingEl.style.color = realPending > 0 ? "#fca5a5" : "var(--green)";
             document.getElementById("fin-real-paid").textContent = `$${totalPaidByMe.toLocaleString("es-AR")}`;
+
+            updateDebtLimitUI();
 
             const amountToReport = realPending > 0 ? realPending : adminCut;
             const waAdminNum = limpiarTelefonoWhatsApp(adminPhone);
@@ -1701,6 +1866,13 @@
         document.getElementById("rides-feed").addEventListener("click", async (e) => {
             const btn = e.target.closest("button[data-accept-id]");
             if (!btn || currentRideId) return;
+
+            if (isDebtBlocked()) {
+                showToast("🔒 Alcanzaste el tope de comisión. Rendí el saldo antes de tomar nuevos pedidos.", "error");
+                setOnlineState(false);
+                switchDriverTab("caja");
+                return;
+            }
 
             const rideId = btn.dataset.acceptId;
             btn.disabled = true;
@@ -1883,10 +2055,12 @@
             currentRideData = null;
             document.getElementById("driver-active-ride").style.display = "none";
             document.getElementById("available-rides-section").style.display = "flex";
+            updateDebtLimitUI();
         }
 
         updateCityDisplays();
         updateVehicleFormUI(selectedVehicleType);
+        updateRulePolicyLabels();
 
         if (driverProfile && driverProfile.name && driverProfile.dni && driverProfile.moto && driverProfile.plate && driverProfile.phone && driverProfile.termsAccepted && driverProfile.dniUploaded) {
             if (!driverProfile.id) {
